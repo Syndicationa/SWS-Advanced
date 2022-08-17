@@ -1,38 +1,151 @@
-.App {
+@font-face {
+  font-family: RedHat;
+  src: url("./RedHatDisplay-VariableFont_wght.ttf");
+}
+
+@font-face {
+  font-family: RedHatItalic;
+  src: url("./RedHatDisplay-Italic-VariableFont_wght.ttf");
+  font-style: italic;
+}
+
+* {
+  background-color: black;
+  color: white;
+  box-sizing: border-box;
+  font-family: RedHat;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  background-color: black;
+  height: 100%
+}
+
+div {
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+#root {
+  height: 100%
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.App {
+  text-align: center;
+  height: 100%;
+  background-image: url("./pexels-francesco-ungaro-998641.jpg");
+  background-size: cover;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.Title {
+  height: 8%;
+  width: 100%;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  background-color: #132433;
+  color: white;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-around;
+
+  font-size: 2em;
+}
+
+.LogIn {
+  position: absolute;
+  right: 0;
+
+  height: 100%;
+  width: 25%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  background-color: inherit;
+}
+
+.LogIn * {
+    margin-right: 20px;
+}
+
+main {
+  position: relative;
+  top: calc(8% + 10px);
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+
+  background:none;
+}
+
+button {
+  border: none;
+  min-height: 50%;
+  width: fit-content;
+
+  background-color: #434c57;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+button:hover {
+  background-color: #636c77;
+  color: white;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.DoubleSize {
+  font-size: 2em;
+}
+
+.SectionTitle {
+  padding-top: auto;
+  padding-bottom: auto;
+  background-color: #404040;
+  width: 100%;
+  max-height: 10%;
+  min-height: 5%;
+  display: inline-flex;
+  align-items: center;
+}
+
+.SectionTitle button {
+  height: 100%;
+  border: 1px white solid;
+}
+
+.SectionTitle h3, .gameTitle h3 {
+
+  margin-top: 0;
+  margin-bottom: 0;
+  background-color: #404040;
+  margin-left: 0;
+  margin-right: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.Section {
+  height: fit-content;
+  width: 50%;
+  border: 1px solid white;
+}
+
+.Section .Section {
+  width: 75%;
+}
+
+.Section .Section .Section {
+	width: 90%;
 }
