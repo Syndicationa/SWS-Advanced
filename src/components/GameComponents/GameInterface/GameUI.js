@@ -4,7 +4,7 @@ import { Board } from './Board'
 import { InfoDisplay } from './InfoDisplay'
 import { PlayerList } from './PlayerList'
 
-export const GameUI = ({game, close}) => {
+export const GameUI = ({game, input, close}) => {
     const title = game.title;
     const mode = game.gameMode;
     const sData = game.shipData;
@@ -18,6 +18,10 @@ export const GameUI = ({game, close}) => {
     const stage = game.stage;
     const impulse = game.impulse;
     const iCount = game.impulseCount;
+
+    const systemFunctions = input.system;
+    const movCurs = input.moveCursor;
+    const movCursTo = input.moveCursorTo;
 
     return (
         <div className="game">
