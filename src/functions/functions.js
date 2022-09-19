@@ -39,7 +39,7 @@ export const clone = (obj, asObject = false) => {
     //throw new Error("Unable to copy obj! Its type isn't supported.");
 }
 
-export const updateSector = (LocArray, grSize) => {
+const updateSector = (LocArray, grSize) => {
 	let position = LocArray[LocArray.length - 1];
 	let sector = LocArray.slice(0,-1);
 	let [x,y] = position;
@@ -74,3 +74,52 @@ export const compareArray = (arr1 = [], arr2 = [], length = 0) => {
 	let array2 = arr2.slice(0,length);
 	return JSON.stringify(array1) === JSON.stringify(array2);
 }
+
+export const rectangle = (location = [], size = [], angle) => {
+	if (size.length !== 2) return;
+	const width = size[0];
+	const height = size[1];
+	const widthEven = width % 2 === 0;
+	const heightEven = height % 2 === 0;
+	const sizeEven = widthEven || heightEven;
+	const cornerOffset = Math.atan2(height, width);
+	const radAngle = Math.PI*(angle)/4;
+	const centerAngle = Math.PI*(angle - (widthEven + !heightEven))/4;
+	const centerOffsetX = 0.5 + sizeEven ? (Math.sign(Math.round(Math.sin(centerAngle)))): 0;
+	const centerOffsetY = 0.5 + sizeEven ? (Math.sign(Math.round(Math.cos(centerAngle)))): 0;
+	const centerX = location[0] + centerOffsetX;
+	const centerY = location[1] + centerOffsetY;
+	const cenCornerLength = (Math.sqrt(width**2 + height**2))/2;
+
+	const calculatePoint = (offSet, cornerOff, angle) => [
+		centerX + cenCornerLength*Math.cos(offSet + angle + cornerOff),
+		centerY + cenCornerLength*Math.sin(offSet + angle + cornerOff)
+	]
+
+	return [
+		calculatePoint(Math.PI, -cornerOffset, radAngle),
+		calculatePoint(0, cornerOffset, radAngle),
+		calculatePoint(0, -cornerOffset, radAngle),
+		calculatePoint(Math.PI, cornerOffset, radAngle)
+	];
+}
+
+export const isInRectangle = (point, rectanglePoints) => {
+	return rectanglePoints.every((point1, index, array) => {
+		const point2 = array[index % 4];
+		const d = (point2[0] - point1[0]) * (point[1] - point1[1]) - (point[0] - point1[0]) * (point2[1] - point1[1])
+		return d >= 0;
+	})
+}
+
+export const distance = (loc, pos) => {
+	return Math.ceil(Math.sqrt((loc[0] - pos[0])**2 + (loc[1] - pos[1])**2));
+}
+
+export const absSum = (v1 = 0, v2 = 0) => {
+    return Math.abs(v1) + Math.abs(v2);
+}
+
+export const sumArrays = (arr1, arr2) => arr1.map((val, i) => val + arr2[i]);
+
+export const negateArray = arr => arr.map((val) => -val);
