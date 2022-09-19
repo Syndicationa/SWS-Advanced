@@ -67,7 +67,6 @@ export class Faction {
 	}
 
 	sendVehicle(vehicle, destination) {
-		const [index, ]
 	}
 }
 

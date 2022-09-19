@@ -1,5 +1,5 @@
-import {clone, compareArray, rectangle, isInRectangle, distance, absSum, sumArrays} from './functions';
-import {inFiringRot} from "./game";
+import {clone, compareArray, rectangle, isInRectangle, distance, absSum, sumArrays, negateArray} from '../functions';
+import {inFiringRot} from "../game";
 
 export class Vehicle {
 	constructor (vehicle, player, vNum, faction, loc, r) {
@@ -141,26 +141,24 @@ export class Vehicle {
     }
 
     addVelocity (dX, dY) {
-        this.Velocity.vel[0] += dX;
-        this.Velocity.vel[1] += dY;
+		const vel = this.Velocity;
+        vel.vel = sumArrays(vel.vel, [dX, dY]);
     }
 
 	moveShip () {
         const vel = this.Velocity;
         let loc = this.Location;
-        vel.moved = true;
         loc.loc = sumArrays(loc.prevLoc, vel.vel);
-        updateArea(reArea(false, true));
+        updateArea(shiftArea(vel.vel[0], vel.vel[1]));
 	}
 
 	finalizeMove(movType) {
         let vel = this.Velocity;
         let loc = this.Location;
         let state = this.State;
-        //Will need to check the importance of moved
-		if (!vel.moved) this.moveShip();
-		state.hasMoved = !(compareArray(vel.prevVel, vel.vel));
+		this.moveShip();
 
+		state.hasMoved = !(compareArray(vel.prevVel, vel.vel));
 		state.hasFired = false;
 
 		if (movType === 0) {
@@ -170,31 +168,39 @@ export class Vehicle {
 		}
 		loc.prevLoc = clone(loc.loc);
 		vel.moveData = "";
-		vel.moved = false;
 		updateArea(reArea());
 	}
     //#endregion
 
 	//#region Attack Commands
-	canFire(weapon, enemyLoc){
-		const dist = distance(this.Location.loc, enemyLoc);
-		const weap = this.Weap[weapon];
-		const ammoCount = this.getAmmo(weap).Count;
+	canFire (weapon, enemyLoc) {
+		const loc = this.Location.loc;
+		const rotat = this.Location.rotation;
+		const weapData = this.Weap.Data[weapon];
+		const weapfRate = this.Weap.fireCount[weapon]
+		const ammoCount = this.Ammo.count[this.getAmmoIndex(weapData)];
+
 		const ammo = (ammoCount > 0);
-		const energy = this.Energy >= weap.EnergyCost;
-		const fireRate = weap.FireCount < weap.FireRate;
-		const ran = weap.WMran === undefined || weap.WMran <= dist;
-		const loc = weap.Wrot === undefined || inFiringRot(-xdif, ydif, this.rot, weap.Wrot + Math.round(this.Mov/6), weap.Offset);
-		return ammo && energy && fireRate && ran && loc;
+		const energy = this.Energy.energy >= weapData.EnergyCost;
+		const fireRate = weapfRate < weapData.FireRate;
+		const ran = weap.WMran === undefined || weapData.WMran <= distance(location, enemyLoc);
+
+		const xydist = sumArrays(loc,negateArray(enemyLoc));
+		//True xy Dist
+		const txydist = [xydist[0], -xydist[1]];
+		const trueWrot = weapData.Wrot + Math.round(this.Stats.Mov / 6);
+		const rot = weapData.Wrot === undefined || inFiringRot(txydist, rotat, trueWrot, weapData.Offset);
+		return ammo && energy && fireRate && ran && rot;
 	}
 
-	getWeapon(weapon) {
-		return this.Weap[weapon];
+	getWeaponData(weapon = 0) {
+		return this.Weap.Data[weapon];
 	}
 
-    getAmmo(weapon) {
+    getAmmoIndex(weapon = Object) {
+		if (weapon.aType === undefined) return -1;
         const ammoType = weapon.aType;
-		return this.Ammo.find((type) => type.Name === ammoType);
+		return this.Ammo.Data.findIndex((type) => type.Name === ammoType);
     }
 
 	attack(weapon) {
@@ -328,8 +334,8 @@ const calculateMovEnergy = (energy = 0, MovEnergy = 0, add = true) => {
 
 
 
-locInfoTemplate = {prevLoc: [0,0], loc: [0,0], rotation: 0};
-areaTemplate = [[0,0]];
+const locInfoTemplate = {prevLoc: [0,0], loc: [0,0], rotation: 0};
+const areaTemplate = [[0,0]];
 
 const reArea = (old = true, both = false) => (locInfo= locInfoTemplate, size = [1,1], area = areaTemplate) => {
     const [prevLoc, loc, rotation] = location;

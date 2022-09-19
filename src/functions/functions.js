@@ -120,6 +120,8 @@ export const absSum = (v1 = 0, v2 = 0) => {
     return Math.abs(v1) + Math.abs(v2);
 }
 
-export const sumArrays = (arr1, arr2) => arr1.map((val, i) => val + arr2[i]);
+export const sumArrays = funcOnArrays((a, b) => a+b);
+
+export const funcOnArrays = (func) => (arr1, arr2) => arr1.map((val, i) => func(val, arr2[i]));
 
 export const negateArray = arr => arr.map((val) => -val);
