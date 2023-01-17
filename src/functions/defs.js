@@ -1,4 +1,4 @@
-import {clone, updateSector, compareArray, rectangle, isInRectangle, distance} from './functions';
+import {clone, updateSector, compareArray, rectangle, isInRectangle, distance} from './functions.mjs';
 import {attackShip, calcLocDiff, inFiringRot} from "./game";
 
 export class Faction {
@@ -216,337 +216,337 @@ export class Player {
 	}
 }
 
-export class Vehicle {
-	constructor (player, vNum, vehicle, faction, loc, r) {
+// export class Vehicle {
+// 	constructor (player, vNum, vehicle, faction, loc, r) {
 
-		//Vehicle Info
-		this.Player = player;
-		this.Number = vNum;
+// 		//Vehicle Info
+// 		this.Player = player;
+// 		this.Number = vNum;
 
-		this.Faction = faction;
-		this.Class = vehicle.Class || vehicle.Name;
+// 		this.Faction = faction;
+// 		this.Class = vehicle.Class || vehicle.Name;
 
-		this.Realm = vehicle.Realm || ["Space"];
+// 		this.Realm = vehicle.Realm || ["Space"];
 
-		this.img = vehicle.img || false;
+// 		this.img = vehicle.img || false;
 
-		//Name
-		this.Name = vehicle.Name;
+// 		//Name
+// 		this.Name = vehicle.Name;
 
-		//Health
-		this.HP = vehicle.HP;
-		this.prevHP = vehicle.prevHP || vehicle.HP;
-		this.maxHP = vehicle.maxHP || vehicle.HP;
+// 		//Health
+// 		this.HP = vehicle.HP;
+// 		this.prevHP = vehicle.prevHP || vehicle.HP;
+// 		this.maxHP = vehicle.maxHP || vehicle.HP;
 
-		//Energy
-		this.Energy = vehicle.Energy;
-		this.MaxEnergy = vehicle.maxEnergy || vehicle.Energy;
-		this.EnergyGenerated = vehicle.EnergyGenerated;
-		this.MovEnergy = vehicle.MovEnergy;
+// 		//Energy
+// 		this.Energy = vehicle.Energy;
+// 		this.MaxEnergy = vehicle.maxEnergy || vehicle.Energy;
+// 		this.EnergyGenerated = vehicle.EnergyGenerated;
+// 		this.MovEnergy = vehicle.MovEnergy;
 
-		//Stats
-		this.Acc = vehicle.Acc;
-		this.Def = vehicle.Def;
-		this.Mov = vehicle.Mov;
-		this.FMov = vehicle.FMov;
-		this.Size = vehicle.Size || [
-			vehicle.SizeX || vehicle.sX,
-			vehicle.SizeY || vehicle.sY];
+// 		//Stats
+// 		this.Acc = vehicle.Acc;
+// 		this.Def = vehicle.Def;
+// 		this.Mov = vehicle.Mov;
+// 		this.FMov = vehicle.FMov;
+// 		this.Size = vehicle.Size || [
+// 			vehicle.SizeX || vehicle.sX,
+// 			vehicle.SizeY || vehicle.sY];
 
-		//Weapons
-		this.Weap = clone(vehicle.Weap);
-		this.Ammo = clone(vehicle.Ammo);
-		this.Weap.forEach((each) => {if (!each.FireCount) each.FireCount = 0});
-		this.Ammo.forEach((type) => {if (type.Count === null) type.Count = Infinity});
-		const [hasEnergy, hasExplode] = this.Weap.reduce((previous, type) => {
-			let hasEnergy = type.Type === "Energy" || previous[0];
-			let hasExplode = type.Type === "Destruct" || previous[1];
-			return [hasEnergy, hasExplode];
-		}, [false, false]);
-		if (!hasEnergy) {
-			this.Weap.push({Name: "Energy Transfer", Type:"Energy", aType:"Energy", EnergyCost: 0, FireCount: 0, FireRate: Infinity});
-			this.Ammo.push({Name: "Energy", Count: Infinity, MCount: Infinity});
-		}
-		if (!hasExplode) {
-			const Watk = Math.round(20*Math.log10(this.HP)) + 20;
-			const Wran = Math.round((8/3)*Math.log10(this.HP));
-			const WRatk = Math.floor(-Watk/(Wran + 1));
-			this.Weap.push({Name: "Self Destruct", Type:"Destruct", aType:"Explodium", 
-                Watk: Watk, Whit: 75, Wran: Wran, WRatk: WRatk, 
-				EnergyCost: 0, FireCount: 0, FireRate: 1});
-			this.Ammo.push({Name: "Explodium", Count: Infinity, MCount: Infinity});
-		}
+// 		//Weapons
+// 		this.Weap = clone(vehicle.Weap);
+// 		this.Ammo = clone(vehicle.Ammo);
+// 		this.Weap.forEach((each) => {if (!each.FireCount) each.FireCount = 0});
+// 		this.Ammo.forEach((type) => {if (type.Count === null) type.Count = Infinity});
+// 		const [hasEnergy, hasExplode] = this.Weap.reduce((previous, type) => {
+// 			let hasEnergy = type.Type === "Energy" || previous[0];
+// 			let hasExplode = type.Type === "Destruct" || previous[1];
+// 			return [hasEnergy, hasExplode];
+// 		}, [false, false]);
+// 		if (!hasEnergy) {
+// 			this.Weap.push({Name: "Energy Transfer", Type:"Energy", aType:"Energy", EnergyCost: 0, FireCount: 0, FireRate: Infinity});
+// 			this.Ammo.push({Name: "Energy", Count: Infinity, MCount: Infinity});
+// 		}
+// 		if (!hasExplode) {
+// 			const Watk = Math.round(20*Math.log10(this.HP)) + 20;
+// 			const Wran = Math.round((8/3)*Math.log10(this.HP));
+// 			const WRatk = Math.floor(-Watk/(Wran + 1));
+// 			this.Weap.push({Name: "Self Destruct", Type:"Destruct", aType:"Explodium", 
+//                 Watk: Watk, Whit: 75, Wran: Wran, WRatk: WRatk, 
+// 				EnergyCost: 0, FireCount: 0, FireRate: 1});
+// 			this.Ammo.push({Name: "Explodium", Count: Infinity, MCount: Infinity});
+// 		}
 
-		//Defenses Need to add more
-		this.defensive = -1;
-		this.checkDefenses();
+// 		//Defenses Need to add more
+// 		this.defensive = -1;
+// 		this.checkDefenses();
 
-		//Position
-		this.location = clone(loc);
-		this.prevLocation = clone(loc);
-		this.rotation = r;
-		this.Area = [];
-		this.reArea();
-		this.Shape = ship.Shape;
+// 		//Position
+// 		this.location = clone(loc);
+// 		this.prevLocation = clone(loc);
+// 		this.rotation = r;
+// 		this.Area = [];
+// 		this.reArea();
+// 		this.Shape = ship.Shape;
 
-		//Velocity
-        this.prevVelocity = ship.prevVelocity || [0,0];
-        this.velocity = ship.velocity || [0,0];
-		this.moveData = "";
-		this.moved = false;
+// 		//Velocity
+//         this.prevVelocity = ship.prevVelocity || [0,0];
+//         this.velocity = ship.velocity || [0,0];
+// 		this.moveData = "";
+// 		this.moved = false;
 
-		//Stealth
-		this.StealthLevel = ship.StealthLevel || ship.Stealth || -1;
-		const vis = ship.visible === undefined;
-		this.visible = ship.visible || vis;
-		this.oDX = ship.oDX || 0;
-		this.oDY = ship.oDY || 0;
-		this.hasMoved = ship.hasMoved || false;
-		this.hasFired = ship.hasFired || false;
-	}
+// 		//Stealth
+// 		this.StealthLevel = ship.StealthLevel || ship.Stealth || -1;
+// 		const vis = ship.visible === undefined;
+// 		this.visible = ship.visible || vis;
+// 		this.oDX = ship.oDX || 0;
+// 		this.oDY = ship.oDY || 0;
+// 		this.hasMoved = ship.hasMoved || false;
+// 		this.hasFired = ship.hasFired || false;
+// 	}
 
-	//#region Move Commands
-	canMove(movX, movY, movType) {
-		let val = false;
-		if (movType === 0) {
-			if (movX !== 0 && movY !== 0) return false;
-			this.addMovData(movX, movY);
-			let tMData = this.moveData.replace(/[+-]/g,"||||").length;
-			const dist = Math.ceil(tMData/4);
-			val = dist <= this.Mov && (this.Energy > 0 || this.MovEnergy >= 0);
-			this.addMovData(-movX, -movY)
-		} else {
-			val = (Math.abs(this.dX + movX) + Math.abs(this.dY + movY)) <= this.Mov;
-            val = val && (this.Energy > 0 || this.MovEnergy >= 0);
-		}
-		return val;
-	}
+// 	//#region Move Commands
+// 	canMove(movX, movY, movType) {
+// 		let val = false;
+// 		if (movType === 0) {
+// 			if (movX !== 0 && movY !== 0) return false;
+// 			this.addMovData(movX, movY);
+// 			let tMData = this.moveData.replace(/[+-]/g,"||||").length;
+// 			const dist = Math.ceil(tMData/4);
+// 			val = dist <= this.Mov && (this.Energy > 0 || this.MovEnergy >= 0);
+// 			this.addMovData(-movX, -movY)
+// 		} else {
+// 			val = (Math.abs(this.dX + movX) + Math.abs(this.dY + movY)) <= this.Mov;
+//             val = val && (this.Energy > 0 || this.MovEnergy >= 0);
+// 		}
+// 		return val;
+// 	}
 	
-	addMovData(movX, movY) {
-		const val = ((movY + 3)/2)*(movX === 0) + (((movX + 3)/2) + 2)*(movY === 0) - 1;
-		const movStr = ["+","-","L","R"];
-		const revMovStrs = ["-","+","R","L"];
-		if (this.moveData.endsWith(revMovStrs[val])) {
-			this.moveData = this.moveData.slice(0,-1);
-			this.Energy -= val < 2 ? this.MovEnergy: this.MovEnergy/4;
-		} else {
-			this.moveData += movStr[val];
-			this.Energy += val < 2 ? this.MovEnergy: this.MovEnergy/4;
-		}
-		//if (preMoveInst ==  + )
-	}
+// 	addMovData(movX, movY) {
+// 		const val = ((movY + 3)/2)*(movX === 0) + (((movX + 3)/2) + 2)*(movY === 0) - 1;
+// 		const movStr = ["+","-","L","R"];
+// 		const revMovStrs = ["-","+","R","L"];
+// 		if (this.moveData.endsWith(revMovStrs[val])) {
+// 			this.moveData = this.moveData.slice(0,-1);
+// 			this.Energy -= val < 2 ? this.MovEnergy: this.MovEnergy/4;
+// 		} else {
+// 			this.moveData += movStr[val];
+// 			this.Energy += val < 2 ? this.MovEnergy: this.MovEnergy/4;
+// 		}
+// 		//if (preMoveInst ==  + )
+// 	}
 
-    setVelocity (dX, dY) {
-        this.velocity = [dX, dY];
-    }
+//     setVelocity (dX, dY) {
+//         this.velocity = [dX, dY];
+//     }
 
-    addVelocity (dX, dY) {
-        this.velocity[0] += dX;
-        this.velocity[1] += dY;
-    }
+//     addVelocity (dX, dY) {
+//         this.velocity[0] += dX;
+//         this.velocity[1] += dY;
+//     }
 
-	moveShip () {	
-        this.moved = true;
-        this.position[0] = this.originalPos[0] + this.velocity[0];
-        this.position[1] = this.originalPos[1] + this.velocity[1];
-        let newPosition = updateSector([...this.sector, this.position], this.grSize);
-        if (newPosition.length !== 0) {
-            this.position = newPosition.pop();
-            this.sector = newPosition;
-        }
-        this.reArea();
-	}
+// 	moveShip () {	
+//         this.moved = true;
+//         this.position[0] = this.originalPos[0] + this.velocity[0];
+//         this.position[1] = this.originalPos[1] + this.velocity[1];
+//         let newPosition = updateSector([...this.sector, this.position], this.grSize);
+//         if (newPosition.length !== 0) {
+//             this.position = newPosition.pop();
+//             this.sector = newPosition;
+//         }
+//         this.reArea();
+// 	}
 
-	finalizeMove(movType) {
-		if (!this.moved) this.moveShip();
-		this.hasMoved = !(compareArray(this.originalVelocity, this.velocity));
+// 	finalizeMove(movType) {
+// 		if (!this.moved) this.moveShip();
+// 		this.hasMoved = !(compareArray(this.originalVelocity, this.velocity));
 
-		this.hasFired = false;
+// 		this.hasFired = false;
 
-		if (movType === 0) {
-			this.originalVelocity = clone(this.velocity);
-		} else {
-			this.velocity = [0, 0];
-		}
-		this.originalPos = clone(this.Position);
-		this.originalSector = clone(this.Sector);
-		this.moveData = "";
-		this.moved = false;
-		this.reArea();
-	}
-    //#endregion
+// 		if (movType === 0) {
+// 			this.originalVelocity = clone(this.velocity);
+// 		} else {
+// 			this.velocity = [0, 0];
+// 		}
+// 		this.originalPos = clone(this.Position);
+// 		this.originalSector = clone(this.Sector);
+// 		this.moveData = "";
+// 		this.moved = false;
+// 		this.reArea();
+// 	}
+//     //#endregion
 
-	//#region Attack Commands
-	canFire(weapon, enemyLoc){
-		const [xdif, ydif] = calcLocDiff(this.location, enemyLoc, this.grSize);
-		const weap = this.Weap[weapon];
-		const ammoCount = this.getAmmo(weap).Count;
-		const ammo = (ammoCount > 0);
-		const energy = this.Energy >= weap.EnergyCost;
-		const fireRate = weap.FireCount < weap.FireRate;
-		const ran = weap.WMran === undefined ? true: weap.WMran <= (Math.abs(xdif) + Math.abs(ydif));
-		const loc = weap.Wrot === undefined ? true: inFiringRot(-xdif, ydif, this.rot, weap.Wrot + Math.round(this.Mov/6), weap.Offset);
-		return ammo && energy && fireRate && ran && loc;
-	}
+// 	//#region Attack Commands
+// 	canFire(weapon, enemyLoc){
+// 		const [xdif, ydif] = calcLocDiff(this.location, enemyLoc, this.grSize);
+// 		const weap = this.Weap[weapon];
+// 		const ammoCount = this.getAmmo(weap).Count;
+// 		const ammo = (ammoCount > 0);
+// 		const energy = this.Energy >= weap.EnergyCost;
+// 		const fireRate = weap.FireCount < weap.FireRate;
+// 		const ran = weap.WMran === undefined ? true: weap.WMran <= (Math.abs(xdif) + Math.abs(ydif));
+// 		const loc = weap.Wrot === undefined ? true: inFiringRot(-xdif, ydif, this.rot, weap.Wrot + Math.round(this.Mov/6), weap.Offset);
+// 		return ammo && energy && fireRate && ran && loc;
+// 	}
 
-	getWeapon(weapon) {
-		return this.Weap[weapon];
-	}
+// 	getWeapon(weapon) {
+// 		return this.Weap[weapon];
+// 	}
 
-    getAmmo(weapon) {
-        const ammoType = weapon.aType;
-		return this.Ammo.find((type) => type.Name === ammoType);
-    }
+//     getAmmo(weapon) {
+//         const ammoType = weapon.aType;
+// 		return this.Ammo.find((type) => type.Name === ammoType);
+//     }
 
-	attack(weapon) {
-		this.hasFired = true;
-		let aWeap = this.Weap[weapon];
-		aWeap.FireCount++;
-		this.Energy -= aWeap.EnergyCost;
-		const ammo = this.getAmmo(aWeap);
-		switch (aWeap.Type) {
-			case "Generic":
-				ammo.Count -= 1;
-			break;
+// 	attack(weapon) {
+// 		this.hasFired = true;
+// 		let aWeap = this.Weap[weapon];
+// 		aWeap.FireCount++;
+// 		this.Energy -= aWeap.EnergyCost;
+// 		const ammo = this.getAmmo(aWeap);
+// 		switch (aWeap.Type) {
+// 			case "Generic":
+// 				ammo.Count -= 1;
+// 			break;
 			
-			case "Missile":
-				ammo.Count -= 1;
-			break;
+// 			case "Missile":
+// 				ammo.Count -= 1;
+// 			break;
 			
-			case "Defensive":
-				ammo.Count -= 1;
-			break;
+// 			case "Defensive":
+// 				ammo.Count -= 1;
+// 			break;
 			
-			case "Deploying":
-				ammo.Count -= 1;
-			break;
+// 			case "Deploying":
+// 				ammo.Count -= 1;
+// 			break;
 			
-			case "Healing":
-				ammo.Count -= 1;
-			break;
+// 			case "Healing":
+// 				ammo.Count -= 1;
+// 			break;
 			
-			case "Ramming":
+// 			case "Ramming":
 				
-			break;
+// 			break;
 			
-			case "Destruct":
-				ammo.Count = this.HP;
-				this.HP = -Infinity;
-			break;
+// 			case "Destruct":
+// 				ammo.Count = this.HP;
+// 				this.HP = -Infinity;
+// 			break;
 
-			case "Resupplying":
-			break;
+// 			case "Resupplying":
+// 			break;
 
-			case "Energy":
-			break;
+// 			case "Energy":
+// 			break;
 
-			default:
-				return;
-		}
-		this.reArea(true);
-	}
+// 			default:
+// 				return;
+// 		}
+// 		this.reArea(true);
+// 	}
 
-	useDefensiveWeapon() {
-		if (this.defensive < 0) return;
-		const ammo = this.getAmmo(this.Weap[this.defensive]);
-		ammo.Count--;
-		this.checkDefenses();
-	}
+// 	useDefensiveWeapon() {
+// 		if (this.defensive < 0) return;
+// 		const ammo = this.getAmmo(this.Weap[this.defensive]);
+// 		ammo.Count--;
+// 		this.checkDefenses();
+// 	}
 
-	defend(damage, wType) {
-		if (wType === 'Healing') {
-			damage = -damage;
-		}
-		this.HP -= damage;
-		if (damage > 0) this.maxHP -= Math.floor(damage/5);
-		this.reArea(true);
-	}
+// 	defend(damage, wType) {
+// 		if (wType === 'Healing') {
+// 			damage = -damage;
+// 		}
+// 		this.HP -= damage;
+// 		if (damage > 0) this.maxHP -= Math.floor(damage/5);
+// 		this.reArea(true);
+// 	}
 
-	//return Ship defenses, so [Def, Mov, defensive]
-	getDefenseData() {
-		return [this.Def, this.Mov, this.defensive];
-	}
+// 	//return Ship defenses, so [Def, Mov, defensive]
+// 	getDefenseData() {
+// 		return [this.Def, this.Mov, this.defensive];
+// 	}
 
-	//Check if any defensive weapons are fully loaded
-	setDefensiveWeapon() {
-        if (this.defensive >= 0 && this.getAmmo(this.Weap[this.defensive])) return this.Weap[this.defensive];
-		this.defensive = -1;
-		this.Weap.forEach((weapon, index) => {
-			const ammo = this.getAmmo(weapon);
-			if (weapon.Defensive && ammo.Count > 0) {
-				this.defensive = index;
-			}
-		});
-		return this.Weap[this.defensive];
-	}
+// 	//Check if any defensive weapons are fully loaded
+// 	setDefensiveWeapon() {
+//         if (this.defensive >= 0 && this.getAmmo(this.Weap[this.defensive])) return this.Weap[this.defensive];
+// 		this.defensive = -1;
+// 		this.Weap.forEach((weapon, index) => {
+// 			const ammo = this.getAmmo(weapon);
+// 			if (weapon.Defensive && ammo.Count > 0) {
+// 				this.defensive = index;
+// 			}
+// 		});
+// 		return this.Weap[this.defensive];
+// 	}
 
-    finalizeAttack () {
-		this.hasMoved = false;
-		this.Weap.forEach((each) => each.FireCount = 0);
-    }
-    //#endregion
+//     finalizeAttack () {
+// 		this.hasMoved = false;
+// 		this.Weap.forEach((each) => each.FireCount = 0);
+//     }
+//     //#endregion
 
-	//Energy
-	addEnergy (amount = 0) {
-		if (!amount) this.Energy += this.EnergyGenerated;
-		this.Energy += amount;
-		const energy = this.Energy - this.maxEnergy;
-		if (this.Energy > this.maxEnergy) this.Energy = this.maxEnergy;
-		else return 0;
-		return energy
-	}
+// 	//Energy
+// 	addEnergy (amount = 0) {
+// 		if (!amount) this.Energy += this.EnergyGenerated;
+// 		this.Energy += amount;
+// 		const energy = this.Energy - this.maxEnergy;
+// 		if (this.Energy > this.maxEnergy) this.Energy = this.maxEnergy;
+// 		else return 0;
+// 		return energy
+// 	}
 
-	//Ship placement
-	reArea(old = true, both = false) {
-		this.Area = [];
-		const location = old ? this.prevLocation: this.location;
-		if (both) {
-			this.reArea(!old);
-		}
+// 	//Ship placement
+// 	reArea(old = true, both = false) {
+// 		this.Area = [];
+// 		const location = old ? this.prevLocation: this.location;
+// 		if (both) {
+// 			this.reArea(!old);
+// 		}
 
-		if (this.HP <= 0) {
-			//destroy.play();
-			return;
-		}
+// 		if (this.HP <= 0) {
+// 			//destroy.play();
+// 			return;
+// 		}
 		
-		//if a ship is a 1x1 then all Area needs to be is itself
-		if (this.sX*this.sY === 1) {
-			this.Area = [...this.Area, location];
-			return;
-		}
+// 		//if a ship is a 1x1 then all Area needs to be is itself
+// 		if (this.sX*this.sY === 1) {
+// 			this.Area = [...this.Area, location];
+// 			return;
+// 		}
 		
-        const rect = rectangle(position, [this.sX, this.sY], this.rot);
-        const extremes = rect.reduce((previous, current) => {
-            if (previous.length === 0) return [current[0], current[1], current[0], current[1]];
-            let nVal = clone(previous);
-            nVal[0] = nVal[0] < current[0] ? nVal[0]: current[0]; //minX
-            nVal[2] = nVal[2] > current[0] ? nVal[2]: current[0]; //maxX
+//         const rect = rectangle(position, [this.sX, this.sY], this.rot);
+//         const extremes = rect.reduce((previous, current) => {
+//             if (previous.length === 0) return [current[0], current[1], current[0], current[1]];
+//             let nVal = clone(previous);
+//             nVal[0] = nVal[0] < current[0] ? nVal[0]: current[0]; //minX
+//             nVal[2] = nVal[2] > current[0] ? nVal[2]: current[0]; //maxX
 
-            nVal[1] = nVal[1] < current[1] ? nVal[1]: current[1]; //minY
-            nVal[3] = nVal[3] > current[1] ? nVal[3]: current[1]; //maxY
-            return nVal;
-        }, [])
+//             nVal[1] = nVal[1] < current[1] ? nVal[1]: current[1]; //minY
+//             nVal[3] = nVal[3] > current[1] ? nVal[3]: current[1]; //maxY
+//             return nVal;
+//         }, [])
 
-        for (let x = extremes[0]; x <= extremes[2]; x++) {
-            for (let y = extremes[1]; y <= extremes[3]; y++) {
-                if (!isInRectangle([x + 0.5,y + 0.5], rect)) {
-					const alreadyIn = this.Area.some((loc) => {
-						return compareArray(loc, [x,y])
-					})
-                    if (!alreadyIn) {
-                        this.Area.push([x,y]);
-                    }
-                }
-            }
-        }
-	}
+//         for (let x = extremes[0]; x <= extremes[2]; x++) {
+//             for (let y = extremes[1]; y <= extremes[3]; y++) {
+//                 if (!isInRectangle([x + 0.5,y + 0.5], rect)) {
+// 					const alreadyIn = this.Area.some((loc) => {
+// 						return compareArray(loc, [x,y])
+// 					})
+//                     if (!alreadyIn) {
+//                         this.Area.push([x,y]);
+//                     }
+//                 }
+//             }
+//         }
+// 	}
 
-		//Needs Work
-	isInLocation (loc) {
-		//this.Area.forEach((val) => console.log([this.Area,val, loc, compareArray(val,loc,loc.length)]));
-		return this.Area.some((val) => compareArray(val,loc,loc.length));
-	}
-}
+// 		//Needs Work
+// 	isInLocation (loc) {
+// 		//this.Area.forEach((val) => console.log([this.Area,val, loc, compareArray(val,loc,loc.length)]));
+// 		return this.Area.some((val) => compareArray(val,loc,loc.length));
+// 	}
+// }
 
 export class Cursor {
     constructor () {
