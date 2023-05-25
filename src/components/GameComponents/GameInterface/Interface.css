@@ -1,0 +1,55 @@
+* {
+    background-color: black;
+    color: white;
+    box-sizing: border-box;
+  }
+
+.Buttons {
+	grid-area: Buttons;
+	border: 1px solid #444;
+
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr 1fr;
+	grid-template-rows: 1fr 1fr 1fr 1fr;
+	grid-template-areas: 'b1 b2 b3 ZIn'
+							'b4 b5 b6 ZOut'
+							'b7 b8 b9 Group'
+							'Info Back Ungroup End';
+}
+
+.bgrid {
+	border: none;
+	border-right: 1px solid #444;
+	border-bottom: 1px solid #444;
+}
+
+.ZoomIn {
+	grid-area: ZIn;
+}
+
+.ZoomOut {
+	grid-area: ZOut;
+}
+
+.InfoButton {
+	grid-area: Info;
+}
+
+.Back {
+	grid-area: Back;
+}
+
+.EndTurn {
+	grid-area: End;
+	border-left: 1px solid #444;
+	border-top: 1px solid #444;
+}
+
+.IO {
+	grid-area: Buttons;
+	visibility: hidden;
+}
+
+.IO * {
+	visibility: inherit;
+}

@@ -217,7 +217,12 @@ const calculateDamage = ([hit, data]) => {
                 const damage = calcGenDamage({...data, tShip: ship})
                 return Math.round(dMult*damage);
             })
-            return [reverseArray(damage), hit, data];
+            const sDamage = tShip.map((ship, i) => {
+                const dMult = (hasEran && i !== 0) ? 0.75:1;
+                const damage =  calcShieldDamage({...data, tShip: ship})
+                return Math.round(dMult*damage);
+            })
+            return [reverseArray(damage), reverseArray(sDamage), hit, data];
         case "Heal":
             return [-weap.Watk, 0, hit, data];
         case "Zero":

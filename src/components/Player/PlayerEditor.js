@@ -85,7 +85,7 @@ export const PlayerEditor = ({player, update, inGame}) => {
                 return (
                     <div key={ind}>
                         <label htmlFor={playerNum}>{inGame.find((play) => {
-                            return play.playerNum == playerNum;
+                            return play.playerNum === playerNum;
                             }).Name}:</label>
                         <input type="color" onChange={(e) => {changeColor(e.target.value, playerNum)}} 
                             value={colors[playerNum]} id={playerNum} />

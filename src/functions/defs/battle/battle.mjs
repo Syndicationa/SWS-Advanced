@@ -42,8 +42,9 @@ export const createBattle = loc => player => {
 
 export const singleBattle = player => data => {
     const ID = player.User.ID;
-    const {Map, PlayerCount, } = data;
+    const {Map, PlayerCount, Size, Title, Discoverable, Online} = data;
     return {
+        Title,
         Players: [player],
         Losses: [],
         Retreated: [],
@@ -55,9 +56,10 @@ export const singleBattle = player => data => {
         },
         Stage: 0,
         Map,
-        Type: "Unique",
+        Type: {Type: "Unique", Discoverable, Joinable: PlayerCount > 1 && Online, Online },
         PlayerCount,
         Display: [],
+        Size
     }
 }
 

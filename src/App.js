@@ -6,6 +6,7 @@ import { SignUp } from './components/Account/SignUp';
 import { Account } from './components/Account/Account';
 import { GameList } from './components/GameList/GameList';
 import { SystemController } from './components/GameComponents/SystemController';
+import { ButtonGrid } from './components/GameComponents/GameInterface/ButtonGrid';
 
 function App() {
   const loggedIn = useSelector((state) => state.player.loggedIn);
@@ -44,12 +45,14 @@ function App() {
         return <Account />
       case "Game":
         return <GameList />
+      default:
+        return homePage;
     }
   }
 
   return (
     <div className="App">
-      {true ? <SystemController />:
+      {true ? <ButtonGrid />:
       <>
         <Header page={page} setPage={setPage} />
         <main>

@@ -22,6 +22,7 @@ export const gPlayerMaker = Player => Name => {
     return {
         User: Player.User,
         colorSet: Player.colorSet,
+        controls: Player.controls || Player.Controls,
         Faction: Player.Faction,
         Name,
         Moves: [],

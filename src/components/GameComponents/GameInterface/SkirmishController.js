@@ -1,7 +1,8 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { GameUI } from './GameUI'
 import { clone } from '../../../functions/functions'
+import { cursorGenerator } from '../../../functions/defs/cursor.mjs'
 
 export const SkirmishController = ({game, close}) => {
     //Getting Info from Store
@@ -11,7 +12,7 @@ export const SkirmishController = ({game, close}) => {
     //Firebase snapshot
     const [snapShot, setSnapShot] = useState(null);
 
-    const [gameData, setGData] = useState();
+    const [gameData, setGData] = useState(game);
     const local = gameData.local;
 
     const [players, setPlayers] = useState(() => clone(gameData.players));
@@ -34,19 +35,13 @@ export const SkirmishController = ({game, close}) => {
 
     //#region Stages and Impulses
     const [active, setActive] = useState(!players[currentPlayer].hasMoved);
-    const [stage, setStage] = useState(mainGame.stage);
+    const [stage, setStage] = useState(gameData.Stage);
     const [attackList, setAttackList] = useState([]);
     //#endregion
 
     //#region Grid and Cursors
-    const grSize = mainGame.grSize;
-    const [cLoc, setCursorLoc] = useState(() => {
-        return grSize.map(() => [0,0])});
-    const [cRot, setCursorRot] = useState(-1);
-    const [cMenu, setCursorMenu] = useState(-1);
-    const [cData, setCursorData] = useState([0,0]);
-    const [cLevel, setLevel] = useState(0);
-    const [info, setInfo] = useState(false);
+    const [grid, setGrid] = useState(gameData.Size);
+    const [cursor, setCursor] = useState(cursorGenerator());
     //#endregion
 
 
@@ -57,6 +52,6 @@ export const SkirmishController = ({game, close}) => {
     }
 
     return (
-        <GameUI game={0} input={0} close={closeFunction} />
+        <GameUI game={gameData} input={cursor} close={closeFunction} />
     )
 }

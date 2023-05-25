@@ -9,14 +9,15 @@ import { PlayerEditor } from '../Player/PlayerEditor';
 
 export const CreateGame = () => {
     const dispatch = useDispatch();
-    const {player, loggedIn} = useSelector((state) => state.player);
+    const {player: user, loggedIn} = useSelector((state) => state.player);
     const convertedPlayer = {
-        colorSet: player.colorSet,
-        Controls: player.Controls, 
+        colorSet: user.colorSet,
+        Controls: user.Controls, 
         movType: 0,
-        Name: player.Username,
-        Faction: player.DefaultFaction};
-    console.log(player, convertedPlayer);
+        Name: user.Username,
+        Faction: user.DefaultFaction,
+        exoticFactions: user.exoticFactions};
+    console.log(user, convertedPlayer);
     const data = useSelector((state) => state.data);
     const gameModes = ["Skirmish", "System"];
     const maps = {Skirmish: ["Space", "Air", "Land", "Sea"], System: ["Sol"]}
@@ -69,12 +70,12 @@ export const CreateGame = () => {
         let nPlayers = [];
         for (let x = 0; x < difference; x++) {
             nPlayers.push(clone
-                ({colorSet: player.colorSet,
-                Controls: player.Controls,
+                ({colorSet: user.colorSet,
+                Controls: user.Controls,
                 movType: 0,
                 Name: "",
                 Faction: "Astute",
-                exoticFactions: player.exoticFactions
+                exoticFactions: user.exoticFactions
                 }
             ));
         }
@@ -140,7 +141,10 @@ export const CreateGame = () => {
                 </>):
                 <></>
             }
-            <button>Create Game</button>
+            {(gameMode === "Skirmish" && gameMap === "Space") ?
+                <button>Create Game</button>:
+                "We are sad to inform you that only Space-Skirmishes are currently playable"
+            }
         </Section>
     )
 }
