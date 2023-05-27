@@ -6,7 +6,29 @@ import { SignUp } from './components/Account/SignUp';
 import { Account } from './components/Account/Account';
 import { GameList } from './components/GameList/GameList';
 import { SystemController } from './components/GameComponents/SystemController';
-import { ButtonGrid } from './components/GameComponents/GameInterface/ButtonGrid';
+import { GameUI } from './components/GameComponents/GameInterface/GameUI';
+import { SkirmishController } from './components/GameComponents/GameInterface/SkirmishController';
+
+const game = {
+  title: "Test Game",
+  gameMode: "Space",
+  sDataType: "",
+  sData: [],
+  list: [],
+  dispFunc: () => {},
+  players: [],
+  cPlayer: 0,
+  updatePlayer: () => {},
+  local: true,
+  active: true,
+  stage: 1
+}
+
+const input = {
+  system: {},
+  movCurs: () => {},
+  movCursTo: () => {}
+}
 
 function App() {
   const loggedIn = useSelector((state) => state.player.loggedIn);
@@ -52,7 +74,7 @@ function App() {
 
   return (
     <div className="App">
-      {true ? <ButtonGrid />:
+      {true ? <SkirmishController />:
       <>
         <Header page={page} setPage={setPage} />
         <main>

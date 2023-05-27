@@ -1,0 +1,27 @@
+<svg
+  version="1.1"
+  baseProfile="full"
+  width="200"
+  height="200"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <mask id="cutout">
+    <rect x="0" y="0" width="200" height="200" fill="white" />
+    <circle cx="70" cy="70" r="50" />
+  </mask>
+ <circle cx="70" cy="70" r="60" mask="url(#cutout)" fill="white" />
+ <path
+    id="handle"
+    d="M 180 190
+       L 190 180
+       L 120 110
+       L 110 120
+       "
+    style="fill:white;stroke:white;stroke-width:1"
+    fill="white"
+  />
+  <polygon
+    points="40,65 40,75 100,75 100,65"
+    style="fill:white;stroke:white;stroke-width:1"
+  />
+</svg>

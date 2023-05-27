@@ -6,7 +6,7 @@ export const Tabs = ({childArr, nameArr}) => {
     <div className='Tabs'>
         <div className='TabList'>
             {nameArr.map((name, i) => {
-                return (<button onClick={setSelected(i)}>{name}</button>)
+                return (<button onClick={() => setSelected(i)} key={i}>{name}</button>)
             })}
         </div>
         {childArr[selected]}

@@ -1,63 +1,72 @@
 import React from 'react';
-import "./Interface.css";
-import ul from "./ButtonGridImages/ul.svg";
+import "../Interface.css";
+import ul from "./images/ul.svg";
+import ur from "./images/ur.svg";
+import u from "./images/u.svg";
+import dl from "./images/dl.svg";
+import dr from "./images/dr.svg";
+import d from "./images/d.svg";
+import l from "./images/l.svg";
+import r from "./images/r.svg";
 
-import info from './ButtonGridImages/info.svg';
+import b from "./images/b.svg";
+import info from './images/info.svg';
+import zoomOut from "./images/zoom out.svg";
+import zoomIn from "./images/zoom in.svg";
 
 
 export const ButtonGrid = props => {
     const {move, system, stage} = props;
 
-    let symbols = [[ul,"U","UR"],["L","C","R"],["DL","D","DR"],["ZO","ZI","B",info,"ET","G","U"]];
+    let symbols = [[ul,u,ur],[l,"C",r],[dl,d,dr],[zoomOut,zoomIn,b, info,"ET","G","U"]];
     let letters = [["UL","U","UR"],["L","C","R"],["DL","D","DR"],["ZO","ZI","B","I","ET","G","U"]];
     const classes = ["ZoomOut","ZoomIn","Back","InfoButton","EndTurn","Group","Ungroup"]
     const functions = [system.zoomOut, system.zoomIn, system.back, system.info, system.endTurn, system.group, system.ungroup];
 
     const click = (index, indey) => {
-        console.log(stage);
         if (index === 3) {
             functions[indey]();
             return;
         }
-        move(indey -1, index -1);
+        move([indey -1, index -1]);
     };
     
     switch (stage) {
         case 0:
-            letters[1][1] = "Place";
+            symbols[1][1] = "Place";
         break;
         case 1:
-            letters[1][1] = "Pick Type"
+            symbols[1][1] = "Pick Type"
         break;
         case 2:
-            letters[1][1] = "Pick Rot"
+            symbols[1][1] = "Pick Rot"
         break;
         case 10:
-            letters[1][1] = "Pick"
+            symbols[1][1] = "Pick"
         break;
         case 11:
-            letters[1][1] = "Pick"
+            symbols[1][1] = "Pick"
         break;
         case 12:
-            letters[1][1] = "Move"
+            symbols[1][1] = "Move"
         break;
         case 13:
-            letters[1][1] = "Pick Rot"
+            symbols[1][1] = "Pick Rot"
         break;
         case 20:
-            letters[1][1] = "Pick Atk"
+            symbols[1][1] = "Pick Atk"
         break;
         case 21:
-            letters[1][1] = "Pick"
+            symbols[1][1] = "Pick"
         break;
         case 22:
-            letters[1][1] = "Pick Def"
+            symbols[1][1] = "Pick Def"
         break;
         case 23:
-            letters[1][1] = "Pick"
+            symbols[1][1] = "Pick"
         break;
         case 24:
-            letters[1][1] = "FIRE"
+            symbols[1][1] = "FIRE"
         break;
         default:
     }

@@ -1,0 +1,19 @@
+<svg
+  version="1.1"
+  baseProfile="full"
+  width="200"
+  height="200"
+  xmlns="http://www.w3.org/2000/svg"
+>
+ <path
+    d="M 100 150
+       L 100 165
+       A 65 65 0 1 0 54 54
+       L 47 47
+       L 47 72
+       L 72 72
+       L 65 65
+       A 50 50 0 1 1 100 150"
+    style="fill:white;stroke:white;stroke-width:1"
+  />
+</svg>

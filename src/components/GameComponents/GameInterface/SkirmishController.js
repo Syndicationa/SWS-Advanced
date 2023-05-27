@@ -3,8 +3,25 @@ import { useDispatch, useSelector } from 'react-redux'
 import { GameUI } from './GameUI'
 import { clone } from '../../../functions/functions'
 import { cursorGenerator } from '../../../functions/defs/cursor.mjs'
+import { sumArrays } from '../../../functions/functions.mjs'
 
-export const SkirmishController = ({game, close}) => {
+const game = {
+    title: "Test Game",
+    gameMode: "Space",
+    sDataType: "",
+    sData: [],
+    list: [],
+    dispFunc: () => {},
+    players: [],
+    cPlayer: 0,
+    updatePlayer: () => {},
+    local: true,
+    active: true,
+    stage: 0
+}
+
+export const SkirmishController = ({g, close}) => {
+    /*
     //Getting Info from Store
     const playerAcc = useSelector((state) => state.player.player);
 
@@ -41,10 +58,19 @@ export const SkirmishController = ({game, close}) => {
 
     //#region Grid and Cursors
     const [grid, setGrid] = useState(gameData.Size);
+    */
     const [cursor, setCursor] = useState(cursorGenerator());
     //#endregion
 
+    const moveCursor = (vec) => setCursor({...cursor, loc: sumArrays(cursor.loc, vec)});
+    const moveCursorTo = (pos) => setCursor({...cursor, loc: pos});
 
+    const input = {
+        system: {},
+        cursor,
+        moveCursor,
+        moveCursorTo
+    }
 
     const closeFunction = () => {
         //SaveGame
@@ -52,6 +78,6 @@ export const SkirmishController = ({game, close}) => {
     }
 
     return (
-        <GameUI game={gameData} input={cursor} close={closeFunction} />
+        <GameUI game={game} input={input} close={closeFunction} />
     )
 }

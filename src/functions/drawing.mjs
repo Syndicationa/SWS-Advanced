@@ -1,10 +1,13 @@
 import { getFromDisp } from "./defs/display.mjs";
 
+export const grSize = (region) => (region.hy - region.ly)/region.yStep;
+
+export const clearBoard = (board) => board.getContext("2d").clearRect(0,0, board.width, board.height)
+
 //#region Grid
-export const drawGrid = (gridcanvas, grid, data) => {
-    const {grSize, level} = data;
+export const drawGrid = (gridcanvas, grid, region) => {
     if (!gridcanvas) return;
-    const size = grSize[level]
+    const size = grSize(region);
     const width = gridcanvas.width/size;
     const height = gridcanvas.height/size;
 
@@ -16,7 +19,7 @@ export const drawGrid = (gridcanvas, grid, data) => {
     const oddColor = "#404040";
     const evenColor = "#707070";
     const quarterColor = "#A0A0A0";
-    const edgeColor = "D0D0D0";
+    const edgeColor = "#D0D0D0";
 
     //Odd loop
     for(let i = 1; i <= size; i += 2) {
@@ -24,18 +27,18 @@ export const drawGrid = (gridcanvas, grid, data) => {
     }
 
     //Even loop
-    for (let i = 0; i <= grSize[level]; i+= 2) {
+    for (let i = 0; i <= size; i+= 2) {
         drawGridLines(grid, evenColor, i, sizeInfo);
     }
 
     //Quarters
-    drawGridLines(grid, quarterColor, Math.floor(size/4));
-    drawGridLines(grid, quarterColor, Math.floor(3*size/4));
+    drawGridLines(grid, quarterColor, Math.floor(size/4), sizeInfo);
+    drawGridLines(grid, quarterColor, Math.floor(3*size/4), sizeInfo);
 
     //Edges & Halves
-    drawGridLines(grid, edgeColor, 0);
-    drawGridLines(grid, edgeColor, Math.floor(size/2));
-    drawGridLines(grid, edgeColor, size);
+    drawGridLines(grid, edgeColor, 0, sizeInfo);
+    drawGridLines(grid, edgeColor, Math.floor(size/2), sizeInfo);
+    drawGridLines(grid, edgeColor, size, sizeInfo);
 }
 
 const drawGridLines = (grid, color, i, sizeInfo) => {
@@ -56,7 +59,7 @@ const drawGridLines = (grid, color, i, sizeInfo) => {
 }
 
 export const copyGrid = (main, grid) => {
-    main.drawImage(grid);
+    main.drawImage(grid, 0, 0);
 }
 //#endregion
 
@@ -211,7 +214,7 @@ export const drawShips = (display, position, colors, board, size) => {
 //#region Cursor
 export const drawCursor = (board, size, position) => {
     const {height, width} = size;
-    const {x, y} = position;
+    const [x, y] = position;
 
     const left = x*width + width/10;
     const innerLeft = x*width + 4*width/10;
@@ -224,6 +227,9 @@ export const drawCursor = (board, size, position) => {
 
     const lower = y*height + 9*height/10;
     const innerLower = y*height + 6*height/10;
+
+    board.strokeStyle = "#D0D0D0";
+    board.lineWidth = width/30;
 
     board.beginPath();
     board.moveTo(left, upper);
@@ -238,5 +244,6 @@ export const drawCursor = (board, size, position) => {
     board.moveTo(right, lower);
     board.lineTo(innerRight, innerLower);
 
+    board.stroke(); board.closePath();
 }
 //#endregion

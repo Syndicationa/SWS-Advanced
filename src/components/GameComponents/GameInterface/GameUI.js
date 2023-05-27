@@ -1,7 +1,7 @@
 import React from 'react'
-import { SectionTitle } from '../../Sections/SectionTitle'
+import { Header } from './Header/Header'
 import { Board } from './Board'
-import { ButtonGrid } from './ButtonGrid'
+import { ButtonGrid } from './ButtonGrid/ButtonGrid'
 import { InfoDisplay } from './InfoDisplay'
 import { PlayerList } from './PlayerList'
 import { Tabs } from './Tabs'
@@ -22,29 +22,25 @@ export const GameUI = ({game, input, close}) => {
     const local = game.local;
     const active = game.active;
     const stage = game.stage;
-    const impulse = game.impulse;
-    const iCount = game.impulseCount;
 
     const systemFunctions = input.system;
     const movCurs = input.moveCursor;
     const movCursTo = input.moveCursorTo;
+    const cursor = input.cursor;
 
-    const tabs = (<Tabs 
+    return (
+        <div className="game">
+        <Header name={`${mode}: ${title}`} className="gameTitle" stage={stage} minimizable={false} close={close} />
+        <Board move={movCursTo} display={[]} region={{lx: 0, ly: 0, hx: 32, hy: 32, xStep: 2, yStep: 2}} cursorLoc={cursor.loc} />
+        <Tabs className="IO"
         childArr={[
             (<InfoDisplay title={sListName} className="ShipList" information={list} 
                 selected={0} displayFunction={dispFunc} />),
             (<InfoDisplay title="Information" className="Info" information={sData} />),
             (<PlayerList players={players} cPlayer={cPlayer} local={local} 
                 updatePlayer={updatePlayer} />)]}
-        nameArr={["Ships, Info, Players"]}></Tabs>)
-
-    return (
-        <div className="game">
-        <SectionTitle title={`${mode}: ${title}`} className="gameTitle" minimizable={false} close={close} />
-        <Board press={movCursTo} />
-        {tabs}
+        nameArr={["Ships", "Info", "Players"]}/>
         { active ? <ButtonGrid system={systemFunctions} move={movCurs} stage={stage} />:<></>}
-        <Footer stage={stage} impulse={impulse} impulseCount={iCount} />
     </div>
     )
 }

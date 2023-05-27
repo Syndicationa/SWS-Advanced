@@ -1,0 +1,12 @@
+<svg
+  version="1.1"
+  baseProfile="full"
+  width="200"
+  height="200"
+  xmlns="http://www.w3.org/2000/svg"
+>
+ <polygon
+    points="180,20 180,100 165,100 165,45 20,190 10,180 155,35 100,35 100,20"
+    style="fill:white;stroke:white;stroke-width:1"
+  />
+</svg>

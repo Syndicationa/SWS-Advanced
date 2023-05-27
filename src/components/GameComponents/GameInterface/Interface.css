@@ -2,7 +2,102 @@
     background-color: black;
     color: white;
     box-sizing: border-box;
+	overflow: hidden;
   }
+
+.game {
+	height: 100%;
+
+	display: grid;
+	grid-template-columns: 75% 25%;
+	grid-template-rows: 6% 1fr 1fr;
+	grid-template-areas: 'Header Header'
+						 'Board Tabs'
+						 'Board Buttons';
+}
+
+.gameTitle {
+	grid-area: Header;
+	height: 100%;
+	width: 100%;
+
+	display: flex;
+	align-items: center;
+
+	background-color: #444;
+
+}
+
+.gameTitle h3 {
+	height: 100%;
+	width: 40%;
+
+	font-size: 200%;
+	background-color: #444;
+}
+
+.PhaseChart {
+	width: 30%;
+	height: 100%;
+	
+	display: flex;
+	align-items: center;
+
+	margin-left: 0;
+	margin-right: 0;
+
+	background-color: #444;
+}
+
+.stageItem {
+	display: flex;
+	flex-direction: column;
+
+	height: 80%;
+	width: 30%;
+	font-size: 80%;
+
+	border: #444 1px solid;
+	border-radius: 10px;
+
+	background-color: #222;
+}
+
+.stageItem div {
+	width: 80%;
+	height: 20%;
+	margin-top: 10%;
+	background-color: #777;
+}
+
+.active {
+	background-color: #0a0 !important;
+}
+
+.gameboard {
+	grid-area: Board;
+	height: 100%;
+}
+
+.Tabs {
+	grid-area: Tabs;
+
+	display: grid;
+	grid-template-rows: 1fr 7fr;
+	grid-template-areas: 'TabList'
+						 'Data';
+}
+
+.TabList {
+	grid-area: TabList;
+	width: 100%;
+
+	display: flex;
+}
+
+.TabList * {
+	width: 100%;
+}
 
 .Buttons {
 	grid-area: Buttons;
@@ -19,8 +114,16 @@
 
 .bgrid {
 	border: none;
+	height: 100%;
+	width: 100%;
 	border-right: 1px solid #444;
 	border-bottom: 1px solid #444;
+}
+
+.bgrid img {
+	height: 100%;
+	width: 100%;
+	background-color: inherit;
 }
 
 .ZoomIn {
@@ -46,10 +149,15 @@
 }
 
 .IO {
-	grid-area: Buttons;
+	grid-area: IO;
 	visibility: hidden;
 }
 
 .IO * {
 	visibility: inherit;
+}
+
+.invisible {
+	visibility: hidden;
+	display: none;
 }
