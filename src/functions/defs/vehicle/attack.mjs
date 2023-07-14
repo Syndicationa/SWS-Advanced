@@ -18,8 +18,7 @@ const cFWeaponTemplate = {weapon: {}, ammoCount: 0}
 
 export const canFire = curry((fShip, tLoc, weap = cFWeaponTemplate) => {
 	const {prevLoc:fLoc, rotation} = fShip.Location;
-	const {energy: fEnergy} = fShip.State;
-	const {Mov} = fShip.Stats;
+	const {energy: fEnergy, mov: Mov} = fShip.State;
 	const {weapon, ammoCount} = weap;
 
 	const trueWrot = weapon.Wrot + Math.round(Mov / 6);
@@ -42,17 +41,17 @@ export const cleanAttackInput = ([fShip, tShip, shipArray, weap]) => {
         const tShips = shipsInRadius(shipArray, tShip.Location.prevLoc, Eran).filter((s) => 
             !sameVehicle(tShip, s));
         return [fShip, [tShip, ...tShips], shipArray, weap];
-    } else if (Type === "Deploying") {
-        return [fShip, fShip.Location.prevLoc, shipArray, weap];
     }
     return {fShip, tShip, shipArray, weap};
 }
 
 //#region Hit Chance Helpers
+
+//Finds every ship with defenses weapons in range of a location
 const defensesInArea =  (shipArray, tLoc) => {
 	const defenders = shipArray.filter((ship) => {
 		const weaponData = ship.Weap.Data;
-		const [Weapons, wActive] = ship.Defenses;
+		const {Weapons, wActive} = ship.Defenses;
 		const dWeaps = Weapons.filter(( w, i) => wActive[i]);
 		if (dWeaps.length === 0) return false;
 		const dist = distance(tLoc, ship.Location.prevLoc);
@@ -64,13 +63,15 @@ const defensesInArea =  (shipArray, tLoc) => {
 const calcDefShip = (shipArray, tLoc) => {
 	return shipArray.reduce((total, ship) => {
 		const weaponData = ship.Weap.Data;
-		const [Weapons, wActive] = ship.Defenses;
-		const dWeaps = Weapons.filter(( w, i) => wActive[i]).map((wInd) => weaponData[wInd]);
-		const dist = distance(tLoc, ship.Location.prevLoc);
+        const dist = distance(tLoc, ship.Location.prevLoc);
+		const dWeaps = 
+            getActiveDefs(ship.Defenses)
+                .filter((w) => dist <= weaponData[w].Wran)
+                .map((wInd) => weaponData[wInd]);
 		return total + dWeaps.reduce((acc, weapon) => {
 			const wCov  = weapon.Wcov;
 			const dHit = weapon.Whit;
-			return acc + ((dHit*wCov)/20)/(dist + 1);
+			return acc + ((dHit*wCov)/20)/Math.max(dist - 4, 1);
 		})
 		
 	}, 0)
@@ -90,7 +91,6 @@ const hitTypes = (weap) => {
         case "Energy":
             return "Range";
         case "Destruct":
-        case "Deploying":
             return "True";
         default:
             return "Err";
@@ -100,7 +100,7 @@ const hitTypes = (weap) => {
 const calcGenHitChance = (fShip, tShip, weap) => {
     const {Whit, Wran} = weap;
     const Acc = fShip.Stats.Acc;
-	const Mov = tShip.Stats.Mov;
+	const Mov = tShip.State.mov;
     const dist = distance(fShip.Location.prevLoc, tShip.Location.prevLoc);
 
 	let hitChance = (Whit + Acc) - (25*Math.tanh((Mov- 15)/5) + 25)
@@ -185,7 +185,7 @@ const calcGenDamage = (data) => {
 	let damage = wAtk - def + wRAtk*(dist - wMran + (wRan - dist)*(wRAtk >= 0 && dist >= wRan));
 	damage = Math.round(damage);
 	damage = damage*(damage > 0);
-    return calcShieldDamage(data, damage);
+    return damage;
 }
 
 const calcShieldDamage = (data, damage) => {
@@ -195,34 +195,38 @@ const calcShieldDamage = (data, damage) => {
     const damageShield = shields.find((s) => s.Type === "Default");
     if (damageShield === undefined) return [damage, 0];
 
-    const damageVal = Math.floor(damage*damageShield.Intercept)
-    const remainingDamage = damage - damageVal;
+    const shieldDamage= Math.floor(damage*damageShield.Intercept)
+    const passthroughDamage = damage - shieldDamage;
     const dSIndex = getShieldIndex(tShip.Defenses.Shields, damageShield);
 
-    const takenDamage = tShip.Defenses.sDamage[dSIndex] + damageVal;
-    const carryDamage = Math.max(takenDamage - damageShield.dThreshold, 0) + remainingDamage;
-    return [takenDamage, carryDamage];
+    const totalShieldDamage = tShip.Defenses.sDamage[dSIndex] + shieldDamage;
+    const shipDamage = Math.max(totalShieldDamage - damageShield.dThreshold, 0) + passthroughDamage;
+    return [shipDamage, shieldDamage];
 }
 
 const calculateDamage = ([hit, data]) => {
 	const {tShip, weap} = data;
     const hasEran = weap.Eran !== undefined;
     const dType = damType(weap);
+
+    let damage;
+    let shieldDamage;
     switch (dType) {
         case "Gen":
-            return [calcGenDamage(data), hit, data];
+            damage = calcGenDamage(data)
+            shieldDamage = calcShieldDamage(data, damage);
+            return [...shieldDamage, hit, data];
         case "Expl":
-            const damage = tShip.map((ship, i) => {
-                const dMult = (hasEran && i !== 0) ? 0.75:1;
+            damage = tShip.map((ship, i) => {
                 const damage = calcGenDamage({...data, tShip: ship})
-                return Math.round(dMult*damage);
+                return Math.round(damage);
             })
-            const sDamage = tShip.map((ship, i) => {
+            shieldDamage = tShip.map((ship, i) => {
                 const dMult = (hasEran && i !== 0) ? 0.75:1;
-                const damage =  calcShieldDamage({...data, tShip: ship})
-                return Math.round(dMult*damage);
+                const sDamage =  calcShieldDamage({...data, tShip: ship}, damage[i]);
+                return sDamage.map((damage) => Math.round(dMult*damage));
             })
-            return [reverseArray(damage), reverseArray(sDamage), hit, data];
+            return [...reverseArray(shieldDamage), hit, data];
         case "Heal":
             return [-weap.Watk, 0, hit, data];
         case "Zero":
@@ -314,18 +318,19 @@ const applyFship = (fShip, weap) => {
     }
 }
 
-const applyTShip = (tShip, damage, sDamage, hit, weap) => {
+const applyTShip = (tShip, [damage, sDamage], hit, weap) => {
     if (tShip === undefined) return {};
-    else if (weap.Type === "Deploying") {
-        return;
-    } else if (tShip instanceof Array)
-        return tShip.map((ship, i) => applyTShip(ship, damage[i], sDamage[i], hit, weap))
+    else if (tShip instanceof Array)
+        return tShip.map((ship, i) => applyTShip(ship, [damage[i], sDamage[i]], hit, weap))
 
-    return consuseShield(applyDamage(damage, hit, tShip), sDamage);
+    return consumeShield(applyDamage(damage, hit, tShip), sDamage);
 }
 
-const consumeDefAmmo = (ship) => {
-    const weapons = getActiveDefs(ship.Defenses);
+const consumeDefAmmo = (loc) => (ship) => {
+    const weaponData = ship.Weap.Data;
+    const dist = distance(loc, ship.Location.prevLoc);
+
+    const weapons = getActiveDefs(ship.Defenses).filter((w) => dist <= weaponData[w].Wran);
     const ammos = weapons.map((weapon) => getAmmoOfWeap(weapon, ship.Ammo));
     const nAmmo = ammos.reduce((acc, ammo) => consumeAmmo(acc, ammo),ship.Ammo);
     return {
@@ -334,15 +339,15 @@ const consumeDefAmmo = (ship) => {
     }
 }
 
-const consuseShield = (ship, sDam) => {
+const consumeShield = (ship, sDam) => {
     const shields = getActiveShields(ship.Defenses);
     const damageShield = shields.find((s) => s.Type === "Default");
     if (damageShield === undefined) return ship;
     const dSIndex = getShieldIndex(ship.Defenses.Shields, damageShield);
 
     const takenDamage = ship.Defenses.sDamage[dSIndex] + sDam;
-    const active = takenDamage >= damageShield.Threshold;
-    const sDamage = replaceInArray(ship.Defenses.sDamage, dSIndex, active);
+    const active = takenDamage < damageShield.dThreshold;
+    const sDamage = replaceInArray(ship.Defenses.sDamage, dSIndex, takenDamage);
     const sActive = replaceInArray(ship.Defenses.sActive, dSIndex, active);
 
     return {
@@ -395,9 +400,6 @@ const createDataStr = (fShip, tShip, weap, damage, hit) => {
             return `${fName} resupplies ${tName}'s ${ammoName} round supply.\n`;
         case "Energy":
             return `${fName} sends Energy to ${tName}.\n`;
-        case "Deploying":
-            const depName = tShip.Appearance.name;
-            return `${fName} deploys a ${depName}.\n`;
         default:
             throw Error("Unexpected Weapon Type")
     }
@@ -407,7 +409,8 @@ const createDataStr = (fShip, tShip, weap, damage, hit) => {
 const applyAttack = ([damage, sDamage, hit, {fShip, tShip, shipArray, weap}]) => {    
     const uPShips = updateShips(fShip, tShip, weap, damage, hit);
     const dShips = weap.Type === "Missile" ? 
-    map(compose(updateActiveDef, consumeDefAmmo), defensesInArea(shipArray, tShip.Location.prevLoc)): 
+    map(compose(updateActiveDef, consumeDefAmmo(tShip.Location.prevLoc), 
+    defensesInArea(shipArray, tShip.Location.prevLoc))): 
     [];
     const updated = mergeShipArrays(uPShips, dShips);
     const updatedShipArray = mergeShipArrays(shipArray, updated);

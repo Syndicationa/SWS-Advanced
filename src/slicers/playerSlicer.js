@@ -8,7 +8,7 @@ import { clone } from '../functions/functions'
 const userRef = collection(database, "users");
 
 const initialState = {
-    player: {
+    user: {
         Username: "",
         //Letters for Up, Down, Left, Right, Action, Back, Info, End Turn, Zoom In, Zoom Out
         Controls: ["w","s","a","d","e","q","f","r","Alt"," "],
@@ -26,6 +26,7 @@ const initialState = {
         colorSet: {},
         games: [],
         unsubGames: [],
+        ID: "A"
     },
     loggedIn: false
 }

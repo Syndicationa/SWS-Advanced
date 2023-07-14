@@ -13,7 +13,7 @@ export const GameUI = ({game, input, close}) => {
     const sListName = game.sDataType
     const sData = game.shipData;
     const list = game.listItems;
-    const dispFunc = game.listDisplay;
+    const display = game.display;
 
     const players = game.Players;
     const cPlayer = game.cPlayer;
@@ -31,11 +31,11 @@ export const GameUI = ({game, input, close}) => {
     return (
         <div className="game">
         <Header name={`${mode}: ${title}`} className="gameTitle" stage={stage} minimizable={false} close={close} />
-        <Board move={movCursTo} display={[]} region={{lx: 0, ly: 0, hx: 32, hy: 32, xStep: 2, yStep: 2}} cursorLoc={cursor.loc} />
+        <Board move={movCursTo} display={display} cursor={cursor} />
         <Tabs className="IO"
         childArr={[
             (<InfoDisplay title={sListName} className="ShipList" information={list} 
-                selected={0} displayFunction={dispFunc} />),
+                selected={0} displayFunction={() => {}} />),
             (<InfoDisplay title="Information" className="Info" information={sData} />),
             (<PlayerList players={players} cPlayer={cPlayer} local={local} 
                 updatePlayer={updatePlayer} />)]}

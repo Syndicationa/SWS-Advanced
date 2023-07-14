@@ -32,7 +32,9 @@ const convertShip = (o, faction) => {
         }
     });
 
-    return {Type, Appearance, Stats, Weap, Ammo}
+    const Defenses = {};
+
+    return {Type, Appearance, Stats, Weap, Ammo, Defenses}
 }
 
 const convertArray = (shipArr) => (faction) => shipArr[faction].map((shipData) => convertShip(shipData, faction))

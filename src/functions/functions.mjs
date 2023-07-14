@@ -114,6 +114,10 @@ export const funcOnArrays = (func) => (arr1 = [], arr2 = []) => arr1.map((val, i
 
 export const sumArrays = funcOnArrays((a, b) => a+b);
 
+export const maxOnArrays = funcOnArrays(Math.max);
+
+export const minOnArrays = funcOnArrays(Math.min);
+
 export const negateArray = arr => arr.map((val) => -val);
 
 export const compose = (...funcList) => (...i) => funcList.reduceRight((acc, f) => {
@@ -164,3 +168,6 @@ export const reverseArray = (arr) => arr[0].map((_,i) => arr.map((v) => v[i]));
 
 export const sliceReduce = curry((fn, arr, [ls, hs]) => 
     arr.slice(ls, hs).reduce(fn, []));
+
+export const minMax = (number = 0, lowerBound = 0, higherBound = 0) => 
+    Math.min(Math.max(number, lowerBound), higherBound);

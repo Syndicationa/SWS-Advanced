@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import './App.css';
 import { Header } from './components/MainPage/Header';
@@ -6,23 +6,24 @@ import { SignUp } from './components/Account/SignUp';
 import { Account } from './components/Account/Account';
 import { GameList } from './components/GameList/GameList';
 import { SystemController } from './components/GameComponents/SystemController';
-import { GameUI } from './components/GameComponents/GameInterface/GameUI';
-import { SkirmishController } from './components/GameComponents/GameInterface/SkirmishController';
+import { createSystem, systemTemplate } from './functions/defs/system/system.mjs';
+import { createFaction } from './functions/defs/faction/faction.mjs';
+import { playerMaker } from './functions/defs/player/player.mjs';
+import { exampleNetwork } from './functions/defs/techNetwork.mjs';
+import { SystemMap } from './components/GameComponents/GameInterface/SystemMap';
 
-const game = {
-  title: "Test Game",
-  gameMode: "Space",
-  sDataType: "",
-  sData: [],
-  list: [],
-  dispFunc: () => {},
-  players: [],
-  cPlayer: 0,
-  updatePlayer: () => {},
-  local: true,
-  active: true,
-  stage: 1
+const systemMake = (user) => {
+  const player = playerMaker(user)({Faction: "Astute", Name: "Synism", Admin: true})
+  const faction = createFaction({
+    Name: "Astute",
+    Color: {Astute: "#0000ff"},
+    Players: [player],
+    Leader: 0,
+    Treasurers: [0],
+  });
+  return createSystem("The Solar Wars", systemTemplate.Maps, faction, exampleNetwork, player, Infinity);
 }
+
 
 const input = {
   system: {},
@@ -32,6 +33,7 @@ const input = {
 
 function App() {
   const loggedIn = useSelector((state) => state.player.loggedIn);
+  const user = useSelector((state) => state.player.user);
   const [page, setPage] = useState("Home");
 
   const homePage = (<>
@@ -74,7 +76,7 @@ function App() {
 
   return (
     <div className="App">
-      {true ? <SkirmishController />:
+      {true ? <SystemMap system={systemMake(user)} />:
       <>
         <Header page={page} setPage={setPage} />
         <main>

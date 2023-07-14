@@ -47,7 +47,7 @@ const addEEWeapons = (weapon, ammo) => HP => {
 }
 
 
-export const makeVehicle = (source, playerID, vID, pos, r) => {
+export const makeVehicle = (source, playerID, vID, pos, r, parent = "") => {
     const {
         Type: type, Stats: stats, 
         State: state, Appearance: app, 
@@ -58,7 +58,7 @@ export const makeVehicle = (source, playerID, vID, pos, r) => {
     const Appearance = {area: [], name: type.Class, visible: true, ...app};
 
     const State = state ?? {hp: stats.MaxHP, maxHP: stats.MaxHP, energy: stats.MaxEnergy,
-        hasMoved: false, hasFired: false};
+        hasMoved: false, hasFired: false, statuses: [], mov: stats.Mov};
 
     const origWeap = weap.fireCount !== undefined ? weap:
         {Data: weap, fireCount: new Array(weap.length).fill(0),
@@ -68,7 +68,7 @@ export const makeVehicle = (source, playerID, vID, pos, r) => {
 
     const origAmmo = ammo.count !== undefined ? ammo:
         {Data: ammo, 
-            count: ammo.map(0).map((u, i) => 
+            count: ammo.fill(0).map((u, i) => 
             ammo[i].sCount ?? ammo[i].MCount ?? Infinity),
         Ammo (i) {
             return {...this.Data[i], count: this.count[i]}
@@ -79,19 +79,19 @@ export const makeVehicle = (source, playerID, vID, pos, r) => {
     const defWeaps = getDefWeaps(Weap.Data);
     const shields = def.Shields ?? []; 
     const origDWeap = def.wActive !== undefined ? def:{
-        Weapons: defWeaps, wActive: defWeaps.map(true),
+        Weapons: defWeaps, wActive: defWeaps.fill(true),
     };
     const origShields = def.sActive !== undefined ? def:{
         Shields: shields,
-        sDamage: shields.map(0),
-        sActive: shields.map(false),
+        sDamage: shields.fill(0),
+        sActive: shields.fill(false),
     }
     const Defenses = {
         ...origDWeap, ...origShields
     };
 
-    const Location = {prevLoc: pos, loc: pos, rotation: r};
-    const Velocity = {vel: [0,0], prevVel: [0,0], moveData: ""};
+    const Location = {prevLoc: pos, loc: pos, rotation: r, parent};
+    const Velocity = {vel: [0,0], prevVel: [0,0]};
 
     const updateShip = compose(updateActiveDef, updateArea(reArea(true, false)));
 
@@ -101,6 +101,17 @@ export const makeVehicle = (source, playerID, vID, pos, r) => {
         Weap, Ammo, Defenses,
         Location, Velocity
     })
+}
+
+export const applyStatuses = (vehicle) => {
+    const statuses = vehicle.State.status.map((status) => {return {...status, time: status.time - 1}});
+    const nVeh = statuses.reduce((accVeh, status) => {
+        if (status.time === 0) return status.reset(accVeh);
+        return status.func(accVeh);
+    }, vehicle);
+    const trimmedStatuses = statuses.reduce((acc, status) => status.time === 0 ? acc:[...acc, status],[]);
+
+    return {...nVeh, State: {...nVeh.State, statuses: trimmedStatuses}};
 }
 
 export const updateArea = curry((func, ship) => {

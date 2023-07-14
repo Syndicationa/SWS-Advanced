@@ -24,8 +24,8 @@ const Data = {
 const setupMoves = {
     Data: [ 'A.Thouself;' ],
     Turns: [ '' ],
-    Thyself: [ 'P-Milita.10.[0,0].[0,-1];Milita.0.[0,0].[0,-1];', 'M-1.[6,0].[1,0];' ],
-    Thouself: [ 'P-MCRN.13.[8,0].[0,1];', '' ]
+    Thyself: [ 'P-Milita.10.[0,0].[0,-1];Milita.0.[0,0].[0,-1];'],
+    Thouself: [ 'P-MCRN.13.[8,0].[0,1];']
   };
 
 const runs = runTurn(Data);
@@ -66,7 +66,7 @@ let tBattle = addPlayMove(battle)(player2);
 
 let currState = tBattle;
 
-tBattle = nextPhase(runs(nextPhase({...runs(tBattle, objectMap(setupMoves)(v => [v[0]]))[0], Moves: setupMoves}), objectMap(setupMoves)(v => [v[1]]))[0]);
+tBattle = nextPhase({...runs(tBattle, objectMap(setupMoves)(v => [v[0]]))[0], Moves: setupMoves})
 currState = tBattle;
 
 let tempState = {cursor: {pos: [0,0], rot: [0,0], menuPos: -1}, cPlayer: 0, impulse: 0, data: {}, Menu: []};

@@ -1,12 +1,12 @@
 import React from 'react'
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Section } from '../Sections/Section'
 import { useSelector } from 'react-redux';
 import { clone } from '../../functions/functions';
 
 export const PlayerEditor = ({player, update, inGame}) => {
     if (!inGame) inGame = [];
-    const controlTypes = ["Up","Down","Left","Right","Action","Back","Info","End Turn","Zoom In","Zoom Out"];
+    const controlTypes = ["Up","Down","Left","Right","Action","Back","Info","End Turn","Zoom In","Zoom Out", "Group", "Ungroup"];
     const data = useSelector(state => state.data);
 
     const [colors, setColors] = useState(player.colorSet);
@@ -36,12 +36,12 @@ export const PlayerEditor = ({player, update, inGame}) => {
 
     const updatePlayer = () => {
         const play = {
+            ...player,
             colorSet: colors,
             Controls: controls, 
             movType: Number(movement),
             Name: name,
-            Faction: faction,
-            exoticFactions: player.exoticFactions};
+            Faction: faction};
         update(play)
     }
 
@@ -52,12 +52,7 @@ export const PlayerEditor = ({player, update, inGame}) => {
         <br />
         <label htmlFor="Faction">Faction: </label>
         <select id="Faction" type="" value={faction} onChange={(e) => setFaction(e.target.value)}>
-            {!player.exoticFactions ? data.factionNames.map((item,ind) => {
-                    return (
-                        <option key={ind} value={item}>{item}</option>
-                    )
-                }):
-                data.exoticFactions.map((item,ind) => {
+            {(!player.exoticFactions ? data.factionNames: data.exoticFactions).map((item,ind) => {
                     return (
                         <option key={ind} value={item}>{item}</option>
                     )
@@ -93,17 +88,7 @@ export const PlayerEditor = ({player, update, inGame}) => {
                 )
             })
             :
-            !player.exoticFactions ? 
-                data.factionNames.map((item,ind) => {
-                    return (
-                        <div key={ind}>
-                            <label htmlFor={item}>{item}:</label>
-                            <input type="color" onChange={(e) => {changeColor(e.target.value,item)}} 
-                                value={colors[item]} id={item} />
-                        </div>
-                    )
-                }):
-                data.exoticFactions.map((item,ind) => {
+            (!player.exoticFactions ? data.factionNames:data.exoticFactions).map((item,ind) => {
                     return (
                         <div key={ind}>
                             <label htmlFor={item}>{item}:</label>

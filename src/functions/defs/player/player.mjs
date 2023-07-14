@@ -2,10 +2,13 @@
 // import {attackShip, calcLocDiff, inFiringRot} from "./game";
 
 export const playerMaker = User => nInfo => {
-    const {Faction, Name} = nInfo;
+    const {Faction, Name, Admin} = nInfo;
     return {
         User,
+        Admin,
         colorSet: User.colorSet,
+        Controls: User.Controls,
+        movType: User.movType,
         Faction,
         Name,
         Battles: [],
@@ -14,7 +17,6 @@ export const playerMaker = User => nInfo => {
             onBoard: [],
             healing: []
         },
-        Money: 0,
     }
 }
 
@@ -22,7 +24,8 @@ export const gPlayerMaker = Player => Name => {
     return {
         User: Player.User,
         colorSet: Player.colorSet,
-        controls: Player.controls || Player.Controls,
+        Controls: Player.Controls,
+        movType: Player.movType,
         Faction: Player.Faction,
         Name,
         Moves: [],

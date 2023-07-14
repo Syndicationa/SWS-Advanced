@@ -11,6 +11,9 @@ export const GameList = () => {
   const playerGames = useSelector(state => state.game.playerGames);
   const gameList = useSelector(state => state.player.player.games);
 
+  const skirmishes = playerGames.filter((game) => game.gameMode === "Skirmish" || game.gameMode === undefined);
+  const systemGames = playerGames.filter((game) => game.gameMode === "System");
+
   const refresh = () => {
     dispatch(fetchPlayerGames(gameList));
   }
@@ -24,7 +27,12 @@ export const GameList = () => {
       <CreateGame />
       <AvailableGames />
       <Section title="Your Games" close={false} >
-        {playerGames.map((game, index) => {
+        {systemGames.length === 0 ? <></>:<span>Systems</span>}
+        {systemGames.map((game, index) => {
+          return <GameDisplay game={game} key={index} />
+        })}
+        {skirmishes.length === 0 ? <></>:<span>Skirmishes</span>}
+        {skirmishes.map((game, index) => {
           return <GameDisplay game={game} key={index} />
         })}
         <button onClick={refresh}>Refresh</button>

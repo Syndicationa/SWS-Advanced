@@ -1,12 +1,16 @@
 import { getFromDisp } from "./defs/display.mjs";
+import { intDivideVector, modVector, sub } from "./vectors.mjs";
 
-export const grSize = (region) => (region.hy - region.ly)/region.yStep;
+export const grSize = (region) => (region.hy - region.ly + 1)/region.yStep;
 
-export const clearBoard = (board) => board.getContext("2d").clearRect(0,0, board.width, board.height)
+export const clearBoard = (board) => {
+    board.getContext("2d").clearRect(0,0, board.width, board.height)
+}
 
 //#region Grid
 export const drawGrid = (gridcanvas, grid, region) => {
     if (!gridcanvas) return;
+    console.log(region)
     const size = grSize(region);
     const width = gridcanvas.width/size;
     const height = gridcanvas.height/size;
@@ -168,6 +172,7 @@ export const drawShips = (display, position, colors, board, size) => {
             const ships = getFromDisp(display, [x, y], [x + xStep, y + yStep]);
 
             const colorSet = ships.reduce((acc, ship) => {
+                if (ship.Ownership === undefined) return [...acc, ship.Appearance.Color]
                 const color = colors[ship.Ownership.Player];
                 if (acc.some((col) => col === color)) {
                     return acc;
@@ -176,6 +181,7 @@ export const drawShips = (display, position, colors, board, size) => {
             }, []);
 
             const shape = ships.reduce((acc, ship) => {
+                if (ship.State === undefined) return {HP: Infinity, Shape: ship.Appearance.Shape}
                 if (acc.HP < ship.State.hp) {
                     return {HP: ship.State.hp, Shape: ship.Appearance.Shape}
                 }
@@ -187,9 +193,9 @@ export const drawShips = (display, position, colors, board, size) => {
             } else if ((xStep !== 1 && yStep !== -1) || colorSet.length > 1) {
                 drawMany(board, size, {x, y}, ships.length, colorSet)
             } else {
-                board.strokeStyle = colors[0];
-		        board.fillStyle = colors[0];
-                let pos = {x, y, rotation: ships[0].Location.rotation};
+                board.strokeStyle = colorSet[0];
+		        board.fillStyle = colorSet[0];
+                let pos = {x, y, rotation: (ships[0].Location ?? {rotation: -1}).rotation};
                 switch (shape) {
                     case "Rect":
                         drawRect(board, size, pos);
@@ -205,6 +211,7 @@ export const drawShips = (display, position, colors, board, size) => {
                         break;
                     default:
                 }
+                board.stroke(); board.closePath();
             }
         }
     }
@@ -212,9 +219,11 @@ export const drawShips = (display, position, colors, board, size) => {
 //#endregion
 
 //#region Cursor
-export const drawCursor = (board, size, position) => {
+export const drawCursor = (board, size, cursor) => {
+
     const {height, width} = size;
-    const [x, y] = position;
+    const {loc, region} = cursor;
+    const [x,y] = intDivideVector(sub(loc, [region.lx, region.ly]), region.yStep);
 
     const left = x*width + width/10;
     const innerLeft = x*width + 4*width/10;

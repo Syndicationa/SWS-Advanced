@@ -1,89 +1,63 @@
-export const createFaction = () => {
+export const createFaction = (info) => {
     return {
-        Name: "",
-        Color: "",
-        Moves: [],
-        Players: [],
-        Leader: -1,
-        Treasurers: [-1],
-        Regions: {
+        Name: info.Name ?? "",
+        Color: info.Color ?? "",
+        Moves: info.Moves ?? [],
+        Players: info.Players ?? [],
+        Leader: info.Leader ?? -1,
+        Treasurers: info.Treasurers ?? [-1],
+        Regions: info.Regions ?? {
 			Earth: [],
 			Cities: []
 		},
-		Treasury: 0,
-		LastUpdated: new Date(),
-		BuildingTypes: [],
-		VehicleTypes: [],
-		OwnedBuildings: [],
-		OwnedVehicles: {},
+		Economy: info.Economy ?? {
+			Treasury: 0,
+			LastUpdated: new Date(),
+			Income: 0,
+			BuildingTypes: [],
+			VehicleTypes: [],
+			OwnedBuildings: [],
+			OwnedVehicles: {},
+		},
+		Technology: info.Technology ?? {
+			Technologies: [],
+			LastUpdated: new Date(),
+			TechPoints: 0,
+			TechIncome: 0,
+			
+		},
     }
 }
 
-class Faction {
-	constructor() {
-		this.Name = "";
-		this.Color = "";
+export const createCoalition = (info) => {
+    return {
+        Name: info.Name ?? "",
+        Color: info.Color ?? "",
+        Moves: info.Moves ?? [],
+        Players: info.Players ?? [],
+        Leader: info.Leader ?? -1,
+        Treasurers: info.Treasurers ?? [-1],
+        Regions: info.Regions ?? {
+			Earth: [],
+			Cities: []
+		},
+		Economy: info.Economy ?? {
+			Treasury: 0,
+			OwnedBuildings: [],
+			OwnedVehicles: {},
+		},
+		Technology: info.Technology ?? {
+			Technologies: [],
+		},
+    }
+}
 
-		this.Moves = [];
+const week = (7 * 24 * 60 * 60 * 1000);
 
-		this.Players = [];
-		//Add get Leader and set Leader
-		this.LeaderIndex = 0;
-		//List of those who can use econ controls
-		this.Treasurers = [this.LeaderIndex];
+export const updateDate = (LastUpdated) => {
+	const today = new Date();
+	const weeks = Math.floor((today - LastUpdated) / week);
+	const updateDay = new Date(LastUpdated + weeks*week);
 
-		this.Regions = {Earth: [], Cities: []}
-		this.Treasury = 0;
-		this.LastUpdated = 0;
-		this.BuildingTypes = [];
-		this.VehicleTypes = [];
-		this.OwnedBuildings = [];
-		this.OwnedShips = {unclaimed: [], unclaimedRepair: [], claimed: []};
-	}
-
-	get Leader() {
-		return this.Players[this.LeaderIndex];
-	}
-
-	get Income() {
-		return this.OwnedBuildings.reduce((previous, building) => {
-			return previous + building.producedValue;
-		}, 0)
-	}
-
-	collectIncome() {
-		if (!LastUpdated) return;
-		this.Treasury += this.Income;
-	}
-
-	buyItem (cost) {
-		this.Treasury -= cost;
-	}
-
-	sellItem (cost) {
-		this.Treasury += cost;
-	}
-
-	addBuilding (building, location) {
-		this.OwnedBuildings.push({...building, ...location});
-	}
-
-	removeBuilding (index) {
-		this.OwnedBuildings.splice(index, 1)[0];
-	}
-
-	addNewShip (ship) {
-		this.OwnedShips.unclaimed.push(ship);
-	}
-
-	addRepairShip (ship) {
-		this.OwnedShips.unclaimedRepair.push(ship);
-	}
-
-	removeShip (index, group) {
-		this.OwnedShips[group].splice(index, 1)
-	}
-
-	sendVehicle(vehicle, destination) {
-	}
+	return {weeks, date: updateDay};
 }

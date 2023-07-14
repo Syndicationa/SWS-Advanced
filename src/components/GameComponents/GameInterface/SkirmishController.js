@@ -1,8 +1,8 @@
-import React, { useCallback, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import React, { /*useCallback,*/ useState } from 'react'
+//import { useDispatch, useSelector } from 'react-redux'
 import { GameUI } from './GameUI'
-import { clone } from '../../../functions/functions'
-import { cursorGenerator } from '../../../functions/defs/cursor.mjs'
+//import { clone } from '../../../functions/functions'
+import { cursorGenerator, moveCursor, moveCursorToPosition, zoom } from '../../../functions/defs/cursor.mjs'
 import { sumArrays } from '../../../functions/functions.mjs'
 
 const game = {
@@ -61,16 +61,18 @@ export const SkirmishController = ({g, close}) => {
     */
     const [cursor, setCursor] = useState(cursorGenerator());
     //#endregion
-
-    const moveCursor = (vec) => setCursor({...cursor, loc: sumArrays(cursor.loc, vec)});
-    const moveCursorTo = (pos) => setCursor({...cursor, loc: pos});
-
     const input = {
-        system: {},
+        system: {
+            zoomOut: () => setCursor(zoom(cursor,-1)),
+            zoomIn: () => setCursor(zoom(cursor, 1)),
+        },
         cursor,
-        moveCursor,
-        moveCursorTo
+        moveCursor: (vec) => setCursor(moveCursor(cursor, vec)),
+        moveCursorTo: (pos) => setCursor(moveCursorToPosition(cursor, pos))
     }
+
+    const sData = [`Position: ${cursor.loc}\nRegion Data: ${cursor.region.xStep}`]
+    //console.log(cursor.region); console.log(cursor.loc);
 
     const closeFunction = () => {
         //SaveGame
@@ -78,6 +80,6 @@ export const SkirmishController = ({g, close}) => {
     }
 
     return (
-        <GameUI game={game} input={input} close={closeFunction} />
+        <GameUI game={{...game, sData}} input={input} close={closeFunction} />
     )
 }

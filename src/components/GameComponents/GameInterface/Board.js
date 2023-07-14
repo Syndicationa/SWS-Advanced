@@ -3,16 +3,17 @@ import { useEffect, useRef } from 'react'
 import { clearBoard, copyGrid, drawCursor, drawGrid, drawShips, grSize } from '../../../functions/drawing.mjs';
 
 export const Board = props => {  
-  const {display, region, colors, cursorLoc, move, ...rest } = props;
+  const {display, colors, cursor, move, ...rest } = props;
   const mainRef = useRef(null);
   const gridRef = useRef(null);
 
   const [main, setMain] = useState(null);
   const [grid, setGrid] = useState(null);
+  const [region, setRegion] = useState(cursor.region);
 
   const press = (e) => {
-    const width = main.width/grSize(region);
-    const height = main.height/grSize(region);
+    const width = main.width/grSize(cursor.region);
+    const height = main.height/grSize(cursor.region);
 	  const mouseX = e.pageX;
 	  const mouseY = e.pageY;
 	  const CWidth = main.width;
@@ -40,6 +41,13 @@ export const Board = props => {
   }, []);
 
   useEffect(() => {
+    if (cursor.region !== region) {
+      
+      setRegion(cursor.region);
+    }
+  }, [cursor, region])
+
+  useEffect(() => {
     if (grid === null) return;
     clearBoard(grid);
     drawGrid(grid, grid.getContext("2d"), region);
@@ -47,15 +55,15 @@ export const Board = props => {
 
   useEffect(() => {
     if (main === null || grid === null) return;
-    const size = grSize(region);
+    const size = grSize(cursor.region);
     const width = main.width/size;
     const height = main.height/size;
     
     clearBoard(main);
-    drawShips(display, region, colors, main.getContext("2d"), {width, height})
-    drawCursor(main.getContext("2d"), {height, width}, cursorLoc)
+    drawShips(display, cursor.region, colors, main.getContext("2d"), {width, height})
+    drawCursor(main.getContext("2d"), {height, width}, cursor)
     copyGrid(main.getContext("2d"), grid);
-  }, [display, colors, region, main, grid, cursorLoc])
+  }, [display, colors, main, grid, cursor])
   
   return (<>
       <canvas ref={mainRef} width="1280" height="1280" id="Board" className="gameboard" onClick={press} {...rest}>Doesn't Support the Canvas</canvas>

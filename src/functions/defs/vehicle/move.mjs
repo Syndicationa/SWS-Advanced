@@ -1,38 +1,40 @@
-import {absSum, curry} from '../../functions.mjs';
-import { compareArray, sumArrays, negateArray } from '../../functions.mjs';
+import {curry} from '../../functions.mjs';
+import { compareArray, sumArrays } from '../../functions.mjs';
+import { distance } from '../../vectors.mjs';
 import {updateArea, reArea} from './vehicle.mjs'
 
 
-export const canMove = (ship, vel, movType) => {
-    const Energy = ship.State.energy;
-    const {MovEnergy, Mov} = ship.Stats;
-    const sVel = ship.Velocity;
-    const [movX, movY] = vel;
-    if (movType === 0) {
-        if (movX !== 0 && movY !== 0) return false;
-        const tempMovStr = generateMovData(sVel.moveData, movX, movY);
-        const dist = Math.ceil((tempMovStr.replace(/[+-]/g,"||||").length)/4);
-        const undo = sVel.moveData.length > tempMovStr.length;
-        const tEnergy = calculateMovEnergy(Energy, MovEnergy, !undo);
-        return (dist <= Mov) && (tEnergy > 0);
-    } else {
-        const [dx, dy] = sVel.vel;
-        const dist = absSum(dx + movX, dy + movY);
-        const undo = absSum(dx, dy) > dist;
-        const tEnergy = calculateMovEnergy(Energy, MovEnergy, !undo);
-        return (dist <= Mov) && (tEnergy > 0);
-    }
-}
+export const canMove = (ship, addVel, movType) => {
+    const {energy, mov} = ship.State;
+    const {MovEnergy} = ship.Stats;
+    const {vel, prevVel} = ship.Velocity;
+    const [, movY] = addVel;
 
-const generateMovData = (movStr, dx, dy) => {
-    const val = ((dy + 3)/2)*(dx === 0) + (((dx + 3)/2) + 2)*(dy === 0) - 1;
-		const movChars = ["+","-","L","R"];
-		const revMovChars = ["-","+","R","L"];
-		if (movChars.endsWith(revMovChars[val])) {
-			return movStr.slice(0,-1);
-		} else {
-			return movStr + movChars[val];
-		}
+	let calculatedVel = sumArrays(vel, addVel);
+	if (movType === 0) {
+		const relVel = ship.Location.rotation.map((v) => v*movY);
+		calculatedVel = sumArrays(vel, relVel);
+	}
+
+	const acc = distance(prevVel, calculatedVel)
+
+	const tEnergy = calculateMovEnergy(energy, MovEnergy*acc);
+
+	return (acc <= mov && tEnergy >= 0);
+
+    // if (movType === 0) {
+    //     if (movX !== 0 && movY !== 0) return false;
+    //     const tempMovStr = generateMovData(sVel.moveData, movX, movY);
+    //     const dist = Math.ceil((tempMovStr.replace(/[+-]/g,"||||").length)/4);
+    //     const undo = sVel.moveData.length > tempMovStr.length;
+    //     const tEnergy = calculateMovEnergy(Energy, MovEnergy, !undo);
+    //     return (dist <= Mov) && (tEnergy > 0);
+    // } else {
+    //     const [dx, dy] = sVel.vel;
+    //     const dist = absSum(dx + movX, dy + movY);
+    //     const undo = absSum(dx, dy) > dist;
+    //     return (dist <= Mov) && (tEnergy > 0);
+    // }
 }
 
 const calculateMovEnergy = (energy = 0, MovEnergy = 0, add = true) => {
@@ -48,8 +50,9 @@ const mShip = curry((render, Vehicle, Velocity) => {
 	const cVel = {...vVel, vel, moveData};
 	const cLoc = {...vLoc, loc: sumArrays(vLoc.prevLoc, vel), rotation: rot};
 	const cApp = {...vApp, area: []};
-    const cSteps = moveData.length > 0 ? moveData.length: sumArrays(vel, negateArray(vVel.vel)).reduce(absSum, 0);
-    const cEnergy = Math.min(vStat.MaxEnergy, calculateMovEnergy(vState.energy, vStat.MovEnergy*cSteps, true));
+	const acc = distance(vVel.prevVel, vel);
+    //const cSteps = moveData.length > 0 ? moveData.length: sumArrays(vel, negateArray(vVel.vel)).reduce(absSum, 0);
+    const cEnergy = Math.min(vStat.MaxEnergy, calculateMovEnergy(vState.energy, vStat.MovEnergy*acc, true));
     const cState = {...vState, energy: cEnergy}
 	const nVehicle = {
 		...Vehicle,
