@@ -167,6 +167,8 @@ const drawMany = (board, size, position, count, colors) => {
 export const drawShips = (display, position, colors, board, size) => {
     const {lx, ly, hx, hy, xStep, yStep} = position;
 
+    board.beginPath();
+
     for (let y = ly; y < hy; y += yStep) {
         for (let x = lx; x < hx; x += xStep) {
             const ships = getFromDisp(display, [x, y], [x + xStep, y + yStep]);
@@ -196,6 +198,7 @@ export const drawShips = (display, position, colors, board, size) => {
                 board.strokeStyle = colorSet[0];
 		        board.fillStyle = colorSet[0];
                 let pos = {x, y, rotation: (ships[0].Location ?? {rotation: -1}).rotation};
+                board.beginPath();
                 switch (shape) {
                     case "Rect":
                         drawRect(board, size, pos);
@@ -220,7 +223,7 @@ export const drawShips = (display, position, colors, board, size) => {
 
 //#region Cursor
 export const drawCursor = (board, size, cursor) => {
-
+    console.log(cursor);
     const {height, width} = size;
     const {loc, region} = cursor;
     const [x,y] = intDivideVector(sub(loc, [region.lx, region.ly]), region.yStep);

@@ -104,7 +104,9 @@ export const pop = arr => arr.slice(0,-1);
 
 export const pull = arr => arr.slice(1);
 
-export const objectMap = obj => func => Object.keys(obj).reduce(
+const defaultObjMapFunc = (value, key = "") => {return value};
+
+export const objectMap = obj => (func = defaultObjMapFunc) => Object.keys(obj).reduce(
     (acc, key) => {return {...acc, [key]: func(obj[key], key)}}
     , {})
 

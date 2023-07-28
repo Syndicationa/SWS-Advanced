@@ -41,7 +41,6 @@ export const hexArea = (mapElement = exampleMapElement) => {
         }
     }
     area = area.map((p) => sumArrays(p, loc));
-    console.log(area)
 
     return {...mapElement, Appearance: {...mapElement.Appearance, area}};
 }

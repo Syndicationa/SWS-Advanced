@@ -5,6 +5,7 @@ import { systemTemplate, systemToGame } from '../../../functions/defs/system/sys
 
 
 export const SystemMap = ({system = systemTemplate, changeInterface = () => {}}) => {
+    const [gameRep] = useState(() => systemToGame(system))
     const [cursor, setCursor] = useState(cursorGenerator({OverallSize: system.Maps.System.Grid.size, StepSizes: [1]}));
     const input = {
         system: {
@@ -15,6 +16,6 @@ export const SystemMap = ({system = systemTemplate, changeInterface = () => {}})
         moveCursorTo: (pos) => setCursor(moveCursorToPosition(cursor, pos))
     }
   return (
-    <GameUI game={systemToGame(system)} input={input} close={(e) => console.log(e)}/>
+    <GameUI game={gameRep} input={input} close={(e) => console.log(e)}/>
   ) 
 }

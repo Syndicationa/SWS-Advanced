@@ -1,5 +1,5 @@
-import { compose, first, last, maxOnArrays, minMax, minOnArrays, pop, pull, sumArrays } from "../functions.mjs";
-import { divideVector, intDivideVector, modVector, multiplyVector } from "../vectors.mjs";
+import { first, last, maxOnArrays, minMax, minOnArrays, pop, pull, sumArrays } from "../functions.mjs";
+import { intDivideVector, modVector, multiplyVector } from "../vectors.mjs";
 
 const defaultRegion = {lx: 0, ly: 0, hx: 64, hy: 64, xStep: 8, yStep: 8};
 const defaultGridInfo = {OverallSize: 64, StepSizes: [8, 1]}
@@ -87,6 +87,7 @@ export const moveCursor = (cursor = cursorGenerator(), vector = defaultVector) =
 }
 
 export const moveCursorToPosition = (cursor = cursorGenerator(), position = defaultVector) => {
+    console.log("Moved")
     if (cursor.mode !== "Move") return cursor;
     const positionOnSubgrid = cursor.loc.map(a => a % cursor.region.yStep);
     const nLoc = sumArrays(scaleVector(cursor.region, position), positionOnSubgrid);

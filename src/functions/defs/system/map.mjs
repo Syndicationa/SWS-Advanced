@@ -1,11 +1,11 @@
 import { map, sumArrays } from "../../functions.mjs";
 import { distance } from "../../vectors.mjs";
-import { hexArea } from "../hexArea.mjs";
+//import { hexArea } from "../hexArea.mjs";
 
 export const exampleMapElement = {
     Appearance: {
         area: [[]], name: "", visible: true,
-        Img: false, Shape: "Circle", SystemSize: [1,1], TrueSize: [10,0],
+        Img: false, Shape: "Circle", SystemSize: [1,1], TrueSize: [3,0,6,5],
         Color: "#ffffff"
     },
     Movement: {
@@ -14,7 +14,7 @@ export const exampleMapElement = {
         movFunc: () => {}
     },
     Grid: {
-        size: 64,
+        size: 32,
         defaultSubGridSize: 0,
         orbiters: []
     }
@@ -48,7 +48,7 @@ export const createMapElementList = (mapElement = exampleMapElement) => {
 }
 
 export const trueMapElementArea = (mapElement = exampleMapElement) => {
-    return hexArea(mapElement)
+    //return hexArea(mapElement)
     const size = mapElement.Grid.size;
     const l = Math.ceil(size/2);
     const loc = [l,l];
