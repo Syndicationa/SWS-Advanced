@@ -9,7 +9,7 @@ const hmgFactionTemplate = {
     abb: "ast"
 }
 
-const saveFileTemplate = {
+export const saveFileTemplate = {
     name: "grid",
     width: 100,
     height: 100,

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useEffect, useRef } from 'react'
-import { clearBoard, copyGrid, drawCursor, drawGrid, drawShips, grSize } from '../../../functions/drawing.mjs';
+import { clearBoard, copyGrid, drawCursor, drawGrid, drawHexMap, drawShips, grSize } from '../../../functions/drawing.mjs';
+import { data } from '../../../tests/Mercury_Hex_Map.mjs';
 
 export const Board = props => {  
   const {display, colors, cursor, move, ...rest } = props;
@@ -50,11 +51,13 @@ export const Board = props => {
   useEffect(() => {
     if (grid === null) return;
     clearBoard(grid);
-    drawGrid(grid, grid.getContext("2d"), region);
+    drawHexMap(data, grid);
+    //drawGrid(grid, grid.getContext("2d"), region);
   }, [region, grid]);
 
   useEffect(() => {
     if (main === null || grid === null) return;
+    return;
     const size = grSize(cursor.region);
     const width = main.width/size;
     const height = main.height/size;
@@ -66,7 +69,7 @@ export const Board = props => {
   }, [display, colors, main, grid, cursor])
   
   return (<>
-      <canvas ref={mainRef} width="1280" height="1280" id="Board" className="gameboard" onClick={press} {...rest}>Doesn't Support the Canvas</canvas>
-      <canvas ref={gridRef} width="1280" height="1280" id="Grid" className="gameboard invisible" {...rest}/>
+      <canvas ref={mainRef} width="1280" height="1280" id="Board" className="gameboard invisible" onClick={press} {...rest}>Doesn't Support the Canvas</canvas>
+      <canvas ref={gridRef} width="1280" height="1280" id="Grid" className="gameboard" {...rest}/>
     </>);
 }

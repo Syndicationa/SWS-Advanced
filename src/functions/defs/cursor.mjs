@@ -29,7 +29,7 @@ const scaleVector = (region = defaultRegion, vec = defaultVector) => {
     return [x*region.xStep, y*region.yStep]
 }
 
-const adjustCursorLocation = (cursor = cursorGenerator) => {
+const adjustCursorLocation = (cursor = cursorGenerator()) => {
     const {loc: location, grid:gridInfo, region} = cursor;
     const {lx, hx, ly, hy, yStep} = region;
     const {OverallSize, StepSizes} = gridInfo;

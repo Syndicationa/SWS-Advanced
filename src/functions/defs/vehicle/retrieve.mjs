@@ -1,5 +1,5 @@
 import { mergeArrays } from '../../functions.mjs';
-import { distance } from '../../vectors.mjs';
+import { distance, sub } from '../../vectors.mjs';
 
 //#region weapon and ammo retrieval
 export const getDefWeaps = (weapDataList) => {
@@ -17,6 +17,10 @@ export const updateActiveDef = (ship) => {
 
 export const getWeapIndex = (WeapData, weapon) => {
     return WeapData.findIndex(weap => weap.Name === weapon.Name);
+}
+
+export const getUtilIndex = (Utils, util) => {
+    return Utils.findIndex(utility => utility.Name === util.Name);
 }
 
 export const getShieldIndex = (ShieldData, shield) => {
@@ -52,6 +56,30 @@ arrShip.Ownership.Player === pID);
 export const shipsInRadius = (shipArray, loc, dist) => shipArray.filter((s) => distance(s.Location.loc, loc) <= dist || distance(s.Location.prevLoc, loc) <= dist);
 
 export const shipsInPosition = (shipArr, loc) => shipsInRadius(shipArr, loc, 0);
+
+export const shipsOnLine = (line, shipArray, target) => {
+    const [dx, dy] = sub(line.b, line.a)
+    const shipList = [];
+    if (dx === 0) {
+        if (dy === 0) return [target];
+        const [x, yOffset] = (dy < 0 ? line.b:line.a);
+        for (let y = 1; y < Math.abs(dy); y++) {
+            shipList.push(...shipsInPosition(shipArray, [x, y + yOffset]))
+        }
+    } else {
+        const slope = dy/dx;
+        let [xOffset,y] = (dx < 0 ? line.b:line.a);
+
+        for (let x = 1; x < Math.abs(dx); x++) {
+            y += slope;
+
+            shipList.push(...shipsInPosition(shipArray, [xOffset + x, Math.round(y)]))
+        }
+    }
+
+    shipList.push(target);
+    return getPlayerShips(target, shipList)
+}
 
 export const sameVehicle = (ship1, ship2) => {
     const Owner = ship1.Ownership;

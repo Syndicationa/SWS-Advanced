@@ -57,7 +57,7 @@ const week = (7 * 24 * 60 * 60 * 1000);
 export const updateDate = (LastUpdated) => {
 	const today = new Date();
 	const weeks = Math.floor((today - LastUpdated) / week);
-	const updateDay = new Date(LastUpdated + weeks*week);
+	const updateDay = new Date(LastUpdated.getTime() + weeks*week);
 
 	return {weeks, date: updateDay};
 }

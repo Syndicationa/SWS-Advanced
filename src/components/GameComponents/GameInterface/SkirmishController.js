@@ -1,18 +1,20 @@
-import React, { /*useCallback,*/ useState } from 'react'
+import React, { /*useCallback,*/ useCallback, useState } from 'react'
 //import { useDispatch, useSelector } from 'react-redux'
 import { GameUI } from './GameUI'
 //import { clone } from '../../../functions/functions'
 import { cursorGenerator, moveCursor, moveCursorToPosition, zoom } from '../../../functions/defs/cursor.mjs'
-import { sumArrays } from '../../../functions/functions.mjs'
+import { replaceInArray } from '../../../functions/functions.mjs'
+import { playerTemplate, singleBattleTemplate } from '../../../functions/defs/templates'
+import { useDispatch, useSelector } from 'react-redux'
 
 const game = {
     title: "Test Game",
     gameMode: "Space",
     sDataType: "",
-    sData: [],
+    shipData: [],
     list: [],
     dispFunc: () => {},
-    players: [],
+    players: [playerTemplate],
     cPlayer: 0,
     updatePlayer: () => {},
     local: true,
@@ -20,47 +22,32 @@ const game = {
     stage: 0
 }
 
-export const SkirmishController = ({g, close}) => {
-    /*
-    //Getting Info from Store
-    const playerAcc = useSelector((state) => state.player.player);
+export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
+    const user = useSelector(state => state.player);
+
+    const [local] = useState(!g.Type.Online);
+    const [active, setActive] = useState(true);
+    const [stage, setStage] = useState(g.Stage);
+    const [attackList, setAttackList] = useState([]);
+
+    const [players, setPlayers] = useState(() => g.Players);
+    const [currentPlayer, setCurrentPlayer] = useState(() => {
+        if (local) return 0;
+        return players.findIndex(play => user.ID === play.User.ID);
+    });
+    const [player, setPlayer] = useState(players[currentPlayer]);
 
     const dispatch = useDispatch();
     //Firebase snapshot
     const [snapShot, setSnapShot] = useState(null);
 
-    const [gameData, setGData] = useState(game);
-    const local = gameData.local;
-
-    const [players, setPlayers] = useState(() => clone(gameData.players));
-    const [currentPlayer, setCPlayer] = useState(() => {
-        if (local) return 0;
-        return players.findIndex((player) => player.ID === player.userID);
-    });
-
-    const updatePlayer = useCallback((playerData, playerNum, replace = false) => {
-        let playerList = clone(players);
-        if (replace) playerList[playerNum] = playerData;
-        else {
-            for (let key in playerData) {
-                playerList[playerNum][key] = playerData[key];
-            }
-        }
-        setPlayers(playerList);
-        return
+    const updatePlayer = useCallback((playerData) => {
+        const playerIndex = players.findIndex((play) => play.User.ID === playerData.User.ID);
+        setPlayers(replaceInArray(players, playerIndex, playerData));
     }, [players]);
 
-    //#region Stages and Impulses
-    const [active, setActive] = useState(!players[currentPlayer].hasMoved);
-    const [stage, setStage] = useState(gameData.Stage);
-    const [attackList, setAttackList] = useState([]);
-    //#endregion
+    const [cursor, setCursor] = useState(cursorGenerator(g.Size));
 
-    //#region Grid and Cursors
-    const [grid, setGrid] = useState(gameData.Size);
-    */
-    const [cursor, setCursor] = useState(cursorGenerator());
-    //#endregion
     const input = {
         system: {
             zoomOut: () => setCursor(zoom(cursor,-1)),
@@ -80,6 +67,6 @@ export const SkirmishController = ({g, close}) => {
     }
 
     return (
-        <GameUI game={{...game, sData}} input={input} close={closeFunction} />
+        <GameUI game={{...g, sData}} input={input} close={closeFunction} />
     )
 }

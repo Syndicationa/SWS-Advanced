@@ -4,6 +4,10 @@ import { gShipFromID, mergeShipArrays } from "../vehicle/retrieve.mjs";
 import { runApply } from "../vehicle/attack.mjs";
 import { filter, last, map, objectMap, pipe } from "../../functions.mjs";
 
+export const press = Data => State => {
+    
+}
+
 export const runTurn = Data => (State, Moves) => {
     const keys = Object.keys(Moves);
 

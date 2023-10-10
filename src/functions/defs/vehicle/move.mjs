@@ -12,15 +12,15 @@ export const canMove = (ship, addVel, movType) => {
 
 	let calculatedVel = sumArrays(vel, addVel);
 	if (movType === 0) {
-		const relVel = ship.Location.rotation.map((v) => v*movY);
-		calculatedVel = sumArrays(vel, relVel);
+		const relativeVel = ship.Location.rotation.map((v) => v*movY);
+		calculatedVel = sumArrays(vel, relativeVel);
 	}
 
-	const acc = distance(prevVel, calculatedVel)
+	const acceleration = distance(prevVel, calculatedVel)
 
-	const tEnergy = calculateMovEnergy(energy, MovEnergy*acc);
+	const remainingEnergy = calculateMovEnergy(energy, MovEnergy*acceleration);
 
-	return (acc <= mov && tEnergy >= 0);
+	return (acceleration <= mov && remainingEnergy >= 0);
 
     // if (movType === 0) {
     //     if (movX !== 0 && movY !== 0) return false;

@@ -151,7 +151,7 @@ export const curry = (func) => {
 
 export const map = curry((func, arr) => arr.map(func));
 
-export const filter = curry((func, arr) => arr.filter(map));
+export const filter = curry((func, arr) => arr.filter(func));
 
 export const reduce = curry((func, arr, start) => arr.reduce(func, start));
 
