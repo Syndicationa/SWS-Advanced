@@ -51,13 +51,12 @@ export const Board = props => {
   useEffect(() => {
     if (grid === null) return;
     clearBoard(grid);
-    drawHexMap(data, grid);
-    //drawGrid(grid, grid.getContext("2d"), region);
+    //drawHexMap(data, grid);
+    drawGrid(grid, grid.getContext("2d"), region);
   }, [region, grid]);
 
   useEffect(() => {
     if (main === null || grid === null) return;
-    return;
     const size = grSize(cursor.region);
     const width = main.width/size;
     const height = main.height/size;
