@@ -4,6 +4,7 @@ import { updateActiveDef, mergeShipArrays, getActiveShields, getShieldIndex, shi
 import {getWeapIndex, getActiveDefs, getAmmoOfWeap, getAmmo, getPlayerShips, shipsInRadius} from './retrieve.mjs';
 import { updateArea, reArea } from "./vehicle.mjs"
 import { sub, unitDotProduct, distance } from '../../vectors.mjs';
+import { vehicleTemplate, weaponTemplate } from '../templates';
 
 
 export const inFiringRot = (fLoc = [0,0], tLoc = [0,0], fRot = [0, 0], wRot = 0, offset = [0, 0]) => {
@@ -302,7 +303,7 @@ const genNewLine = (line, shipList) => {
 const generateHitList = (shipList, target) => {
     let position = 0;
     return shipList.map(ship => {
-        const hitValue = ship === target ? position/4:
+        const hitValue = ship === target ? 10:
             ship.intercept + 5;
         position += hitValue;
         return position;
@@ -326,6 +327,11 @@ const standardAttack = (attacker, target, weapon, shipArray) => {
         damage,
         hit: [hit]
     }
+}
+
+const newDamage = (damage = [0,0], hp = 0) => {
+    const shipDamage = damage[0];
+    return shipDamage - hp;
 }
 
 const interceptDamage = (shipList, hitList, attacker, target, weapon) => {
@@ -354,9 +360,8 @@ const interceptDamage = (shipList, hitList, attacker, target, weapon) => {
         ({damage, newTarget} = performDamage(attacker, newTarget, weapon));
         targetArray.push(newTarget);
         damages.push(damage);
-        damage = damage[0] + damage[1];
         
-        weap = {...weap, Watk: damage - hp};
+        weap = {...weap, Watk: newDamage(damage, hp)};
 
         ran = Math.random()*(position - ran) + ran
     }
@@ -417,8 +422,7 @@ const genericAttack = (attacker, target, weapon, shipArray) => {
     return interceptAttack(attacker, target, weapon, shipArray);
 }
 
-const missileAttack = (attacker, target, weapon, shipArray) => {
-    const hit = calcHit(calcDefHitChance(attacker, target[0], weapon, shipArray));
+const missileAttack = (attacker, target, weapon, shipArray, hit) => {
     const newAttacker = applyAttacker(attacker, weapon);
     if (hit < 2) return {
         modifiedShips: [newAttacker],
@@ -428,7 +432,9 @@ const missileAttack = (attacker, target, weapon, shipArray) => {
 
     const {damage, newTarget} = performDamage(attacker, target, weapon);
 
-    const returnTarget = map(consumeDefAmmo(target[0].Location.loc)(), newTarget)
+    const newShipArray = mergeShipArrays(getPlayerShips(newTarget, shipArray), newTarget)
+
+    const returnTarget = map(consumeDefAmmo(target[0].Location.loc), newShipArray);
     
     return {
         modifiedShips: [newAttacker, ...returnTarget],
@@ -437,8 +443,7 @@ const missileAttack = (attacker, target, weapon, shipArray) => {
     }
 };
 
-const selfDestruct = (attacker, target, weapon) => {
-    const hit = calcRangeHC(attacker, target[0], weapon.Wran);
+const selfDestruct = (attacker, target, weapon, hit) => {
     const newAttacker = {...attacker, State: {...attacker.State, hp: 0, maxHP: 0}};
     if (!hit) return {
         modifiedShips: [newAttacker],
@@ -466,7 +471,7 @@ const rammingAttack = (attacker, target, weapon) => {
 };
 //#endregion
 
-export const attack = (attacker, target, weapon, shipArray) => {
+export const attack = curry((shipArray, attacker, target, weapon) => {
     const {Type, Eran, Wran} = weapon;
 
     const location = (Eran === undefined ? attacker:target).Location.prevLoc;
@@ -484,17 +489,22 @@ export const attack = (attacker, target, weapon, shipArray) => {
                 = genericAttack(attacker, trueTarget, weapon, shipArray));
             break;
         case "Missile":
-            ({modifiedShips, damage, hit} = missileAttack());
+            hit = calcHit(calcDefHitChance(attacker, target[0], weapon, shipArray));
+            ({modifiedShips, damage, hit} = missileAttack(attacker, trueTarget, weapon, shipArray, hit));
             break;
         case "Ramming":
-            ({modifiedShips, damage, hit} = rammingAttack());
+            ({modifiedShips, damage, hit} = rammingAttack(attacker, trueTarget, weapon));
             break;
         case "Destruct":
-            ({modifiedShips, damage, hit} = selfDestruct(attacker, nearTarget, weapon, shipArray));
+            hit = calcRangeHC(attacker, target[0], weapon.Wran);
+            ({modifiedShips, damage} = selfDestruct(attacker, trueTarget, weapon, shipArray, hit));
             break;
         default:
             throw Error("Unknown Weapon");
     }
+
+    if (typeof hit === "boolean") hit = hit ? 2:0;
+
     modifiedShips = modifiedShips.map(updateArea(reArea(true, false)));
 
     const merged = mergeShipArrays(shipArray, modifiedShips);
@@ -506,6 +516,58 @@ export const attack = (attacker, target, weapon, shipArray) => {
 
     const dataString = createDataStr(attacker, trueTarget, weapon, damage, hit);
     return [merged, move, dataString]
+})
+
+export const applyAttack = (shipArray = [vehicleTemplate], attacker = vehicleTemplate, target = [vehicleTemplate], weapon = weaponTemplate, hit = [0]) => {
+    const {Type, Eran, Wran} = weapon;
+    const location = (Eran === undefined ? attacker:target).Location.prevLoc;
+    const nearTarget = shipsInRadius(shipArray, location, Eran ?? Wran);
+
+    let trueTarget = Eran === undefined ? [...target]:nearTarget;
+    let modifiedShips = [];
+    let damage = [];
+
+    switch (Type) {
+        case "Generic":
+            if (Eran === undefined && trueTarget.length > 1) {
+                let tWeapon = weapon;
+                const nAttacker = applyAttacker(attacker, weapon);
+                const nTargets = trueTarget.map((target = vehicleTemplate) => {
+                    const {damage: dam, newTarget} = performDamage(attacker, target, tWeapon);
+                    tWeapon.Watk = newDamage(dam, target.State.hp);
+                    damage.push(dam);
+                    return newTarget;
+                });
+                modifiedShips = [nAttacker, ...nTargets];
+            } else {
+                const nAttacker = applyAttacker(attacker, weapon);
+                const nTargets = trueTarget.map((target = vehicleTemplate) => {
+                    const {damage: dam, newTarget} = performDamage(attacker, target, weapon);
+                    damage.push(dam);
+                    return newTarget;
+                });
+                modifiedShips = [nAttacker, ...nTargets];
+            }
+            break;
+        case "Missile":
+            ({modifiedShips, damage} = missileAttack(attacker, trueTarget, weapon, shipArray, hit));
+            break;
+        case "Ramming":
+            ({modifiedShips, damage} = rammingAttack(attacker, trueTarget, weapon));
+            break;
+        case "Destruct":
+            ({modifiedShips, damage} = selfDestruct(attacker, trueTarget, weapon, shipArray, hit));
+            break;
+        default:
+            throw Error("Unknown Weapon");
+    }
+
+    modifiedShips = modifiedShips.map(updateArea(reArea(true, false)));
+
+    const merged = mergeShipArrays(shipArray, modifiedShips);
+
+    const dataString = createDataStr(attacker, trueTarget, weapon, damage, hit);
+    return [merged, dataString]
 }
 
 //export const runApply = (fShip, tShip, shipArray, weap, hit) => applyAttack(calculateDamage([hit, cleanAttackInput([fShip, tShip, shipArray, weap])]));

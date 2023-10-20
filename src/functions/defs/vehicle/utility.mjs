@@ -1,4 +1,4 @@
-import { clone, replaceInArray } from "../../functions.mjs";
+import { clone, curry, replaceInArray } from "../../functions.mjs";
 import { statusTemplate, utilityTemplate, vehicleTemplate } from "../templates";
 import { applyDamage, calcGenHitChance, calcHit, calcRangeHC, consumeAmmo } from "./attack.mjs";
 import { getAmmo, getAmmoOfWeap, getPlayerShips, getUtilIndex, mergeShipArrays } from "./retrieve.mjs";
@@ -176,7 +176,7 @@ const inflictStatus = (source = vehicleTemplate, target = vehicleTemplate, util 
 
 const createDataStr = () => "";
 
-export const utility = (source, target, util = utilityTemplate, shipArray, Data) => {
+export const utility = curry((Data, shipArray, source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate) => {
     const {Type} = util;
 
     let modifiedShips = [];
@@ -216,4 +216,4 @@ export const utility = (source, target, util = utilityTemplate, shipArray, Data)
 
     const dataString = createDataStr(source, trueTarget, util, damage, hit);
     return [merged, move, dataString]
-}
+})

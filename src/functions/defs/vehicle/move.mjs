@@ -1,20 +1,18 @@
-import {curry} from '../../functions.mjs';
+import {curry, rotate} from '../../functions.mjs';
 import { compareArray, sumArrays } from '../../functions.mjs';
 import { distance } from '../../vectors.mjs';
+import { vehicleTemplate } from '../templates';
 import {updateArea, reArea} from './vehicle.mjs'
 
 
-export const canMove = (ship, addVel, movType) => {
+export const canMove = (ship, addVel) => {
     const {energy, mov} = ship.State;
     const {MovEnergy} = ship.Stats;
     const {vel, prevVel} = ship.Velocity;
     const [, movY] = addVel;
 
-	let calculatedVel = sumArrays(vel, addVel);
-	if (movType === 0) {
-		const relativeVel = ship.Location.rotation.map((v) => v*movY);
-		calculatedVel = sumArrays(vel, relativeVel);
-	}
+	const relativeVel = ship.Location.rotation.map((v) => v*movY);
+	const calculatedVel = sumArrays(vel, relativeVel);
 
 	const acceleration = distance(prevVel, calculatedVel)
 
@@ -42,12 +40,26 @@ const calculateMovEnergy = (energy = 0, MovEnergy = 0, add = true) => {
     return energy - MovEnergy;
 }
 
+export const generateVelocity = (Vehicle = vehicleTemplate, addVel = [0,0]) => {
+	const {Velocity, Location} = Vehicle;
+	const rot = Location.rotation;
+	const vel = Velocity.vel;
+	const [rotation, movY] = addVel;
+
+	const relativeVel = rot.map((v) => v*movY);
+
+	const nVel = sumArrays(vel, relativeVel);
+	const nRot = rotate(rot, rotation);
+
+	return {vel: nVel, rot: nRot}
+}
+
 const mShip = curry((render, Vehicle, Velocity) => {
-	const {vel, rot, moveData} = Velocity;
+	const {vel, rot} = Velocity;
 	const {Velocity: vVel, Location: vLoc, Appearance: vApp, State: vState, Stats: vStat} = Vehicle;
 
 	//Create new objects
-	const cVel = {...vVel, vel, moveData};
+	const cVel = {...vVel, vel};
 	const cLoc = {...vLoc, loc: sumArrays(vLoc.prevLoc, vel), rotation: rot};
 	const cApp = {...vApp, area: []};
 	const acc = distance(vVel.prevVel, vel);
@@ -64,7 +76,8 @@ const mShip = curry((render, Vehicle, Velocity) => {
 	return render(nVehicle);
 })
 
-export const moveShip = mShip(updateArea(reArea(false, false)))
+export const movingShip = mShip(updateArea(reArea(true, true)));
+export const moveShip = mShip(updateArea(reArea(false, false)));
 
 export const finalizeMove = V => {
 	const {Velocity, Location, State, Appearance} = V;
