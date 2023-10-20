@@ -1,5 +1,8 @@
-import { first, last, maxOnArrays, minMax, minOnArrays, pop, pull, sumArrays } from "../functions.mjs";
+import { first, last, maxOnArrays, minMax, minOnArrays, pop, pull, rotate, sumArrays } from "../functions.mjs";
 import { intDivideVector, modVector, multiplyVector } from "../vectors.mjs";
+import { vehicleTemplate } from "./templates";
+import { canMove, generateVelocity, movingShip } from "./vehicle/move.mjs";
+import { mergeShipArrays } from "./vehicle/retrieve.mjs";
 
 const defaultRegion = {lx: 0, ly: 0, hx: 64, hy: 64, xStep: 8, yStep: 8};
 const defaultGridInfo = {OverallSize: 64, StepSizes: [8, 1]}
@@ -7,14 +10,14 @@ const generateRegion = (gridInfo = defaultGridInfo) => {
     const {OverallSize, StepSizes} = gridInfo;
     return {lx: 0, ly: 0, hx: OverallSize - 1, hy: OverallSize -1 , xStep: StepSizes[0], yStep: StepSizes[0]}
 }
-export const cursorModes = ["Move", "Menu"];
+export const cursorModes = ["Move", "Menu", "Rotate"];
 
 export const cursorGenerator = (gridInfo = defaultGridInfo, parent = "") => {
     return {
         loc: [0,0],
         parent,
-        rot: -1,
-        menu: -1,
+        rot: [0,0],
+        menu: 0,
         data: [0,0],
         grid: gridInfo,
         region: generateRegion(gridInfo),
@@ -81,13 +84,45 @@ export const zoom = (cursor = cursorGenerator(), direction = 0) => {
     return {...cursor, region: {lx, ly, hx, hy, xStep: StepSizes[index], yStep: StepSizes[index]}}
 }
 
-export const moveCursor = (cursor = cursorGenerator(), vector = defaultVector) => { 
+const changeSelection = (cursor = cursorGenerator(), vector = defaultVector) => {
+    if (vector[0] !== 0 || Math.abs(vector[1]) !== 1) return cursor;
+    const nMenu = (cursor.menu + vector[1] + cursor.data.length) % cursor.data.length;
+    return {...cursor, menu: nMenu};
+}
+
+const rotateCursor = (cursor = cursorGenerator(), vector = defaultVector) => {
+    if (vector[1] !== 0 || Math.abs(vector[0]) !== 1) return cursor;
+    return {...cursor, rot: rotate(cursor.rot, vector[0])};
+}
+
+export const vehicleMovementCursor = 
+    (vehicle = vehicleTemplate, vehicleArr = [vehicleTemplate], setVehicle, moveRatio = 1) => 
+    (cursor = cursorGenerator(), vector = defaultVector) => {
+        if (!canMove({...vehicle, Stats: {...vehicle.Stats, Mov: Math.round(vehicle.Stats.Mov*moveRatio)}}, vector)) return cursor;
+        const v = generateVelocity(vehicle, vector);
+        const movedVehicle = movingShip(vehicle, v);
+        const modifiedVehicleArray = mergeShipArrays(vehicleArr, [movedVehicle]);
+        setVehicle(modifiedVehicleArray);
+
+        const [rotation, movY] = vector;
+	    const relativeVel = vehicle.rot.map((v) => v*movY);
+        return {
+            ...cursor, 
+            loc: sumArrays(cursor.loc, relativeVel), 
+            rot: rotate(cursor.rot, rotation),
+            data: vehicleMovementCursor(movedVehicle, modifiedVehicleArray, setVehicle)
+        }
+    }
+
+export const moveCursor = (cursor = cursorGenerator(), vector = defaultVector) => {
+    if (cursor.mode === "Menu") return changeSelection(cursor, vector);
+    if (cursor.mode === "Rotate") return rotateCursor(cursor, vector);
+    if (cursor.mode === "Function") return cursor.data(cursor, vector);
     const nLoc = sumArrays(cursor.loc, scaleVector(cursor.region, vector))
     return adjustCursorLocation({...cursor, loc: nLoc})
 }
 
 export const moveCursorToPosition = (cursor = cursorGenerator(), position = defaultVector) => {
-    console.log("Moved")
     if (cursor.mode !== "Move") return cursor;
     const positionOnSubgrid = cursor.loc.map(a => a % cursor.region.yStep);
     const nLoc = sumArrays(scaleVector(cursor.region, position), positionOnSubgrid);

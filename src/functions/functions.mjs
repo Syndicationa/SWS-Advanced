@@ -173,3 +173,13 @@ export const sliceReduce = curry((fn, arr, [ls, hs]) =>
 
 export const minMax = (number = 0, lowerBound = 0, higherBound = 0) => 
     Math.min(Math.max(number, lowerBound), higherBound);
+
+export const rotate = (rotation = [0,0], direction = 0) => {
+    const {round, cos, sin, PI: pi, atan2} = Math;
+    const [xr,yr] = rotation;
+    const trueDirection = direction % 8;
+    const num = ((4*atan2(-xr,yr)/Math.PI)*4 + 12 + trueDirection) % 8
+    const x = round(sin(num*pi/4));
+    const y = -round(cos(num*pi/4));
+    return [x,y];
+}
