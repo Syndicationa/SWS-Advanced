@@ -1,6 +1,6 @@
 import { first, last, maxOnArrays, minMax, minOnArrays, pop, pull, rotate, sumArrays } from "../functions.mjs";
 import { intDivideVector, modVector, multiplyVector } from "../vectors.mjs";
-import { vehicleTemplate } from "./templates";
+import { vehicleTemplate } from "./templates.mjs";
 import { canMove, generateVelocity, movingShip } from "./vehicle/move.mjs";
 import { mergeShipArrays } from "./vehicle/retrieve.mjs";
 

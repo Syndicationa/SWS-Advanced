@@ -3,11 +3,13 @@ import { Tabs } from '../GameInterface/Tabs'
 import { updateDate } from '../../../functions/defs/faction/faction.mjs';
 import { Section } from '../../Sections/Section';
 import { buyBuilding } from '../../../functions/defs/economy.mjs';
+import { HexagonMapReader } from '../Hexagon Map Reader/HexagonMapReader';
+import { data } from '../../../tests/Mercury_Hex_Map.mjs';
 
 
 export const EconInterface = ({factionList, faction, updateFaction}) => {
     const playerFaction = factionList.find((f) => f.Name === faction);
-    const [nameArr] = useState(["World", "Construction", "Creation", "Trade"])
+    const [nameArr] = useState(["World", "Nation", "Creation", "Trade"])
     const [children] = useState([
         (<ol>{factionList.map((faction) => {
             return (
@@ -32,7 +34,7 @@ export const EconInterface = ({factionList, faction, updateFaction}) => {
 
             </Section>
         </>),
-        (<>How are you looking over here?</>),
+        (<HexagonMapReader hexagonMapFile={data} />),
         (<>Skill</>)
     ])
 

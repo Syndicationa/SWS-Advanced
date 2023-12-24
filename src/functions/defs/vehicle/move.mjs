@@ -1,7 +1,7 @@
 import {curry, rotate} from '../../functions.mjs';
 import { compareArray, sumArrays } from '../../functions.mjs';
 import { distance } from '../../vectors.mjs';
-import { vehicleTemplate } from '../templates';
+import { vehicleTemplate } from '../templates.mjs';
 import {updateArea, reArea} from './vehicle.mjs'
 
 

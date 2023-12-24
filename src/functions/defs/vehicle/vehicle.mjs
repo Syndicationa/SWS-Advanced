@@ -1,6 +1,6 @@
 import {curry, rectangle, isInRectangle, compose} from '../../functions.mjs';
 import { compareArray } from '../../functions.mjs';
-import { ammoTemplate, utilityTemplate, weaponTemplate } from '../templates';
+import { ammoTemplate, utilityTemplate, weaponTemplate } from '../templates.mjs';
 import { getDefWeaps, updateActiveDef } from './retrieve.mjs';
 
 const addEE = (weapons = {Data: [weaponTemplate]}, utils = {Data: [utilityTemplate]}, ammo = {Data: [ammoTemplate]}, HP) => {

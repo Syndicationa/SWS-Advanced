@@ -12,7 +12,6 @@ export const clearBoard = (board) => {
 //#region Grid
 export const drawGrid = (gridcanvas, grid, region) => {
     if (!gridcanvas) return;
-    console.log(region)
     const size = grSize(region);
     const width = gridcanvas.width/size;
     const height = gridcanvas.height/size;
@@ -225,7 +224,6 @@ export const drawShips = (display, position, colors, board, size) => {
 
 //#region Cursor
 export const drawCursor = (board, size, cursor) => {
-    console.log(cursor);
     const {height, width} = size;
     const {loc, region} = cursor;
     const [x,y] = intDivideVector(sub(loc, [region.lx, region.ly]), region.yStep);
@@ -276,7 +274,7 @@ const fastGetHexPoints = (x, y, hw) => [
 const drawGridHexagon = (board, px, py, sz, c) => {
     const points = fastGetHexPoints(px, py, sz);
     let [x, y] = points[0]
-    board.strokeStyle = "#FFFFFF";
+    //board.strokeStyle = "#FFFFFF";
     board.moveTo(x, y);
 
     for (let i = 1; i <= c; i++) {
@@ -326,7 +324,7 @@ export const drawHexGrid = (gridCanvas, [sx,sy]) => {
 }
 
 export const drawHexMap = (hexMap = saveFileTemplate, gridCanvas) => {
-    const {factions, hexes, width, height} = hexMap
+    const {factions, hexes, width, height, hexOpacity, imageData, image} = hexMap
     let hexInfo = new Array(factions.length).fill(0).map(() => []);
 
     const convertFaction = (s) => factions.findIndex(({id}) => id === s);
@@ -337,28 +335,34 @@ export const drawHexMap = (hexMap = saveFileTemplate, gridCanvas) => {
             hexInfo[convertFaction(s)].push([c,r]);
         })});
 
-    const sizeX = gridCanvas.width/(width*2);
-    const sizeY = gridCanvas.height/(height*2);
+    const sizeX = gridCanvas.width/(width*1.5);
+    const sizeY = gridCanvas.height/(height*1.5);
     const size = sizeX < sizeY ? sizeX: sizeY;
     const spacing = size*2;
 
     const gridContext = gridCanvas.getContext("2d");
+    const opacity = (Math.floor(hexOpacity*255)).toString(16).toUpperCase();
     
     let x, y, tx, ty;
     let sideCount = 6;
+
+    const imageFile = new Image(image.width, image.height);
+    imageFile.src = imageData;
+    gridContext.drawImage(imageFile, 0,0, gridCanvas.width, gridCanvas.height);
 
     for (let i = 0; i < hexInfo.length; i++) {
         gridContext.beginPath();
         for (let j = 0; j < hexInfo[i].length; j++) {
             [x,y] = hexInfo[i][j];
-            tx = x*size*1.5 + spacing;
-            ty = y*size*sq3 + spacing;
+            tx = x*size*1.5 + 3*size/4;
+            ty = y*size*sq3;
 
             if (x % 2 === 0) ty -= size*sq3/2;
 
             drawGridHexagon(gridContext, tx, ty, size, sideCount);
         }
-        gridContext.fillStyle = `#${factions[i].fill.toUpperCase()}`;
+        gridContext.fillStyle = `#${factions[i].fill.toUpperCase()}${opacity}`;
+        gridContext.strokeStyle = "#00000000"
         gridContext.closePath();
         gridContext.stroke();
         gridContext.fill();

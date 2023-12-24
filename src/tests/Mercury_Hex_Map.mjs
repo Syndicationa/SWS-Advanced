@@ -1,7 +1,7 @@
 export const data = JSON.parse(`{
     "name":"Mercury",
     "width":94,"height":47,
-    "hexOpacity":0.48,"stroke":{"r":255,"g":255,"b":255,"a":1},
+    "hexOpacity":0.60,"stroke":{"r":255,"g":255,"b":255,"a":1},
     "factions":[
         {"fill":"00ffff","stroke":"000000","hexCount":101,"id":1,"name":"Enclave","abb":"Enclave"},
         {"fill":"ff00e9","stroke":"000000","hexCount":3980,"id":2,"name":"Atlas Labs","abb":"Atlas"},

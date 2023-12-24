@@ -4,7 +4,7 @@ import { updateActiveDef, mergeShipArrays, getActiveShields, getShieldIndex, shi
 import {getWeapIndex, getActiveDefs, getAmmoOfWeap, getAmmo, getPlayerShips, shipsInRadius} from './retrieve.mjs';
 import { updateArea, reArea } from "./vehicle.mjs"
 import { sub, unitDotProduct, distance } from '../../vectors.mjs';
-import { vehicleTemplate, weaponTemplate } from '../templates';
+import { vehicleTemplate, weaponTemplate } from '../templates.mjs';
 
 
 export const inFiringRot = (fLoc = [0,0], tLoc = [0,0], fRot = [0, 0], wRot = 0, offset = [0, 0]) => {

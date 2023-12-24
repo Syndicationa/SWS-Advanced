@@ -1,5 +1,5 @@
 import { clone, curry, replaceInArray } from "../../functions.mjs";
-import { statusTemplate, utilityTemplate, vehicleTemplate } from "../templates";
+import { statusTemplate, utilityTemplate, vehicleTemplate } from "../templates.mjs";
 import { applyDamage, calcGenHitChance, calcHit, calcRangeHC, consumeAmmo } from "./attack.mjs";
 import { getAmmo, getAmmoOfWeap, getPlayerShips, getUtilIndex, mergeShipArrays } from "./retrieve.mjs";
 import { makeVehicle, reArea, updateArea } from "./vehicle.mjs";

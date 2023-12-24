@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { useEffect, useRef } from 'react'
-import { clearBoard, copyGrid, drawCursor, drawGrid, drawHexMap, drawShips, grSize } from '../../../functions/drawing.mjs';
-import { data } from '../../../tests/Mercury_Hex_Map.mjs';
+import { clearBoard, copyGrid, drawCursor, drawGrid, drawShips, grSize } from '../../../functions/drawing.mjs';
 
 export const Board = props => {  
   const {display, colors, cursor, move, ...rest } = props;
@@ -68,7 +67,7 @@ export const Board = props => {
   }, [display, colors, main, grid, cursor])
   
   return (<>
-      <canvas ref={mainRef} width="1280" height="1280" id="Board" className="gameboard invisible" onClick={press} {...rest}>Doesn't Support the Canvas</canvas>
-      <canvas ref={gridRef} width="1280" height="1280" id="Grid" className="gameboard" {...rest}/>
+      <canvas ref={mainRef} width="1280" height="1280" id="Board" className="gameboard" onClick={press} {...rest}>Doesn't Support the Canvas</canvas>
+      <canvas ref={gridRef} width="1280" height="1280" id="Grid" className="gameboard invisible" {...rest}/>
     </>);
 }

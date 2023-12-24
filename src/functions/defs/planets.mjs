@@ -14,11 +14,11 @@ export const saveFileTemplate = {
     width: 100,
     height: 100,
     hexOpacity: 1,
-    stroke: {r: 255, g: 255, b: 255},
+    stroke: {r: 255, g: 255, b: 255, a:1},
     factions: [hmgFactionTemplate],
     hexes: [[null, "ast", null, "ast", null]],
-    image: [],
-    imageData: []
+    image: {},
+    imageData: ""
 }
 
 const resourceTemplate = {
