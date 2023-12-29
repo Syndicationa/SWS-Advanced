@@ -125,6 +125,36 @@ export const playerTemplate = {
     Money: 0,
 }
 
+export const factionTemplate = {
+    Name: "",
+    Color: "",
+    Moves: [],
+    Players: [],
+    Leader: -1,
+    Treasurers: [-1],
+    Population: 0,
+    Regions: {
+        Earth: [],
+        Cities: []
+    },
+    Economy: {
+        Treasury: {},
+        LastUpdated: new Date(),
+        Income: {},
+        BuildingTypes: [],
+        VehicleTypes: [],
+        OwnedBuildings: [],
+        OwnedVehicles: {},
+    },
+    Technology: {
+        Technologies: [],
+        LastUpdated: new Date(),
+        TechPoints: 0,
+        TechIncome: 0,
+        
+    },
+}
+
 export const singleBattleTemplate = {
     Title: "Name",
     Players: [playerTemplate],

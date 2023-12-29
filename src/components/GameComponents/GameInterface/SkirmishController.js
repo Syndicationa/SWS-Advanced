@@ -12,7 +12,8 @@ import { createDisplay } from '../../../functions/defs/display.mjs'
 
 const generateVehicleList = (vehicles = [vehicleTemplate], cursor = cursorGenerator(), setCursor = () => {}) => {
     const options = vehicles.map((vehicle, i) => {
-        const name = vehicle.Appearance.name ?? vehicle.Type.Class;
+        if (vehicle.Name !== undefined) return;
+        const name = (vehicle.Appearance ?? {}).name ?? vehicle.Type.Class;
         const currentHP = vehicle.State ? vehicle.State.hp:vehicle.Stats.MaxHP;
         const maxHP = vehicle.State ? vehicle.State.hp:vehicle.Stats.MaxHP;
         return <div className={`Option ${cursor.menu === i ? 'Selected':''}`}>
@@ -62,17 +63,17 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
     const [cursor, setCursor] = useState(cursorGenerator(game.Size));
 
     //#region Game Systems
-    const [press] = useState(pressFunction(Data));
+    const [press] = useState(() => pressFunction(Data));
     const [selectedVehicle, setSelectedVehicle] = useState();
     const [currentFunction, setCurrentFunction] = useState();
     const [activeVehicles, setActiveVehicles] = useState(game.Vehicles);
     const [Display, setDisplay] = useState(() => createDisplay(game.Size.OverallSize)());
     const [selection, setSelection] = useState(1);
     const [list, setList] = useState([]);
-    const data = [`Position: ${cursor.loc}\nRegion Data: ${cursor.region.xStep}`]
+    const data = [`Position: ${cursor.loc} Region Data: ${cursor.region.xStep}`]
 
     useEffect(() => {
-        setDisplay(createDisplay(game.Size.OverallSize));
+        setDisplay(createDisplay(game.Size.OverallSize)(activeVehicles));
     }, [activeVehicles, game.Size.OverallSize]);
 
     useEffect(() => {
@@ -98,7 +99,7 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
     const input = useMemo(() => {
         return {
             system: {
-                zoomOut: () => setCursor(zoom(cursor,-1)),
+                zoomOut: () => setCursor(zoom(cursor,-1)), 
                 zoomIn: () => setCursor(zoom(cursor, 1)),
             },
             cursor,
@@ -113,12 +114,26 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
         }
     }, [cursor, State, press])
 
+    const uiGame = useMemo(() => {
+        return {
+            ...g,
+            data,
+            active,
+            stage,
+            step,
+            players, updatePlayer,
+            Display,
+            list,
+            selection,
+        }
+    }, [Display, active, data, g, list, players, selection, stage, step, updatePlayer])
+
     const closeFunction = () => {
         //SaveGame
         close();
     }
 
     return (
-        <GameUI game={{...g, data, list, selection, Display}} input={input} close={closeFunction} />
+        <GameUI game={uiGame} input={input} close={closeFunction} />
     )
 }

@@ -1,18 +1,15 @@
 import { compareArray, sliceReduce, map } from "../functions.mjs"
 
 //Creates a display struct
-export const createDisplay = (size = 1) => (shipArray) => {
+export const createDisplay = (size = 1) => (shipArray = []) => {
+    console.log(shipArray)
     const arr = map(() => 
                     map(() => [], new Array(size).fill(0)), 
                 new Array(size).fill(0));
-    return map((yarr, x) => 
-                map((p,y) => {
-                    return shipArray.filter((ship) => {
-                        return inLocation([x, y], ship.Appearance.area);
-                    })
-                }, 
-                yarr), 
-            arr)
+    shipArray.forEach((ship) => {
+        ship.Appearance.area.forEach(([x,y]) => {try {arr[x][y].push(ship)} catch (e) {}})
+    });
+    return arr;
 }
 
 export const getFromDisp = (display = [[[]]], [lx, ly], [hx, hy]) =>
@@ -23,4 +20,3 @@ export const getFromDisp = (display = [[[]]], [lx, ly], [hx, hy]) =>
         [lx, hx]
         );
 
-const inLocation = (loc, area) => area.some((aloc) => compareArray(loc, aloc));

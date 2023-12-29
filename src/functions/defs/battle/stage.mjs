@@ -59,7 +59,8 @@ export const runMove = Data => (State, Move, {type, id, str}) => {
     }
     if (type === "U-") { //Utility
         const [utilMovement, utilApplication, updates] = substrs;
-        const movedState = runMove(Data)(State, `M-${utilMovement.replace(":",".")}`, )
+        const {str: _, ...movedState} = runMove(Data)(State, utilMovement.replace(":","."), {type: "M-", id, str});
+
         return State;
     }
     if (type === "A-") { //Attack

@@ -7,7 +7,7 @@ import { PlayerList } from './PlayerList'
 import { Tabs } from './Tabs'
 
 export const GameUI = ({game, input, close}) => {
-    const title = game.title;
+    const title = game.Title;
     const mode = game.gameMode;
 
     const sListName = game.sDataType
@@ -29,9 +29,10 @@ export const GameUI = ({game, input, close}) => {
     const movCursTo = input.moveCursorTo;
     const cursor = input.cursor;
 
+
     return (
         <div className="game">
-        <Header name={`${mode}: ${title}`} className="gameTitle" stage={stage} minimizable={false} close={close} />
+        <Header name={`${mode}: ${title}`} className="gameTitle" stage={stage} close={close} />
         <Board move={movCursTo} display={display} cursor={cursor} />
         <Tabs className="IO"
         selection={defaultSelection}
@@ -40,7 +41,7 @@ export const GameUI = ({game, input, close}) => {
                 selected={0} displayFunction={() => {}} />),
             (<InfoDisplay title="Information" className="Info" information={data} />),
             (<PlayerList players={players} cPlayer={cPlayer} local={local} 
-                updatePlayer={updatePlayer} />)]}
+                updatePlayer={updatePlayer} game={game} />)]}
         nameArr={["Ships", "Info", "Players"]}/>
         { active ? <ButtonGrid system={systemFunctions} move={movCurs} stage={stage} />:<></>}
     </div>

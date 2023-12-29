@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {doc, getDoc} from "firebase/firestore";
 import { database } from '../firebase';
-import { data } from "./dataInit";
+import { tempData as data } from "../tests/temporaryData.mjs";
 
 const initialState = data;
 
@@ -12,6 +12,7 @@ const dataSlice = createSlice({
     initialState,
     reducers: {
         fetchData: async (state) => {
+            return data;
             const fData = await getDoc(dataRef);
             const factionData = fData.data();
             if (!factionData) return;

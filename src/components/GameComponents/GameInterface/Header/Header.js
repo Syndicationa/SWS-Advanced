@@ -2,7 +2,7 @@ import React from 'react'
 import { Phase } from './Phase';
 
 export const Header = props => {
-    const {stage, name, version, ...rest} = props;
+    const {stage, name, version, close, ...rest} = props;
 
     const stageNames = ["Place Ships","Movement Phase", "Utility Phase", "Attack Phase", "Recovery Phase"];
 

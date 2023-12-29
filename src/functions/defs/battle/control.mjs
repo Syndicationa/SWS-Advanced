@@ -1,5 +1,5 @@
 import { cursorGenerator, vehicleMovementCursor } from "../cursor.mjs";
-import { playerTemplate, vehicleTemplate } from "../templates";
+import { playerTemplate, vehicleTemplate } from "../templates.mjs";
 import { attack } from "../vehicle/attack.mjs";
 import { moveShip } from "../vehicle/move.mjs";
 import { gShipFromID, getPlayShips, mergeShipArrays } from "../vehicle/retrieve.mjs";
@@ -8,6 +8,8 @@ import { makeVehicle } from "../vehicle/vehicle.mjs";
 
 export const pressFunction = Data => State => {
     const {stage} = State;
+
+    console.log(Data)
 
     switch (stage) {
         case 0:
