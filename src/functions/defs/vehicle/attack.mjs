@@ -380,19 +380,25 @@ const interceptAttack = (attacker, target, weapon, shipArray) => {
 
     const hit = calcHit(calcGenHitChance(attacker, target, weap));
     
-    if (weap.Watk <= 0 && hit < 2) return {
+    if (weap.Watk <= 0) return {
         modifiedShips: [newAttacker, ...targetArray], 
         damage: damages, 
         hit: damages.map(() => 2), 
         trueTarget: targetArray};
 
-    const {damage, newTarget} = performDamage(attacker, target, weap);
-    const postTargetWeapon = {...weap, Watk: damage - target.State.hp};
+    let damage = 0;
+    let newTarget = target;
+    let postTargetWeapon = weap;
+
+    if (hit < 2) {
+        ({damage, newTarget} = performDamage(attacker, target, weap));
+        postTargetWeapon = {...weap, Watk: damage - target.State.hp};
+    }
 
     if (postTargetWeapon.Watk <= 0) return {
         modifiedShips: [newAttacker, ...targetArray, newTarget], 
         damage: [...damages, damage], 
-        hit: [...damages.map(() => 2), 2], 
+        hit: [...damages.map(() => 2), hit], 
         trueTarget: [...targetArray, newTarget]
     };
 
@@ -405,7 +411,7 @@ const interceptAttack = (attacker, target, weapon, shipArray) => {
     return {
         modifiedShips: [newAttacker, ...targetArray, newTarget, ...postTargets], 
         damage: [...damages, damage, ...postDamages], 
-        hit: [...damages.map(() => 2), 2, ...postDamages.map(() => 2)], 
+        hit: [...damages.map(() => 2), hit, ...postDamages.map(() => 2)], 
         trueTarget: [...targetArray, newTarget, ...postTargets]
     };
 };
@@ -519,20 +525,17 @@ export const attack = curry((shipArray, attacker, target, weapon) => {
 })
 
 export const applyAttack = (shipArray = [vehicleTemplate], attacker = vehicleTemplate, target = [vehicleTemplate], weapon = weaponTemplate, hit = [0]) => {
-    const {Type, Eran, Wran} = weapon;
-    const location = (Eran === undefined ? attacker:target).Location.prevLoc;
-    const nearTarget = shipsInRadius(shipArray, location, Eran ?? Wran);
-
-    let trueTarget = Eran === undefined ? [...target]:nearTarget;
+    const Type = weapon.Type;
     let modifiedShips = [];
     let damage = [];
 
     switch (Type) {
         case "Generic":
-            if (Eran === undefined && trueTarget.length > 1) {
-                let tWeapon = weapon;
+            if (hit.length > 1) {
+                let tWeapon = weapon; 
                 const nAttacker = applyAttacker(attacker, weapon);
-                const nTargets = trueTarget.map((target = vehicleTemplate) => {
+                const nTargets = target.map((target = vehicleTemplate, i) => {
+                    if (hit[i] !== 2) return target;
                     const {damage: dam, newTarget} = performDamage(attacker, target, tWeapon);
                     tWeapon.Watk = newDamage(dam, target.State.hp);
                     damage.push(dam);
@@ -541,7 +544,8 @@ export const applyAttack = (shipArray = [vehicleTemplate], attacker = vehicleTem
                 modifiedShips = [nAttacker, ...nTargets];
             } else {
                 const nAttacker = applyAttacker(attacker, weapon);
-                const nTargets = trueTarget.map((target = vehicleTemplate) => {
+                const nTargets = target.map((target = vehicleTemplate, i) => {
+                    if (hit[i] !== 2) return target;
                     const {damage: dam, newTarget} = performDamage(attacker, target, weapon);
                     damage.push(dam);
                     return newTarget;
@@ -550,13 +554,13 @@ export const applyAttack = (shipArray = [vehicleTemplate], attacker = vehicleTem
             }
             break;
         case "Missile":
-            ({modifiedShips, damage} = missileAttack(attacker, trueTarget, weapon, shipArray, hit));
+            ({modifiedShips, damage} = missileAttack(attacker, target, weapon, shipArray, hit));
             break;
         case "Ramming":
-            ({modifiedShips, damage} = rammingAttack(attacker, trueTarget, weapon));
+            ({modifiedShips, damage} = rammingAttack(attacker, target, weapon));
             break;
         case "Destruct":
-            ({modifiedShips, damage} = selfDestruct(attacker, trueTarget, weapon, shipArray, hit));
+            ({modifiedShips, damage} = selfDestruct(attacker, target, weapon, shipArray, hit));
             break;
         default:
             throw Error("Unknown Weapon");
@@ -566,7 +570,7 @@ export const applyAttack = (shipArray = [vehicleTemplate], attacker = vehicleTem
 
     const merged = mergeShipArrays(shipArray, modifiedShips);
 
-    const dataString = createDataStr(attacker, trueTarget, weapon, damage, hit);
+    const dataString = createDataStr(attacker, target, weapon, damage, hit);
     return [merged, dataString]
 }
 

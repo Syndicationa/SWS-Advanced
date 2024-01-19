@@ -75,8 +75,8 @@ export const makeVehicle = (source, playerID, vID, pos, r, parent = "") => {
 
     const origAmmo = ammo.count !== undefined ? ammo:
         {Data: ammo, 
-            count: ammo.fill(0).map((u, i) => 
-            ammo[i].sCount ?? ammo[i].MCount ?? Infinity),
+            count: ammo.map((ammoType) => 
+            ammoType.sCount ?? ammoType.MCount ?? Infinity),
         Ammo (i) {
             return {...this.Data[i], count: this.count[i]}
         }};
@@ -90,8 +90,8 @@ export const makeVehicle = (source, playerID, vID, pos, r, parent = "") => {
     };
     const origShields = def.sActive !== undefined ? def:{
         Shields: shields,
-        sDamage: shields.fill(0),
-        sActive: shields.fill(false),
+        sDamage: shields.map(() => 0),
+        sActive: shields.map(() => false),
     }
     const Defenses = {
         ...origDWeap, ...origShields

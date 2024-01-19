@@ -1,8 +1,7 @@
-import { compareArray, sliceReduce, map } from "../functions.mjs"
+import { map } from "../functions.mjs"
 
 //Creates a display struct
 export const createDisplay = (size = 1) => (shipArray = []) => {
-    console.log(shipArray)
     const arr = map(() => 
                     map(() => [], new Array(size).fill(0)), 
                 new Array(size).fill(0));
@@ -13,10 +12,5 @@ export const createDisplay = (size = 1) => (shipArray = []) => {
 }
 
 export const getFromDisp = (display = [[[]]], [lx, ly], [hx, hy]) =>
-    sliceReduce(
-        (acc, yarr) => 
-            [...acc, ...sliceReduce((a,v) => [...a, ...v], yarr, [ly, hy])],
-        display,
-        [lx, hx]
-        );
+    display.slice(lx, hx).map(arr => arr.slice(ly, hy)).flat(2);
 

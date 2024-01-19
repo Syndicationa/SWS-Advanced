@@ -101,7 +101,7 @@ const drawSquare = (board, size, position) => {
     board.fillRect(x*width,y*height,width,height);
     board.stroke();
     board.beginPath();
-    if (rotation < 0) {
+    if (!Array.isArray(rotation)) {
         return;
     }
     drawDirection(board, size, position)
@@ -137,16 +137,29 @@ const drawCircle = (board, size, position) => {
 
 const drawDirection = (board, size, position, colorSet = false) => {
     const {height, width} = size;
-    const {x, y, rotation} = position;
+    const {x, y, rotation: [xr, yr]} = position;
+
+    const {cos, sin, PI: pi, atan2} = Math;
+
+    const rotation = ((atan2(-xr,yr)/pi)*4 + 12) % 8
 
     if (!colorSet) {
         board.strokeStyle = "#ffffff";
         board.fillStyle = "#ffffff";
     }
     
-    board.moveTo(width*((x +0.5)+0.5*Math.sin(Math.PI*(rotation/4))),height*((y +0.5)-0.5*Math.cos(Math.PI*(rotation/4))));
-    board.lineTo(width*((x +0.5)+0.5*Math.sin(Math.PI*((rotation+3)/4))),height*((y +0.5)-0.5*Math.cos(Math.PI*((rotation+3)/4))));
-    board.lineTo(width*((x +0.5)+0.5*Math.sin(Math.PI*((rotation-3)/4))),height*((y +0.5)-0.5*Math.cos(Math.PI*((rotation-3)/4))));
+    board.moveTo(
+        width* ((x + 0.5) + 0.5*sin(pi*(rotation/4))),
+        height*((y + 0.5) - 0.5*cos(pi*(rotation/4)))
+    );
+    board.lineTo(
+        width* ((x + 0.5) + 0.5*sin(pi*((rotation+3)/4))),
+        height*((y + 0.5) - 0.5*cos(pi*((rotation+3)/4)))
+    );
+    board.lineTo(
+        width* ((x + 0.5) + 0.5*sin(pi*((rotation-3)/4))),
+        height*((y + 0.5) - 0.5*cos(pi*((rotation-3)/4)))
+    );
     board.closePath();
     board.fill();
     board.stroke();
@@ -169,9 +182,10 @@ export const drawShips = (display, position, colors, board, size) => {
     const {lx, ly, hx, hy, xStep, yStep} = position;
 
     board.beginPath();
+    board.lineWidth = 1;
 
-    for (let y = ly; y < hy; y += yStep) {
-        for (let x = lx; x < hx; x += xStep) {
+    for (let y = ly; y <= hy; y += yStep) {
+        for (let x = lx; x <= hx; x += xStep) {
             const ships = getFromDisp(display, [x, y], [x + xStep, y + yStep]);
 
             const colorSet = ships.reduce((acc, ship) => {
@@ -194,11 +208,11 @@ export const drawShips = (display, position, colors, board, size) => {
             if (ships.length === 0) {
                 continue;
             } else if ((xStep !== 1 && yStep !== -1) || colorSet.length > 1) {
-                drawMany(board, size, {x, y}, ships.length, colorSet)
+                drawMany(board, size, {x: (x - lx)/xStep, y: (y - ly)/yStep}, ships.length, colorSet)
             } else {
                 board.strokeStyle = colorSet[0];
 		        board.fillStyle = colorSet[0];
-                let pos = {x, y, rotation: (ships[0].Location ?? {rotation: -1}).rotation};
+                let pos = {x: (x - lx)/xStep, y: (y - ly)/yStep, rotation: (ships[0].Location ?? {rotation: -1}).rotation};
                 board.beginPath();
                 switch (shape) {
                     case "Rect":
@@ -225,7 +239,7 @@ export const drawShips = (display, position, colors, board, size) => {
 //#region Cursor
 export const drawCursor = (board, size, cursor) => {
     const {height, width} = size;
-    const {loc, region} = cursor;
+    const {loc, rot, region, mode} = cursor;
     const [x,y] = intDivideVector(sub(loc, [region.lx, region.ly]), region.yStep);
 
     const left = x*width + width/10;
@@ -239,6 +253,9 @@ export const drawCursor = (board, size, cursor) => {
 
     const lower = y*height + 9*height/10;
     const innerLower = y*height + 6*height/10;
+
+    const midx = x*width + width/2;
+    const midy = y*height + height/2;
 
     board.strokeStyle = "#D0D0D0";
     board.lineWidth = width/30;
@@ -255,6 +272,11 @@ export const drawCursor = (board, size, cursor) => {
 
     board.moveTo(right, lower);
     board.lineTo(innerRight, innerLower);
+
+    if (mode === "Rotate") {
+        board.moveTo(midx, midy);
+        board.lineTo(midx + (width/2)*rot[0], midy + (height/2)*rot[1]);
+    }
 
     board.stroke(); board.closePath();
 }
@@ -375,3 +397,5 @@ export const drawHexMap = (hexMap = saveFileTemplate, gridCanvas) => {
     gridContext.lineTo(0, spacing*height);
     gridContext.stroke();
 }
+
+//#endregion

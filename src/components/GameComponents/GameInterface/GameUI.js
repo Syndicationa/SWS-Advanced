@@ -16,8 +16,8 @@ export const GameUI = ({game, input, close}) => {
     const display = game.display;
     const defaultSelection = game.selection;
 
-    const players = game.Players;
-    const cPlayer = game.cPlayer;
+    const players = game.players;
+    const currentPlayer = game.currentPlayer;
     const updatePlayer = game.updatePlayer;
 
     const local = game.local;
@@ -29,18 +29,17 @@ export const GameUI = ({game, input, close}) => {
     const movCursTo = input.moveCursorTo;
     const cursor = input.cursor;
 
-
     return (
         <div className="game">
         <Header name={`${mode}: ${title}`} className="gameTitle" stage={stage} close={close} />
-        <Board move={movCursTo} display={display} cursor={cursor} />
+        <Board move={movCursTo} display={display} cursor={cursor} colors={players[currentPlayer].colorSet}/>
         <Tabs className="IO"
         selection={defaultSelection}
         childArr={[
             (<InfoDisplay title={sListName} className="List" information={list} 
-                selected={0} displayFunction={() => {}} />),
+                selected={0} displayFunction={a => a} />),
             (<InfoDisplay title="Information" className="Info" information={data} />),
-            (<PlayerList players={players} cPlayer={cPlayer} local={local} 
+            (<PlayerList players={players} cPlayer={currentPlayer} local={local} 
                 updatePlayer={updatePlayer} game={game} />)]}
         nameArr={["Ships", "Info", "Players"]}/>
         { active ? <ButtonGrid system={systemFunctions} move={movCurs} stage={stage} />:<></>}

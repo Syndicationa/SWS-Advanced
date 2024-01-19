@@ -1,22 +1,27 @@
-import { cursorGenerator, vehicleMovementCursor } from "../cursor.mjs";
+import { last, replaceInArray, split } from "../../functions.mjs";
+import { cursorGenerator, vehicleMovementCursor, zoom } from "../cursor.mjs";
 import { playerTemplate, vehicleTemplate } from "../templates.mjs";
 import { attack } from "../vehicle/attack.mjs";
 import { moveShip } from "../vehicle/move.mjs";
 import { gShipFromID, getPlayShips, mergeShipArrays } from "../vehicle/retrieve.mjs";
 import { utility } from "../vehicle/utility.mjs";
 import { makeVehicle } from "../vehicle/vehicle.mjs";
+import { addMove, setMove } from "./stage.mjs";
 
 export const pressFunction = Data => State => {
-    const {stage} = State;
+    const {stage, cursor, setCursor} = State;
 
-    console.log(Data)
+    if (cursor.region.xStep > 1) {
+        setCursor(zoom(cursor, 1));
+        return;
+    }
 
     switch (stage) {
         case 0:
             placementPress(Data, State);
             break;
         case 1:
-            movementPress(Data, State);
+            movementPress(State);
             break;
         case 2:
             utilityPress(Data, State);
@@ -30,24 +35,38 @@ export const pressFunction = Data => State => {
 }
 
 const placementPress = (Data, State) => {
-    const {player, step, setStep, cursor, setCursor, setSelection, activeVehicles, setActiveVehicles} = State;
+    const {
+        setPlayerGame,
+        moves, setMoves,
+        cursor, setCursor,
+        run,
+        impulse, setImpulse,
+        player,
+        setSelection
+    } = State;
     const vehicleOptions = Data.shipTypes[player.Faction];
-    switch (step) {
+    switch (impulse) {
         case 0:
+            setSelection(1);
             setSelection(0);
             setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
-            setStep(1);
+            setImpulse(1);
             break;
         case 1:
             setCursor({...cursor, mode:"Rotate"});
-            setStep(2);
+            setImpulse(2);
             break;
         case 2:
             setCursor({...cursor, mode: "Move"});
-            const shipCount = getPlayShips(player.User.ID, activeVehicles).length;
-            const newVehicle = makeVehicle(vehicleOptions[cursor.menu],player.User.ID, shipCount, cursor.loc, cursor.rot);
-            setActiveVehicles([...activeVehicles, newVehicle]);
-            setStep(0);
+            const move = `${player.Faction}.${cursor.menu}.${JSON.stringify(cursor.loc)}.${JSON.stringify(cursor.rot)}`;
+
+            const ID = player.User.ID;
+
+            setPlayerGame(playerGame => run(playerGame, move, {type: "P-", str: "", id: ID}));
+            
+            setMoves(addMove(moves, ID, move));
+
+            setImpulse(0);
             break;
         default:
             throw Error("Unexpected Outcome")
@@ -55,27 +74,52 @@ const placementPress = (Data, State) => {
 }
 
 const movementPress = (State) => {
-    const {player, step, setStep, cursor, setCursor, setSelection, activeVehicles, setActiveVehicles, Display} = State;
+    const {
+        setPlayerGame,
+        moves, setMoves,
+        cursor, setCursor,
+        run,
+        impulse, setImpulse,
+        display,
+        selectedVehicle, setSelectedVehicle,
+        player,
+        setSelection,
+    } = State;
+    const ID = player.User.ID;
     const [x,y] = cursor.loc;
-    const vehicleOptions = getPlayShips(player.User.ID, Display[x][y]);
+    const vehicleOptions = getPlayShips(ID, display[x][y]);
     const vehicle = vehicleOptions[cursor.menu] ?? false;
-    switch (step) {
+    switch (impulse) {
         case 0:
             if (vehicleOptions.length === 0) return;
+            setSelection(1);
             setSelection(0);
             setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
-            setStep(1);
+            setImpulse(1);
             break;
         case 1:
-            setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(vehicle, activeVehicles, setActiveVehicles)});
-            setStep(2);
+            setSelectedVehicle(vehicle);
+            setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(vehicle, setSelectedVehicle)});
+            setImpulse(2);
             break;
         case 2:
             setCursor({...cursor, mode: "Move", data: []});
-            const velocity = {vel: vehicle.Velocity.vel, rot: vehicle.Location.rotation}
-            const movedVehicle = moveShip(vehicle, velocity);
-            setActiveVehicles(mergeShipArrays(activeVehicles, [movedVehicle]))
-            setStep(0);
+            const velocity = selectedVehicle.Velocity.vel; 
+            const rotation = selectedVehicle.Location.rotation;
+
+            const lastMove = last(moves[ID], -1)[0];
+            const splitMove = lastMove.slice(2).split(";");
+            const vehicleIndex = splitMove.length === 1 ? -1:splitMove.findIndex(move => Number(move.split(".")[0]) === selectedVehicle.Ownership.vID);
+            const move = `${selectedVehicle.Ownership.vID}.${JSON.stringify(velocity)}.${JSON.stringify(rotation)}`;
+
+            if (vehicleIndex === -1) setMoves(addMove(moves, ID, move));
+            else setMoves(setMove(moves, ID, `M-${replaceInArray(splitMove, vehicleIndex, move).join(";")}`));
+
+            setPlayerGame(playerGame => run(playerGame, move, {type: "M-", str: "", id: ID}));
+
+            setSelectedVehicle(undefined)
+
+            setImpulse(0);
             break;
         default:
             throw Error("Unexpected Outcome")
@@ -83,10 +127,12 @@ const movementPress = (State) => {
 }
 
 const setupUtilityModes = (Data, State) => {
-    const {cursor, setCursor, activeVehicles, setActiveVehicles, selectedVehicle, setCurrentFunction} = State;
+    const {cursor, setCursor, activeVehicles, setSelectedVehicle, selectedVehicle, setCurrentFunction} = State;
+    const selected = gShipFromID(selectedVehicle.Ownership.Player,selectedVehicle.Ownership.vID, activeVehicles);
+    setSelectedVehicle(selected);
     switch (cursor.menu) {
         case 0: //Move
-            setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(selectedVehicle, activeVehicles, setActiveVehicles, .25)});
+            setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(selected, setSelectedVehicle, .25)});
             break;
         case 1: //Attack
             setCurrentFunction(utility(Data, activeVehicles, selectedVehicle));
@@ -103,37 +149,48 @@ const setupUtilityModes = (Data, State) => {
 }
 
 const resetUtility = (State) => {
-    const {modes, setSelection, setCursor, cursor, setStep} = State;
+    const {modes, setSelection, setCursor, cursor, setImpulse} = State;
     setSelection(0);
     setCursor({...cursor, mode: "Menu", data: modes, menu: 0});
-    setStep(2);
+    setImpulse(2);
 }
 
 const utilityPress = (Data, State) => {
     const modes = ["Move", "Attack", "Utility", "Exit"];
-    const steps = [3, 4, 7, 0];
+    const impulses = [3, 4, 7, 0];
     const {
-        player, 
-        step, setStep, 
-        cursor, setCursor, 
-        setSelection, 
-        activeVehicles, setActiveVehicles, 
-        Display, 
-        currentFunction, setCurrentFunction,
+        setPlayerGame,
+        moves, setMoves,
+        cursor, setCursor,
+        run,
+        impulse, setImpulse,
+        display,
         selectedVehicle, setSelectedVehicle,
-        attackList, setAttackList
+        currentFunction, setCurrentFunction,
+        player,
+        setSelection,
+        setAttackList
     } = State;
+    const ID = player.User.ID;
     const [x,y] = cursor.loc;
-    const vehicleOptions = getPlayShips(player.User.ID, Display[x][y]);
-    const allVehicles = Display[x][y];
+    const vehicleOptions = getPlayShips(player.User.ID, display[x][y]);
+    const allVehicles = display[x][y];
     const vehicle = vehicleOptions[cursor.menu] ?? selectedVehicle;
-    const utils = selectedVehicle.Utils.Data;
-    switch (step) {
+    const utils = selectedVehicle ? selectedVehicle.Utils.Data:undefined;
+
+    const lastMove = last(moves[ID], -1)[0];
+    const splitMove = lastMove.slice(2).split(";");
+    const vehicleIndex = 
+        splitMove.length === 1 || !selectedVehicle ? 
+            -1:
+            splitMove.findIndex(move => Number(move.split(".")[0]) === selectedVehicle.Ownership.vID);
+
+    switch (impulse) {
         case 0:
             if (vehicleOptions.length === 0) return;
             setSelection(0);
             setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
-            setStep(1);
+            setImpulse(1);
             break;
         case 1:
             setSelectedVehicle(vehicle);
@@ -141,14 +198,23 @@ const utilityPress = (Data, State) => {
             break;
         case 2:
             setupUtilityModes(Data, State);
-            setStep(steps[cursor.menu]);
+            setImpulse(impulses[cursor.menu]);
             break;
         //#region Movement
         case 3:
             //Wrap Up Movement
-            const velocity = {vel: vehicle.Velocity.vel, rot: vehicle.Location.rotation}
-            const movedVehicle = moveShip(selectedVehicle, velocity);
-            setActiveVehicles(mergeShipArrays(activeVehicles, [movedVehicle]));
+            const velocity = selectedVehicle.Velocity.vel; 
+            const rotation = selectedVehicle.Location.rotation;
+            const velRotMove = `${JSON.stringify(velocity)}:${JSON.stringify(rotation)}`;
+            const playedGenerateMove = `${selectedVehicle.Ownership.vID}.${velRotMove}..`
+            const generatedMovementMove = vehicleIndex === -1 ? playedGenerateMove:
+                replaceInArray(splitMove[vehicleIndex].split("."), 1, velRotMove);
+
+            if (vehicleIndex === -1) setMoves(addMove(moves, ID, generatedMovementMove));
+            else setMoves(setMove(moves, ID, `U-${replaceInArray(splitMove, vehicleIndex, generatedMovementMove).join(";")}`));
+
+            setPlayerGame(playerGame => run(playerGame, playedGenerateMove, {type: "U-", str: "", id: ID}));
+
             resetUtility({...State, modes});
             break;
         //#endregion
@@ -157,18 +223,24 @@ const utilityPress = (Data, State) => {
             if (allVehicles.length === 0) return;
             setSelection(0);
             setCursor({...cursor, data:allVehicles, mode:"Menu", menu: Math.max(cursor.menu, allVehicles.length - 1)});
-            setStep(5);
+            setImpulse(5);
             break;
         case 5: //Select Target Part 2
             setCurrentFunction(currentFunction(allVehicles[cursor.menu]))//Add target
             setCursor({...cursor, data: utils, mode:"Menu", menu: Math.max(cursor.menu, utils.length - 1)});
-            setStep(6);
+            setImpulse(6);
             break;
         case 6:
-            const [newVehicleArray, move, string] = currentFunction(utils[cursor.menu]);
-            setActiveVehicles(newVehicleArray);
-            setSelectedVehicle(gShipFromID(selectedVehicle.Ownership.Player,selectedVehicle.Ownership.vID, newVehicleArray));
-            setAttackList([...attackList, string]);
+            const [_, utilityMove, string] = currentFunction(utils[cursor.menu]);
+            const playedGeneratedUtility = `${selectedVehicle.Ownership.vID}..${utilityMove}.`
+            const generatedUtilityMove = vehicleIndex === -1 ? playedGeneratedUtility:
+                replaceInArray(splitMove[vehicleIndex].split("."), 1, utilityMove);
+
+            if (vehicleIndex === -1) setMoves(addMove(moves, ID, generatedUtilityMove));
+            else setMoves(setMove(moves, ID, `U-${replaceInArray(splitMove, vehicleIndex, generatedUtilityMove).join(";")}`));
+
+            setPlayerGame(playerGame => run(playerGame, playedGeneratedUtility, {type: "U-", str: "", id: ID}));
+            setAttackList(attackList => [...attackList, string]);
             resetUtility({...State, modes});
             break;
         //#endregion
@@ -185,7 +257,7 @@ const utilityPress = (Data, State) => {
 const attackPress = (State) => {
     const {
         player, 
-        step, setStep, 
+        impulse, setImpulse, 
         cursor, setCursor, 
         setSelection, 
         activeVehicles, setActiveVehicles, 
@@ -202,30 +274,30 @@ const attackPress = (State) => {
     const vehicle = vehicleOptions[cursor.menu] ?? selectedVehicle;
     const utils = selectedVehicle.Utils.Data;
 
-    switch (step) {
+    switch (impulse) {
         case 0:
             if (vehicleOptions.length === 0) return;
             setSelection(0);
             setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
-            setStep(1);
+            setImpulse(1);
             break;
         case 1:
             setSelectedVehicle(vehicle);
             setCurrentFunction(attack(activeVehicles, vehicle));
             setCursor({...cursor, mode: "Move", data: []});
-            setStep(2);
+            setImpulse(2);
             break;
         case 2: //Select Target Part 1
             if (allVehicles.length === 0) return;
             setSelection(0);
             setCursor({...cursor, data:allVehicles, mode:"Menu", menu: Math.max(cursor.menu, allVehicles.length - 1)});
-            setStep(3);
+            setImpulse(3);
             break;
         case 3: //Select Target Part 2
             setCurrentFunction(currentFunction(allVehicles[cursor.menu]))//Add target
             setSelectedVehicle([selectedVehicle, allVehicles[cursor.menu]]);
             setCursor({...cursor, data: utils, mode:"Menu", menu: Math.max(cursor.menu, utils.length - 1)});
-            setStep(4);
+            setImpulse(4);
             break;
         case 4:
             const [newVehicleArray, move, string] = currentFunction(utils[cursor.menu]);

@@ -28,9 +28,9 @@ export const gPlayerMaker = Player => Name => {
         movType: Player.movType,
         Faction: Player.Faction,
         Name,
-        Moves: [],
         Vehicles: [],
-        Loses: []
+        Loses: [],
+        hasMoved: false,
     }
 }
 

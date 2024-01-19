@@ -23,7 +23,10 @@ const initialState = {
             gameType: "Deathmatch",
             joinability: "Public"
             },
-        colorSet: {},
+        colorSet: {
+            Astute: "#0000ff",
+            Blade: "#ff0000"
+        },
         games: [],
         unsubGames: [],
         ID: "A"

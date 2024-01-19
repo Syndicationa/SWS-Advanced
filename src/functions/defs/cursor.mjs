@@ -16,7 +16,7 @@ export const cursorGenerator = (gridInfo = defaultGridInfo, parent = "") => {
     return {
         loc: [0,0],
         parent,
-        rot: [0,0],
+        rot: [0,1],
         menu: 0,
         data: [0,0],
         grid: gridInfo,
@@ -96,21 +96,20 @@ const rotateCursor = (cursor = cursorGenerator(), vector = defaultVector) => {
 }
 
 export const vehicleMovementCursor = 
-    (vehicle = vehicleTemplate, vehicleArr = [vehicleTemplate], setVehicle, moveRatio = 1) => 
+    (vehicle = vehicleTemplate, setVehicle, moveRatio = 1) => 
     (cursor = cursorGenerator(), vector = defaultVector) => {
         if (!canMove({...vehicle, Stats: {...vehicle.Stats, Mov: Math.round(vehicle.Stats.Mov*moveRatio)}}, vector)) return cursor;
         const v = generateVelocity(vehicle, vector);
         const movedVehicle = movingShip(vehicle, v);
-        const modifiedVehicleArray = mergeShipArrays(vehicleArr, [movedVehicle]);
-        setVehicle(modifiedVehicleArray);
+        setVehicle(movedVehicle);
 
         const [rotation, movY] = vector;
-	    const relativeVel = vehicle.rot.map((v) => v*movY);
+	    const relativeVel = vehicle.Location.rotation.map((v) => v*-movY);
         return {
             ...cursor, 
             loc: sumArrays(cursor.loc, relativeVel), 
             rot: rotate(cursor.rot, rotation),
-            data: vehicleMovementCursor(movedVehicle, modifiedVehicleArray, setVehicle)
+            data: vehicleMovementCursor(movedVehicle, setVehicle)
         }
     }
 
@@ -122,9 +121,12 @@ export const moveCursor = (cursor = cursorGenerator(), vector = defaultVector) =
     return adjustCursorLocation({...cursor, loc: nLoc})
 }
 
+export const fixCursorPosition = (cursor = cursorGenerator(), position = defaultVector) => {
+    const positionOnSubgrid = cursor.loc.map(a => a % cursor.region.yStep);
+    return sumArrays(scaleVector(cursor.region, position), sumArrays(positionOnSubgrid, [cursor.region.lx, cursor.region.ly]));
+}
+
 export const moveCursorToPosition = (cursor = cursorGenerator(), position = defaultVector) => {
     if (cursor.mode !== "Move") return cursor;
-    const positionOnSubgrid = cursor.loc.map(a => a % cursor.region.yStep);
-    const nLoc = sumArrays(scaleVector(cursor.region, position), positionOnSubgrid);
-    return {...cursor, loc: nLoc}
+    return {...cursor, loc: fixCursorPosition(cursor, position)}
 }

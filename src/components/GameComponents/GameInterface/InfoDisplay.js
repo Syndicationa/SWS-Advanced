@@ -12,7 +12,7 @@ export const InfoDisplay = props => {
             <h3>{title}</h3>
             <ul>
                 {info.map((value, index) => {
-                    return (<li key={index}>{(index === selected) ? ">":""}{value}</li>)
+                    return (<li key={index}>{value}</li>)
                 })}
             </ul>
         </div>

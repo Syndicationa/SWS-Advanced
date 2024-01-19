@@ -104,6 +104,8 @@ export const pop = arr => arr.slice(0,-1);
 
 export const pull = arr => arr.slice(1);
 
+export const split = (arr, position) => [arr.slice(0, position), arr.slice(position)];
+
 const defaultObjMapFunc = (value, key = "") => {return value};
 
 export const objectMap = obj => (func = defaultObjMapFunc) => Object.keys(obj).reduce(
@@ -178,7 +180,7 @@ export const rotate = (rotation = [0,0], direction = 0) => {
     const {round, cos, sin, PI: pi, atan2} = Math;
     const [xr,yr] = rotation;
     const trueDirection = direction % 8;
-    const num = ((4*atan2(-xr,yr)/Math.PI)*4 + 12 + trueDirection) % 8
+    const num = ((atan2(-xr,yr)/pi)*4 + 12 + trueDirection) % 8
     const x = round(sin(num*pi/4));
     const y = -round(cos(num*pi/4));
     return [x,y];

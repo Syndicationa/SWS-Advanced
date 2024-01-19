@@ -161,3 +161,32 @@
 	visibility: hidden;
 	display: none;
 }
+
+.Option {
+	background-color: #333;
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	grid-template-rows: 1fr 1fr;
+	grid-template-areas: 'Name SelectButton'
+						 	'HP SelectButton';
+	padding-left: 0px;
+}
+
+.Selected {
+	background-color: #444;
+}
+
+.SelectButton {
+	grid-area: SelectButton;
+	width: 100%;
+	height: 100%;
+}
+
+.Health {
+	background-color: inherit;
+	grid-area: HP;
+}
+
+ul {
+	padding-left: 0%;
+}

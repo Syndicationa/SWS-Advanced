@@ -28,8 +28,9 @@ const systemMake = (user) => {
 }
 
 const battleMake = user => {
+    const user2 = {...user, ID: "B"};
     const player = playerMaker(user)({Faction: "Astute", Name: "Synism", Admin: true});
-    const player2 = playerMaker(user)({Faction: "Blade", Name: "Bobism", Admin: true});
+    const player2 = playerMaker(user2)({Faction: "Blade", Name: "Bobism", Admin: true});
     const gplayer = gPlayerMaker(player)("Synism");
     const gplayer2 = gPlayerMaker(player2)("Bobism");
 

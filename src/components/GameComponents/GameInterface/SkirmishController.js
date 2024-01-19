@@ -1,56 +1,86 @@
-import React, { /*useCallback,*/ useCallback, useEffect, useMemo, useState } from 'react'
-//import { useDispatch, useSelector } from 'react-redux'
-import { GameUI } from './GameUI'
-//import { clone } from '../../../functions/functions'
-import { cursorGenerator, moveCursor, moveCursorToPosition, zoom } from '../../../functions/defs/cursor.mjs'
-import { replaceInArray } from '../../../functions/functions.mjs'
-import { singleBattleTemplate, vehicleTemplate } from '../../../functions/defs/templates'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { pressFunction } from '../../../functions/defs/battle/control.mjs'
+import { GameUI } from './GameUI'
+
+import { mergeArrays, replaceInArray } from '../../../functions/functions.mjs'
 import { magnitude, sub } from '../../../functions/vectors.mjs'
-import { createDisplay } from '../../../functions/defs/display.mjs'
+
+import { singleBattleTemplate, vehicleTemplate } from '../../../functions/defs/templates.mjs'
+import { cursorGenerator, fixCursorPosition, moveCursor, moveCursorToPosition, zoom } from '../../../functions/defs/cursor.mjs'
+import { createDisplay, getFromDisp } from '../../../functions/defs/display.mjs'
+
+import { pressFunction } from '../../../functions/defs/battle/control.mjs'
+import { nextPhase, runMove, runTurn } from '../../../functions/defs/battle/stage.mjs'
+import { mergeShipArrays } from '../../../functions/defs/vehicle/retrieve.mjs'
 
 const generateVehicleList = (vehicles = [vehicleTemplate], cursor = cursorGenerator(), setCursor = () => {}) => {
-    const options = vehicles.map((vehicle, i) => {
-        if (vehicle.Name !== undefined) return;
+    const options = vehicles.map((vehicle, index) => {
+        console.log(vehicle);
+        if (vehicle.Name || !vehicle) return null;
         const name = (vehicle.Appearance ?? {}).name ?? vehicle.Type.Class;
         const currentHP = vehicle.State ? vehicle.State.hp:vehicle.Stats.MaxHP;
-        const maxHP = vehicle.State ? vehicle.State.hp:vehicle.Stats.MaxHP;
-        return <div className={`Option ${cursor.menu === i ? 'Selected':''}`}>
+        return <div className={`Option ${cursor.menu === index ? 'Selected':''}`}>
             {name}
-            <br />
-            HP: {currentHP}/{maxHP}
-            <br />
-            <button onClick={setCursor({...cursor, menu: i})}>Select</button>
+            <div className='Health'>HP: {currentHP}/{vehicle.Stats.MaxHP}</div>
+            <button className='SelectButton' onClick={() => setCursor({...cursor, menu: index})}>Select</button>
         </div>
     })
-    return options
+    return options.filter(Boolean);
 }
 
 export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
     const user = useSelector(state => state.player);
 
-    const [game, setGame] = useState(g);
+    const [game, setGame] = useState(g); //Core game that playerGames are built on
+    const [playerGame, setPlayerGame] = useState(g); //Game used for the player's turns
+    const [moves, setMoves] = useState(g.Moves);
+    const [cursor, setCursor] = useState(cursorGenerator(game.Size));
 
-    //#region Game Info
+    //#region Constant Data
+    const [press] = useState(() => pressFunction(Data));
+    const [run] = useState(() => runMove(Data));
+    const [turn] = useState(() => runTurn(Data));
     const [local] = useState(!game.Type.Online);
+    //#endregion
+
+    //#region Game Data
+    const stage = useMemo(() => game.Stage, [game.Stage]);
+    const [impulse, setImpulse] = useState(0);
     const [active, setActive] = useState(true);
-    const [stage, setStage] = useState(game.Stage);
-    const [step, setStep] = useState(0);
-    const [attackList, setAttackList] = useState([]);
+
+    const [selectedVehicle, setSelectedVehicle] = useState();
+    const [currentFunction, setCurrentFunction] = useState();
+
+    const activeVehicles = useMemo(() => playerGame.Vehicles, [playerGame.Vehicles]);
+    const display = useMemo(() => createDisplay(game.Size.OverallSize)(selectedVehicle ? mergeShipArrays(activeVehicles, [selectedVehicle]): activeVehicles), 
+            [activeVehicles, selectedVehicle, game.Size.OverallSize]);
     //#endregion
 
     //#region Players
-    const [players, setPlayers] = useState(() => game.Players);
+    const players = useMemo(() => game.Players, [game]);
     const [currentPlayer, setCurrentPlayer] = useState(() => {
         if (local) return 0;
         return players.findIndex(play => user.ID === play.User.ID);
     });
-    const [player, setPlayer] = useState(players[currentPlayer]);
+    const player = useMemo(() => players[currentPlayer], [players, currentPlayer]);
 
     const updatePlayer = useCallback((playerData) => {
         const playerIndex = players.findIndex((play) => play.User.ID === playerData.User.ID);
-        setPlayers(replaceInArray(players, playerIndex, playerData));
+        const newPlayers = replaceInArray(players, playerIndex, playerData);
+        setGame(previousGame => {return {...previousGame, Players: newPlayers}});
+        return newPlayers;
+    }, [players]);
+
+    const updateHasMoves = useCallback(() => {
+        setGame(previousGame => {
+            return {
+                ...previousGame, 
+                Players: previousGame.Players.map(
+                    playerData => {
+                        return {...playerData, hasMoved: false}
+                    })
+                }
+        });
     }, [players]);
     //#endregion
 
@@ -60,47 +90,81 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
     const [snapShot, setSnapShot] = useState(null);
     //#endregion
 
-    const [cursor, setCursor] = useState(cursorGenerator(game.Size));
-
-    //#region Game Systems
-    const [press] = useState(() => pressFunction(Data));
-    const [selectedVehicle, setSelectedVehicle] = useState();
-    const [currentFunction, setCurrentFunction] = useState();
-    const [activeVehicles, setActiveVehicles] = useState(game.Vehicles);
-    const [Display, setDisplay] = useState(() => createDisplay(game.Size.OverallSize)());
+    //#region UI
     const [selection, setSelection] = useState(1);
-    const [list, setList] = useState([]);
-    const data = [`Position: ${cursor.loc} Region Data: ${cursor.region.xStep}`]
-
-    useEffect(() => {
-        setDisplay(createDisplay(game.Size.OverallSize)(activeVehicles));
-    }, [activeVehicles, game.Size.OverallSize]);
-
-    useEffect(() => {
-        if (cursor.mode === "Move") return;
-        setList(generateVehicleList(cursor.data, cursor, setCursor))
-    }, [cursor])
+    const list = useMemo(() => {
+        if (cursor.mode === "Menu") return generateVehicleList(cursor.data, cursor, setCursor)
+        else if (cursor.mode === "Move") return generateVehicleList(getFromDisp(display, cursor.loc, cursor.loc))
+    }, [cursor]);
+    const data = [`Position: ${cursor.loc} Region Data: ${cursor.region.xStep}`];
+    const [attackList, setAttackList] = useState([]);
     //#endregion
 
     const State = useMemo(() => {
         return {
+            playerGame, setPlayerGame,
+            moves, setMoves,
             cursor, setCursor,
+            run,
+            stage, impulse, setImpulse,
+            activeVehicles, display,
             selectedVehicle, setSelectedVehicle,
             currentFunction, setCurrentFunction,
-            activeVehicles, setActiveVehicles,
-            player, players,
-            stage, active,
-            step, setStep,
-            setList, setSelection,
-            attackList, setAttackList
+            player,
+            setSelection,
+            setAttackList
         }
-    }, [cursor, selectedVehicle, currentFunction, activeVehicles, player, players, stage, active, step, attackList])
+    }, [playerGame, moves, cursor, stage, impulse, activeVehicles, selectedVehicle, currentFunction, player])
+
+    const nextPlayer = useCallback(() => {
+        if (local) {
+            setGame(previousGame => {
+                setCurrentPlayer(currentPlayer + 1);
+                const newGame = {...previousGame, Moves: moves};
+                setPlayerGame(newGame);
+                return newGame;
+            })    
+        } else {
+            setActive(false);
+            //Do Database stuff
+        }
+    }, [currentPlayer])
+
+    const endTurn = useCallback(() => {
+        const newPlayers = updatePlayer({...player, hasMoved: true});
+        const allMoved = newPlayers.every((playerObject) => playerObject.hasMoved);
+
+        if (!allMoved) {
+            nextPlayer();
+            return;
+        }
+        setGame(previousGame => {
+            const [changedGame, string] = turn({...previousGame, Moves: moves}, moves);
+            const game = nextPhase(changedGame);
+            setPlayerGame(game);
+            setMoves(game.Moves);
+            return game;
+        });
+
+        updateHasMoves();
+
+        if (local) {
+            setCurrentPlayer(0);
+            return;
+        }
+        //Database stuff
+    }, [player, moves, updatePlayer, nextPlayer])
 
     const input = useMemo(() => {
         return {
             system: {
                 zoomOut: () => setCursor(zoom(cursor,-1)), 
                 zoomIn: () => setCursor(zoom(cursor, 1)),
+                endTurn: () => endTurn(),
+                group: () => console.log(currentPlayer, players),
+                ungroup: () => console.log(game),
+                info: () => console.log(playerGame),
+                back: () => console.log(moves),
             },
             cursor,
             moveCursor: 
@@ -108,7 +172,7 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
                     press(State):
                     setCursor(moveCursor(cursor, vec)),
             moveCursorTo: 
-                (pos) => magnitude(sub(cursor.loc,pos)) === 0 ? 
+                (pos) => magnitude(sub(cursor.loc,fixCursorPosition(cursor, pos))) === 0 ? 
                     press(State): 
                     setCursor(moveCursorToPosition(cursor, pos))
         }
@@ -116,22 +180,24 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
 
     const uiGame = useMemo(() => {
         return {
-            ...g,
+            ...game,
             data,
             active,
             stage,
-            step,
-            players, updatePlayer,
-            Display,
+            impulse,
+            players, updatePlayer, currentPlayer,
+            display,
             list,
             selection,
         }
-    }, [Display, active, data, g, list, players, selection, stage, step, updatePlayer])
+    }, [display, active, data, list, players, selection, stage, impulse, game, updatePlayer])
 
     const closeFunction = () => {
         //SaveGame
         close();
     }
+
+    useEffect(() => console.log(moves), [moves]);
 
     return (
         <GameUI game={uiGame} input={input} close={closeFunction} />

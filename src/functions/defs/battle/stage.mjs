@@ -1,8 +1,9 @@
-import { makeVehicle } from "../vehicle/vehicle.mjs";
+import { applyStatuses, makeVehicle } from "../vehicle/vehicle.mjs";
 import { finalizeMove, moveShip } from "../vehicle/move.mjs";
 import { gShipFromID, mergeShipArrays } from "../vehicle/retrieve.mjs";
 import { applyAttack } from "../vehicle/attack.mjs";
-import { filter, last, map, objectMap, pipe } from "../../functions.mjs";
+import { filter, last, map, objectMap, pipe, pop, split } from "../../functions.mjs";
+import { applyUtility } from "../vehicle/utility.mjs";
 
 export const runTurn = Data => (State, Moves) => {
     const keys = Object.keys(Moves);
@@ -34,7 +35,7 @@ export const runMove = Data => (State, Move, {type, id, str}) => {
         const type = Number(tStr);
         const pos = JSON.parse(posStr);
         const rot = JSON.parse(rotStr);
-        const source = Data.Vehicles[faction][type];
+        const source = Data.shipTypes[faction][type];
         const vehicle = makeVehicle(source, id, vehicleArr.length, pos, rot);
         return {
             ...State, 
@@ -48,8 +49,6 @@ export const runMove = Data => (State, Move, {type, id, str}) => {
         const vel = JSON.parse(velStr);
         const rot = JSON.parse(rotStr);
 
-        console.log(vehicle);
-
         const nVehicle = moveShip(vehicle, {vel, rot});
 
         return {
@@ -58,10 +57,45 @@ export const runMove = Data => (State, Move, {type, id, str}) => {
         }
     }
     if (type === "U-") { //Utility
-        const [utilMovement, utilApplication, updates] = substrs;
-        const {str: _, ...movedState} = runMove(Data)(State, utilMovement.replace(":","."), {type: "M-", id, str});
+        const [vehicleID, utilMovement, utilApplication, updates] = substrs;
+        const vehicle = gShipFromID(id, vehicleID, vehicleArr);
+        let nVehicle = vehicle;
+        let info = '';
 
-        return State;
+        if (utilMovement !== "") {
+            const [vel, rot] = utilMovement.split(":").map(JSON.parse);
+            nVehicle = moveShip(nVehicle, {vel, rot});
+        }
+        if (updates !== "") {
+            const [defenseWeapons, shields] = updates.split(":");
+            const wActive = defenseWeapons.split(",").map(JSON.parse);
+            const sActive = shields.split(",").map(JSON.parse);
+
+            nVehicle = {
+                ...nVehicle,
+                Defenses: {
+                    ...nVehicle.Defenses,
+                    wActive,
+                    sActive
+                }
+            }
+        }
+
+        let nVehicles = mergeShipArrays(vehicleArr, [nVehicle])
+
+        if (utilApplication !== "") {
+            const [utilityID, targetPlayerIDs, targetVehicleIDs, hit] = utilApplication.split(":").map(JSON.parse);
+            const targets = targetPlayerIDs.map((playerID, i) => {
+                return gShipFromID(playerID, Number(targetVehicleIDs[i]), vehicleArr)
+             });
+            [nVehicles, info] = applyUtility(Data, nVehicles, nVehicle, targets[0], nVehicle.Utils.Util(utilityID), hit);
+        }
+
+        return {
+            ...State,
+            Vehicles: nVehicles,
+            str: str + `${info + info.length === 0 ? '':'\n'}`
+        };
     }
     if (type === "A-") { //Attack
         const [attackerID, weapStr, targetPlayers, targetIDs, hitStr] = substrs;
@@ -86,9 +120,17 @@ export const runMove = Data => (State, Move, {type, id, str}) => {
     return State;
 }
 
-export const updateShips = pipe(map(ship => {
-    
-}), filter(ship => ship.State.hp));
+export const addMove = (moves = {}, ID = "", move = "") => {
+    const [previousMoves, lastMove] = split(moves[ID], -1);
+    return {...moves, [ID]: [...previousMoves, `${lastMove[0]}${move};`]}
+};
+
+export const setMove = (moves = {}, ID = "", move = "") => {
+    const previousMoves = pop(moves[ID]);
+    return {...moves, [ID]: [...previousMoves, move]}
+}
+
+export const updateShips = pipe(map(ship => applyStatuses(ship)), filter(ship => ship.State.hp));
 
 const eF = (s) => {
     const {
@@ -105,28 +147,30 @@ const eF = (s) => {
 }
 
 export const nextPhase = (State) => {
-    console.log(State);
+    const stageNext =  ["M-", "U-", "A-", "M-"];
     const stage = State.Stage;
     const moves = State.Moves;
+    const nMoves = objectMap(moves)((move, key) => {
+        if (key === "Phase") return [...move, "Next"];
+        return [...move, stageNext[stage]]});
+    const Vehicles = updateShips(State.Vehicles);
+
     if (stage === 0) {
-        const nMoves = objectMap(moves)((move, key) => {
-            if (key === "Phase") return [...move, last(move)];
-            return [...move, ""]});
         return {
             ...State,
             Stage: 1,
-            Moves: nMoves
-        }
-    } else if (stage === 1) {
-        const nMoves = objectMap(moves)((move, key) => {
-            if (key === "Phase") return [...move, last(move)];
-            return [...move, ""]});
-        const Vehicles = map(finalizeMove, State.Vehicles);
-        return {
-            ...State,
-            Stage: 3,
             Vehicles,
             Moves: nMoves
         }
+    } else if (stage === 1) {
+        const newVehicles = map(finalizeMove, Vehicles);
+        return {
+            ...State,
+            Stage: 2,
+            Vehicles: newVehicles,
+            Moves: nMoves
+        }
+    } else if (stage === 2) {
+
     }
 }

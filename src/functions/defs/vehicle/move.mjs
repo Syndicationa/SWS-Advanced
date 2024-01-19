@@ -7,7 +7,7 @@ import {updateArea, reArea} from './vehicle.mjs'
 
 export const canMove = (ship, addVel) => {
     const {energy, mov} = ship.State;
-    const {MovEnergy} = ship.Stats;
+    const {MovEnergy, Mov} = ship.Stats;
     const {vel, prevVel} = ship.Velocity;
     const [, movY] = addVel;
 
@@ -18,7 +18,7 @@ export const canMove = (ship, addVel) => {
 
 	const remainingEnergy = calculateMovEnergy(energy, MovEnergy*acceleration);
 
-	return (acceleration <= mov && remainingEnergy >= 0);
+	return (acceleration <= Mov && remainingEnergy >= 0);
 
     // if (movType === 0) {
     //     if (movX !== 0 && movY !== 0) return false;
@@ -46,7 +46,7 @@ export const generateVelocity = (Vehicle = vehicleTemplate, addVel = [0,0]) => {
 	const vel = Velocity.vel;
 	const [rotation, movY] = addVel;
 
-	const relativeVel = rot.map((v) => v*movY);
+	const relativeVel = rot.map((v) => v*-movY);
 
 	const nVel = sumArrays(vel, relativeVel);
 	const nRot = rotate(rot, rotation);

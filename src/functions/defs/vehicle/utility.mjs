@@ -64,8 +64,8 @@ const applySource = (source = vehicleTemplate, util = utilityTemplate) => {
 //#endregion
 
 //#region Utilities
-const heal = (source, target, util = utilityTemplate) => {
-    const hit = calcRangeHC(source, target, util.Wran);
+const heal = (source, target, util = utilityTemplate, hitValue) => {
+    const hit = hitValue ?? calcRangeHC(source, target, util.Wran);
     if (!hit) return {
         modifiedShips: [],
         damage: [[0,0]],
@@ -82,8 +82,8 @@ const heal = (source, target, util = utilityTemplate) => {
     }
 };
 
-const resupply = (source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate) => {
-    const hit = calcRangeHC(source, target, util.Wran);
+const resupply = (source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate, hitValue) => {
+    const hit = hitValue ?? calcRangeHC(source, target, util.Wran);
     if (!hit) return {
         modifiedShips: [],
         damage: [[0,0]],
@@ -104,8 +104,8 @@ const resupply = (source = vehicleTemplate, target = vehicleTemplate, util = uti
     }
 };
 
-const energyTransfer = (source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate) => {
-    const hit = calcRangeHC(source, target, util.Wran);
+const energyTransfer = (source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate, hitValue) => {
+    const hit = hitValue ?? calcRangeHC(source, target, util.Wran);
     if (!hit) return {
         modifiedShips: [],
         damage: [[0,0]],
@@ -124,7 +124,7 @@ const energyTransfer = (source = vehicleTemplate, target = vehicleTemplate, util
     }
 };
 
-const deployVehicle = (source = vehicleTemplate, vehicleArray = [vehicleTemplate], util = utilityTemplate, Data = data) => {
+const deployVehicle = (source = vehicleTemplate, vehicleArray = [vehicleTemplate], util = utilityTemplate, Data = data, hitValue) => {
     const shipNum = getPlayerShips(source, vehicleArray)
         .reduce(
             (acc,vehicle) => Math.max(acc, vehicle.Ownership.vID),0) + 1;
@@ -148,9 +148,9 @@ const deployVehicle = (source = vehicleTemplate, vehicleArray = [vehicleTemplate
     
 };
 
-const inflictStatus = (source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate) => {
+const inflictStatus = (source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate, hitValue) => {
     const [targetName, status] = util.Status;
-    const hit = calcHit(calcGenHitChance(source, target, util));
+    const hit = hitValue ?? calcHit(calcGenHitChance(source, target, util));
 
     const newSource = applySource(source, util);
 
@@ -209,11 +209,47 @@ export const utility = curry((Data, shipArray, source = vehicleTemplate, target 
 
     const merged = mergeShipArrays(shipArray, modifiedShips);
     const move = [
-        source.Ownership.vID, getUtilIndex(source.Utils.Data, util), 
+        getUtilIndex(source.Utils.Data, util), 
         trueTarget.map((target) => target.Owner.Player), trueTarget.map((target) => target.Owner.vID), 
         hit
     ]
 
     const dataString = createDataStr(source, trueTarget, util, damage, hit);
     return [merged, move, dataString]
+});
+
+export const applyUtility = curry((Data, shipArray, source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate, hit = 0) => {
+    const {Type} = util;
+
+    let modifiedShips = [];
+    let damage = [0,0];
+
+    let trueTarget = [target];
+
+    switch (Type) {
+        //"Healing/Resupplying/Energy/Deploying/Status"
+        case "Healing":
+            ({modifiedShips, damage} = heal(source, target, util, hit));
+            break;
+        case "Resupplying":
+            ({modifiedShips, damage} = resupply(source, target, util, hit));
+            break;
+        case "Energy":
+            ({modifiedShips, damage} = energyTransfer(source, target, util, hit));
+            break;
+        case "Deploying":
+            ({modifiedShips, damage} = deployVehicle(source, shipArray, util, Data, hit));
+            break;
+        case "Status":
+            ({modifiedShips, damage} = inflictStatus(source, shipArray, util, Data, hit));
+            break;
+        default:
+            break;
+    }
+    modifiedShips = modifiedShips.map(updateArea(reArea(true, false)));
+
+    const merged = mergeShipArrays(shipArray, modifiedShips);
+
+    const dataString = createDataStr(source, trueTarget, util, damage, hit);
+    return [merged, dataString]
 })
