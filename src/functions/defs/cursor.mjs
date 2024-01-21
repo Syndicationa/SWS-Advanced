@@ -97,19 +97,19 @@ const rotateCursor = (cursor = cursorGenerator(), vector = defaultVector) => {
 export const vehicleMovementCursor = 
     (vehicle = vehicleTemplate, setVehicle, moveRatio = 1) => 
         (cursor = cursorGenerator(), vector = defaultVector) => {
-            if (!canMove({...vehicle, Stats: {...vehicle.Stats, Mov: Math.round(vehicle.Stats.Mov*moveRatio)}}, vector)) return cursor;
+            if (!canMove(vehicle, vector, moveRatio)) return cursor;
             const v = generateVelocity(vehicle, vector);
             const movedVehicle = movingShip(vehicle, v);
             setVehicle(movedVehicle);
 
             const [rotation, movY] = vector;
 	    const relativeVel = vehicle.Location.rotation.map((v) => v*-movY);
-            return {
+            return adjustCursorLocation({
                 ...cursor, 
                 loc: sumArrays(cursor.loc, relativeVel), 
                 rot: rotate(cursor.rot, rotation),
                 data: vehicleMovementCursor(movedVehicle, setVehicle)
-            };
+            });
         };
 
 export const moveCursor = (cursor = cursorGenerator(), vector = defaultVector) => {

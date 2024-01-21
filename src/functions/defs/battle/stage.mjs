@@ -59,6 +59,7 @@ export const runMove = Data => (State, Move, {type, id, str}) => {
     if (type === "U-") { //Utility
         const [vehicleID, utilMovement, utilApplication, updates] = substrs;
         const vehicle = gShipFromID(id, vehicleID, vehicleArr);
+        console.log(vehicle, vehicleID, vehicleArr);
         let nVehicle = vehicle;
         let info = "";
 

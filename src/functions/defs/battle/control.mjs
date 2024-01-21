@@ -1,6 +1,7 @@
 import { last, replaceInArray } from "../../functions.mjs";
 import { vehicleMovementCursor, zoom } from "../cursor.mjs";
 import { attack } from "../vehicle/attack.mjs";
+import { velZero } from "../vehicle/move.mjs";
 import { gShipFromID, getPlayShips } from "../vehicle/retrieve.mjs";
 import { utility } from "../vehicle/utility.mjs";
 import { addMove, setMove } from "./stage.mjs";
@@ -46,7 +47,7 @@ const placementPress = (Data, State) => {
         case 0: {
             setSelection(1);
             setSelection(0);
-            setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
+            setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.min(cursor.menu, vehicleOptions.length - 1)});
             setImpulse(1);
             break;
         }
@@ -94,7 +95,7 @@ const movementPress = (State) => {
             if (vehicleOptions.length === 0) return;
             setSelection(1);
             setSelection(0);
-            setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
+            setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.min(cursor.menu, vehicleOptions.length - 1)});
             setImpulse(1);
             break;
         }
@@ -130,16 +131,17 @@ const movementPress = (State) => {
 };
 
 const setupUtilityModes = (Data, State) => {
-    const {cursor, setCursor, activeVehicles, setSelectedVehicle, selectedVehicle, setCurrentFunction} = State;
+    const {cursor, setCursor, activeVehicles, setSelectedVehicle, selectedVehicle, setCurrentFunction, setListType, setImpulse} = State;
     const selected = gShipFromID(selectedVehicle.Ownership.Player,selectedVehicle.Ownership.vID, activeVehicles);
     setSelectedVehicle(selected);
+    setListType("Vehicle");
     switch (cursor.menu) {
         case 0: {//Move
-            setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(selected, setSelectedVehicle, .25)});
+            setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(velZero(selected), setSelectedVehicle, .25)});
             break;
         }
         case 1: {//Attack
-            setCurrentFunction(utility(Data, activeVehicles, selectedVehicle));
+            setCurrentFunction(utility(Data, activeVehicles, selected));
             setCursor({...cursor, mode: "Move", data: []});
             break;
         }
@@ -147,6 +149,7 @@ const setupUtilityModes = (Data, State) => {
             break;
         }
         case 3: {
+            setImpulse(0);
             setCursor({...cursor, mode: "Move", data: []});
             break;
         }
@@ -156,8 +159,9 @@ const setupUtilityModes = (Data, State) => {
 };
 
 const resetUtility = (State) => {
-    const {modes, setSelection, setCursor, cursor, setImpulse} = State;
+    const {modes, setSelection, setCursor, cursor, setImpulse, setListType} = State;
     setSelection(0);
+    setListType("Message");
     setCursor({...cursor, mode: "Menu", data: modes, menu: 0});
     setImpulse(2);
 };
@@ -196,7 +200,7 @@ const utilityPress = (Data, State) => {
         case 0: {
             if (vehicleOptions.length === 0) return;
             setSelection(0);
-            setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
+            setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.min(cursor.menu, vehicleOptions.length - 1)});
             setImpulse(1);
             break;
         }
@@ -233,13 +237,13 @@ const utilityPress = (Data, State) => {
         case 4: {//Select Target Part 1
             if (allVehicles.length === 0) return;
             setSelection(0);
-            setCursor({...cursor, data:allVehicles, mode:"Menu", menu: Math.max(cursor.menu, allVehicles.length - 1)});
+            setCursor({...cursor, data:allVehicles, mode:"Menu", menu: Math.min(cursor.menu, allVehicles.length - 1)});
             setImpulse(5);
             break;
         }
         case 5: {//Select Target Part 2
             setCurrentFunction(currentFunction(allVehicles[cursor.menu]));//Add target
-            setCursor({...cursor, data: utils, mode:"Menu", menu: Math.max(cursor.menu, utils.length - 1)});
+            setCursor({...cursor, data: utils, mode:"Menu", menu: Math.min(cursor.menu, utils.length - 1)});
             setImpulse(6);
             break;
         }
@@ -293,7 +297,7 @@ const attackPress = (State) => {
         case 0: {
             if (vehicleOptions.length === 0) return;
             setSelection(0);
-            setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
+            setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.min(cursor.menu, vehicleOptions.length - 1)});
             setImpulse(1);
             break;
         }
@@ -307,14 +311,14 @@ const attackPress = (State) => {
         case 2: {//Select Target Part 1
             if (allVehicles.length === 0) return;
             setSelection(0);
-            setCursor({...cursor, data:allVehicles, mode:"Menu", menu: Math.max(cursor.menu, allVehicles.length - 1)});
+            setCursor({...cursor, data:allVehicles, mode:"Menu", menu: Math.min(cursor.menu, allVehicles.length - 1)});
             setImpulse(3);
             break;
         }
         case 3: {//Select Target Part 2
             setCurrentFunction(currentFunction(allVehicles[cursor.menu]));//Add target
             setSelectedVehicle([selectedVehicle, allVehicles[cursor.menu]]);
-            setCursor({...cursor, data: utils, mode:"Menu", menu: Math.max(cursor.menu, utils.length - 1)});
+            setCursor({...cursor, data: utils, mode:"Menu", menu: Math.min(cursor.menu, utils.length - 1)});
             setImpulse(4);
             break;
         }

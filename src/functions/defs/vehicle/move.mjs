@@ -5,20 +5,22 @@ import { vehicleTemplate } from "../templates.mjs";
 import {updateArea, reArea} from "./vehicle.mjs";
 
 
-export const canMove = (ship, addVel) => {
+export const canMove = (ship, addVel, utility = false) => {
     const {energy} = ship.State;
     const {MovEnergy, Mov} = ship.Stats;
     const {vel, prevVel} = ship.Velocity;
     const [, movY] = addVel;
 
-    const relativeVel = ship.Location.rotation.map((v) => v*movY);
+    const moveRatio = utility ? 1:.25;
+
+    const relativeVel = ship.Location.rotation.map((v) => v*-movY);
     const calculatedVel = sumArrays(vel, relativeVel);
 
-    const acceleration = distance(prevVel, calculatedVel);
+    const acceleration = utility ? distance(prevVel, calculatedVel):calculatedVel;
 
     const remainingEnergy = calculateMovEnergy(energy, MovEnergy*acceleration);
 
-    return (acceleration <= Mov && remainingEnergy >= 0);
+    return (acceleration <= Mov*moveRatio && remainingEnergy >= 0);
 };
 
 const calculateMovEnergy = (energy = 0, MovEnergy = 0, add = true) => {
@@ -64,6 +66,8 @@ const mShip = curry((render, Vehicle, Velocity) => {
 
 export const movingShip = mShip(updateArea(reArea(true, true)));
 export const moveShip = mShip(updateArea(reArea(false, false)));
+
+export const velZero = vehicle => {return {...vehicle, Velocity: {...vehicle.Velocity, vel: [0,0]}};};
 
 export const finalizeMove = V => {
     const {Velocity, Location, State, Appearance} = V;

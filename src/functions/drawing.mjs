@@ -265,8 +265,8 @@ export const drawCursor = (board, size, cursor) => {
         
         const [xr,yr] = rot;
         const num = ((atan2(-xr,yr)/pi)*4 + 4) % 8;
-        const left = num - (270/90);
-        const right = num + (270/90);
+        const left = num - (180/90);
+        const right = num + (180/90);
 
         board.moveTo(midx + (width/2)*rot[0], midy + (height/2)*rot[1]);
         board.arc(midx, midy, height/10, left*pi/4-pi/2, right*pi/4-pi/2, false);

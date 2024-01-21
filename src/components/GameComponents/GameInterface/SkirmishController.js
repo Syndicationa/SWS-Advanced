@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { PropTypes } from "prop-types";
 import { GameUI } from "./GameUI";
@@ -6,7 +6,7 @@ import { GameUI } from "./GameUI";
 import { replaceInArray } from "../../../functions/functions.mjs";
 import { magnitude, sub } from "../../../functions/vectors.mjs";
 
-import { singleBattleTemplate, vehicleTemplate } from "../../../functions/defs/templates.mjs";
+import { singleBattleTemplate } from "../../../functions/defs/templates.mjs";
 import { cursorGenerator, fixCursorPosition, moveCursor, moveCursorToPosition, zoom } from "../../../functions/defs/cursor.mjs";
 import { createDisplay, getFromDisp } from "../../../functions/defs/display.mjs";
 
@@ -14,20 +14,7 @@ import { pressFunction } from "../../../functions/defs/battle/control.mjs";
 import { nextPhase, runMove, runTurn } from "../../../functions/defs/battle/stage.mjs";
 import { mergeShipArrays } from "../../../functions/defs/vehicle/retrieve.mjs";
 
-const generateVehicleList = (vehicles = [vehicleTemplate], cursor = cursorGenerator(), setCursor = () => {}) => {
-    const options = vehicles.map((vehicle, index) => {
-        console.log(vehicle);
-        if (vehicle.Name || !vehicle) return null;
-        const name = vehicle.Appearance?.name ?? vehicle.Type.Class;
-        const currentHP = vehicle?.State?.hp ??vehicle.Stats.MaxHP;
-        return <div className={`Option ${cursor.menu === index ? "Selected":""}`} key={index}>
-            {name}
-            <div className='Health'>HP: {currentHP}/{vehicle.Stats.MaxHP}</div>
-            <button className='SelectButton' onClick={() => setCursor({...cursor, menu: index})}>Select</button>
-        </div>;
-    });
-    return options.filter(Boolean);
-};
+import { generateButtonedVehicles, generateStringList, generateVehicleList } from "../../../functions/listGenerator.mjs";
 
 const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
     const user = useSelector(state => state.player);
@@ -93,8 +80,10 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
 
     //#region UI
     const [selection, setSelection] = useState(1);
+    const [listType, setListType] = useState("Vehicle");
     const list = useMemo(() => {
-        if (cursor.mode === "Menu") return generateVehicleList(cursor.data, cursor, setCursor);
+        if (listType === "Message") return generateStringList(cursor.data, cursor, setCursor);
+        else if (cursor.mode === "Menu") return generateButtonedVehicles(cursor.data, cursor, setCursor);
         else if (cursor.mode === "Move") return generateVehicleList(getFromDisp(display, cursor.loc, cursor.loc));
     }, [cursor]);
     const data = [`Position: ${cursor.loc} Region Data: ${cursor.region.xStep}`];
@@ -112,6 +101,7 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
             selectedVehicle, setSelectedVehicle,
             currentFunction, setCurrentFunction,
             player,
+            setListType,
             setSelection,
             setAttackList
         };
@@ -198,8 +188,6 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
         //SaveGame
         close();
     };
-
-    useEffect(() => console.log(moves), [moves]);
 
     return (
         <GameUI game={uiGame} input={input} close={closeFunction} />
