@@ -2,23 +2,23 @@ import { last, pop } from "../../functions.mjs";
 import { playerTemplate } from "../templates.mjs";
 
 export const battleTemplate = {
-		Players: [],
-        Vehicles: [],
-		Losses: [],
-		Retreated: [],
-		Stage: 0,
-		Moves: {},
+    Players: [],
+    Vehicles: [],
+    Losses: [],
+    Retreated: [],
+    Stage: 0,
+    Moves: {},
 
-		//This is for inside the battle
-		Map: {Space: [], Ground: [], Domains: []},
+    //This is for inside the battle
+    Map: {Space: [], Ground: [], Domains: []},
 
-		//This is for the Sector Map
-		Locations: [],
+    //This is for the Sector Map
+    Locations: [],
 
-        Type: "",
+    Type: "",
 
-        PlayerCount: 0
-}
+    PlayerCount: 0
+};
 
 export const createBattle = loc => player => {
     const ID = player.User.ID;
@@ -38,8 +38,8 @@ export const createBattle = loc => player => {
         Locations: [loc.Loc],
         Type: "Game",
         Display: []
-    }
-}
+    };
+};
 
 export const singleBattle = player => data => {
     const ID = player.User.ID;
@@ -61,21 +61,21 @@ export const singleBattle = player => data => {
         PlayerCount,
         Display: [],
         Size
-    }
-}
+    };
+};
 
 const colorPlayers = (players = [playerTemplate], addedPlayer = playerTemplate) => {
     const addedPlayerColors = {};
-    players.forEach(player => addedPlayerColors[player.User.ID] = addedPlayer.colorSet[player.Faction])
+    players.forEach(player => addedPlayerColors[player.User.ID] = addedPlayer.colorSet[player.Faction]);
     const modAddedPlayer = {
         ...addedPlayer, 
         colorSet: {...addedPlayer.colorSet,
             ...addedPlayerColors
         }};
     return [...players, modAddedPlayer].map(player => {
-        return {...player, colorSet:{...player.colorSet, [addedPlayer.User.ID]: player.colorSet[addedPlayer.Faction]}}
-    })
-}
+        return {...player, colorSet:{...player.colorSet, [addedPlayer.User.ID]: player.colorSet[addedPlayer.Faction]}};
+    });
+};
 
 export const addPlayer = game => player => {
     const ID = player.User.ID;
@@ -87,8 +87,8 @@ export const addPlayer = game => player => {
     if (Players.some(play => play.User.ID === ID)) return game;
 
     const Moves = game.Moves;
-    const pMoves = Moves.Turns.map(() => 'N-Skip');
-    const moveType = Stage === 0 ? "P-":"U-"
+    const pMoves = Moves.Turns.map(() => "N-Skip");
+    const moveType = Stage === 0 ? "P-":"U-";
     const playerMoves = [...pop(pMoves), moveType];
     const nDataMoves = [...pop(Moves.Data), last(Moves.Data) + `A.${ID};`];
     const nMoves = {...Moves, Data: nDataMoves, [ID]: playerMoves};
@@ -96,5 +96,5 @@ export const addPlayer = game => player => {
         ...game,
         Moves: nMoves,
         Players: colorPlayers(Players, player)
-    }
-}
+    };
+};

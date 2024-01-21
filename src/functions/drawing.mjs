@@ -1,13 +1,12 @@
 import { getFromDisp } from "./defs/display.mjs";
-import { intDivideVector, modVector, sub } from "./vectors.mjs";
-import { map } from "./functions.mjs";
+import { intDivideVector, sub } from "./vectors.mjs";
 import { saveFileTemplate } from "./defs/planets.mjs";
 
 export const grSize = (region) => (region.hy - region.ly + 1)/region.yStep;
 
 export const clearBoard = (board) => {
-    board.getContext("2d").clearRect(0,0, board.width, board.height)
-}
+    board.getContext("2d").clearRect(0,0, board.width, board.height);
+};
 
 //#region Grid
 export const drawGrid = (gridcanvas, grid, region) => {
@@ -44,7 +43,7 @@ export const drawGrid = (gridcanvas, grid, region) => {
     drawGridLines(grid, edgeColor, 0, sizeInfo);
     drawGridLines(grid, edgeColor, Math.floor(size/2), sizeInfo);
     drawGridLines(grid, edgeColor, size, sizeInfo);
-}
+};
 
 const drawGridLines = (grid, color, i, sizeInfo) => {
     const {width, height, size} = sizeInfo;
@@ -61,11 +60,11 @@ const drawGridLines = (grid, color, i, sizeInfo) => {
     grid.moveTo(0,i*height);
     grid.lineTo(size*width,i*height);
     grid.stroke();	
-}
+};
 
 export const copyGrid = (main, grid) => {
     main.drawImage(grid, 0, 0);
-}
+};
 //#endregion
 
 //#region Ships
@@ -92,7 +91,7 @@ const drawRect = (board, size, position) => {
     board.fill();
     board.stroke();
     return;
-}
+};
 
 const drawSquare = (board, size, position) => {
     const {height, width} = size;
@@ -104,8 +103,8 @@ const drawSquare = (board, size, position) => {
     if (!Array.isArray(rotation)) {
         return;
     }
-    drawDirection(board, size, position)
-}
+    drawDirection(board, size, position);
+};
 
 const drawOctagon = (board, size, position) => {
     const {height, width} = size;
@@ -123,7 +122,7 @@ const drawOctagon = (board, size, position) => {
     board.stroke();
     board.beginPath();
     drawDirection(board, size, position);
-}
+};
 
 const drawCircle = (board, size, position) => {
     const {height, width} = size;
@@ -133,7 +132,7 @@ const drawCircle = (board, size, position) => {
     board.stroke();
     board.beginPath();
     drawDirection(board, size, position);
-}
+};
 
 const drawDirection = (board, size, position, colorSet = false) => {
     const {height, width} = size;
@@ -141,7 +140,7 @@ const drawDirection = (board, size, position, colorSet = false) => {
 
     const {cos, sin, PI: pi, atan2} = Math;
 
-    const rotation = ((atan2(-xr,yr)/pi)*4 + 12) % 8
+    const rotation = ((atan2(-xr,yr)/pi)*4 + 12) % 8;
 
     if (!colorSet) {
         board.strokeStyle = "#ffffff";
@@ -163,7 +162,7 @@ const drawDirection = (board, size, position, colorSet = false) => {
     board.closePath();
     board.fill();
     board.stroke();
-}
+};
 
 const drawMany = (board, size, position, count, colors) => {
     const {height, width} = size;
@@ -176,7 +175,7 @@ const drawMany = (board, size, position, count, colors) => {
         board.stroke();
     }
 
-}
+};
 
 export const drawShips = (display, position, colors, board, size) => {
     const {lx, ly, hx, hy, xStep, yStep} = position;
@@ -189,7 +188,7 @@ export const drawShips = (display, position, colors, board, size) => {
             const ships = getFromDisp(display, [x, y], [x + xStep, y + yStep]);
 
             const colorSet = ships.reduce((acc, ship) => {
-                if (ship.Ownership === undefined) return [...acc, ship.Appearance.Color]
+                if (ship.Ownership === undefined) return [...acc, ship.Appearance.Color];
                 const color = colors[ship.Ownership.Player];
                 if (acc.some((col) => col === color)) {
                     return acc;
@@ -198,9 +197,9 @@ export const drawShips = (display, position, colors, board, size) => {
             }, []);
 
             const shape = ships.reduce((acc, ship) => {
-                if (ship.State === undefined) return {HP: Infinity, Shape: ship.Appearance.Shape}
+                if (ship.State === undefined) return {HP: Infinity, Shape: ship.Appearance.Shape};
                 if (acc.HP < ship.State.hp) {
-                    return {HP: ship.State.hp, Shape: ship.Appearance.Shape}
+                    return {HP: ship.State.hp, Shape: ship.Appearance.Shape};
                 }
                 return acc;
             },{HP: 0, Shape: ""}).Shape;
@@ -208,10 +207,10 @@ export const drawShips = (display, position, colors, board, size) => {
             if (ships.length === 0) {
                 continue;
             } else if ((xStep !== 1 && yStep !== -1) || colorSet.length > 1) {
-                drawMany(board, size, {x: (x - lx)/xStep, y: (y - ly)/yStep}, ships.length, colorSet)
+                drawMany(board, size, {x: (x - lx)/xStep, y: (y - ly)/yStep}, ships.length, colorSet);
             } else {
                 board.strokeStyle = colorSet[0];
-		        board.fillStyle = colorSet[0];
+                board.fillStyle = colorSet[0];
                 let pos = {x: (x - lx)/xStep, y: (y - ly)/yStep, rotation: (ships[0].Location ?? {rotation: -1}).rotation};
                 board.beginPath();
                 switch (shape) {
@@ -233,7 +232,7 @@ export const drawShips = (display, position, colors, board, size) => {
             }
         }
     }
-}
+};
 //#endregion
 
 //#region Cursor
@@ -254,13 +253,30 @@ export const drawCursor = (board, size, cursor) => {
     const lower = y*height + 9*height/10;
     const innerLower = y*height + 6*height/10;
 
-    const midx = x*width + width/2;
-    const midy = y*height + height/2;
-
     board.strokeStyle = "#D0D0D0";
+    board.fillStyle = "#D0D0D0";
     board.lineWidth = width/30;
+    board.beginPath();    
 
-    board.beginPath();
+    if (mode === "Rotate") {
+        const midx = x*width + width/2;
+        const midy = y*height + height/2;
+        const {PI: pi, atan2} = Math;
+        
+        const [xr,yr] = rot;
+        const num = ((atan2(-xr,yr)/pi)*4 + 4) % 8;
+        const left = num - (270/90);
+        const right = num + (270/90);
+
+        board.moveTo(midx + (width/2)*rot[0], midy + (height/2)*rot[1]);
+        board.arc(midx, midy, height/10, left*pi/4-pi/2, right*pi/4-pi/2, false);
+        board.lineTo(midx + (width/2)*rot[0], midy + (height/2)*rot[1]);
+        board.fill();
+
+        return;
+
+    }
+
     board.moveTo(left, upper);
     board.lineTo(innerLeft, innerUpper);
 
@@ -273,13 +289,8 @@ export const drawCursor = (board, size, cursor) => {
     board.moveTo(right, lower);
     board.lineTo(innerRight, innerLower);
 
-    if (mode === "Rotate") {
-        board.moveTo(midx, midy);
-        board.lineTo(midx + (width/2)*rot[0], midy + (height/2)*rot[1]);
-    }
-
     board.stroke(); board.closePath();
-}
+};
 //#endregion
 
 //#region HexagonGrid
@@ -295,7 +306,7 @@ const fastGetHexPoints = (x, y, hw) => [
 
 const drawGridHexagon = (board, px, py, sz, c) => {
     const points = fastGetHexPoints(px, py, sz);
-    let [x, y] = points[0]
+    let [x, y] = points[0];
     //board.strokeStyle = "#FFFFFF";
     board.moveTo(x, y);
 
@@ -303,7 +314,7 @@ const drawGridHexagon = (board, px, py, sz, c) => {
         [x, y] = points[i % 6];
         board.lineTo(x,y);
     }
-}
+};
 
 export const drawHexGrid = (gridCanvas, [sx,sy]) => {
     const sizeX = gridCanvas.width/(sx*2);
@@ -343,10 +354,10 @@ export const drawHexGrid = (gridCanvas, [sx,sy]) => {
     gridContext.lineTo(spacing*sx, spacing*sy);
     gridContext.lineTo(0, spacing*sy);
     gridContext.stroke();
-}
+};
 
 export const drawHexMap = (hexMap = saveFileTemplate, gridCanvas) => {
-    const {factions, hexes, width, height, hexOpacity, imageData, image} = hexMap
+    const {factions, hexes, width, height, hexOpacity, imageData, image} = hexMap;
     let hexInfo = new Array(factions.length).fill(0).map(() => []);
 
     const convertFaction = (s) => factions.findIndex(({id}) => id === s);
@@ -355,7 +366,7 @@ export const drawHexMap = (hexMap = saveFileTemplate, gridCanvas) => {
         row.forEach((s, r) => {
             if (s === null || s === undefined) return;
             hexInfo[convertFaction(s)].push([c,r]);
-        })});
+        });});
 
     const sizeX = gridCanvas.width/(width*1.5);
     const sizeY = gridCanvas.height/(height*1.5);
@@ -384,7 +395,7 @@ export const drawHexMap = (hexMap = saveFileTemplate, gridCanvas) => {
             drawGridHexagon(gridContext, tx, ty, size, sideCount);
         }
         gridContext.fillStyle = `#${factions[i].fill.toUpperCase()}${opacity}`;
-        gridContext.strokeStyle = "#00000000"
+        gridContext.strokeStyle = "#00000000";
         gridContext.closePath();
         gridContext.stroke();
         gridContext.fill();
@@ -396,6 +407,6 @@ export const drawHexMap = (hexMap = saveFileTemplate, gridCanvas) => {
     gridContext.lineTo(spacing*width, spacing*height);
     gridContext.lineTo(0, spacing*height);
     gridContext.stroke();
-}
+};
 
 //#endregion

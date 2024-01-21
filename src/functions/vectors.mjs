@@ -11,7 +11,7 @@ const mult = funcOnArrays((a, b) => a*b);
 export const unitVec = (vec) => {
     const mag = magnitude(vec);
     return map((val) => val/mag, vec);
-}
+};
 
 export const trueDist = compose(magnitude, sub);
 
@@ -27,6 +27,6 @@ export const multiplyVector = (vector = exampleVector, factor) => vector.map((v)
 
 export const divideVector = (vector = exampleVector, factor) => vector.map((v) => v/factor);
 
-export const intDivideVector = (vector = exampleVector, factor) => map(Math.floor, divideVector(vector, factor))
+export const intDivideVector = (vector = exampleVector, factor) => map(Math.floor, divideVector(vector, factor));
 
 export const modVector = (vector = exampleVector, factor) => vector.map((v) => v%factor);

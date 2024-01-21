@@ -61,7 +61,7 @@ export const vehicleTemplate = {
     Velocity: {
         vel: [0,0], prevVel: [0,0]
     }
-}
+};
 
 export const statusTemplate = {
     time: 0,
@@ -71,7 +71,7 @@ export const statusTemplate = {
     apply: (ship) => ship,
     reset: (ship) => ship,
     function: () => {},
-}
+};
 
 export const weaponTemplate = {
     Name: "Default", Type: "Generic",
@@ -80,7 +80,7 @@ export const weaponTemplate = {
     Wran: 0, WMran: 0, Wrot: 0,
     FireRate: 0, EnergyCost: 0, HeatLoad: 0,
     aType: "Default"
-}
+};
 
 export const utilityTemplate = {
     Name: "Default", Type: "Healing/Resupplying/Energy/Deploying/Status",
@@ -89,12 +89,12 @@ export const utilityTemplate = {
     Deploys: 0,
     Status: ["Self/Target", statusTemplate], Whit: 0,
     FireRate: 0, EnergyCost: 0, HeatLoad: 0,
-}
+};
 
 export const ammoTemplate = {
     Name: "Default",
     sCount: 0, MCount: 0
-}
+};
 
 export const shieldTemplate = {
     Name: "Default",
@@ -102,7 +102,7 @@ export const shieldTemplate = {
     Cloak: false, StealthLevel: 0, StealthCost: 0,
     Intercept: 1.0, MaxDamage: 0, DamageRegen: 0,
     EnergyCost: 0, HeatLoad: 0,
-}
+};
 
 export const playerTemplate = {
     User: {
@@ -123,7 +123,7 @@ export const playerTemplate = {
         Healing: [],
     },
     Money: 0,
-}
+};
 
 export const factionTemplate = {
     Name: "",
@@ -153,7 +153,7 @@ export const factionTemplate = {
         TechIncome: 0,
         
     },
-}
+};
 
 export const singleBattleTemplate = {
     Title: "Name",
@@ -171,4 +171,4 @@ export const singleBattleTemplate = {
     PlayerCount: 0,
     Display: [[]],
     Size: {OverallSize: 64, StepSizes: [8, 1]},
-}
+};

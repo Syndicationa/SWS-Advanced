@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import { minMax } from '../../../functions/functions.mjs';
+import { useEffect, useState } from "react";
+import { PropTypes } from "prop-types";
+import { minMax } from "../../../functions/functions.mjs";
 
-export const Tabs = ({childArr, nameArr, selection = 0}) => {
+const Tabs = ({childArr, nameArr, selection = 0}) => {
     const [selected, setSelected] = useState(selection);
 
     useEffect(() => {
@@ -13,10 +14,18 @@ export const Tabs = ({childArr, nameArr, selection = 0}) => {
         <div className='Tabs'>
             <div className='TabList'>
                 {nameArr.map((name, i) => {
-                    return (<button onClick={() => setSelected(i)} key={i}>{name}</button>)
+                    return (<button onClick={() => setSelected(i)} key={i}>{name}</button>);
                 })}
             </div>
             {childArr[selected]}
         </div>
-    )
-}
+    );
+};
+
+Tabs.propTypes = {
+    childArr: PropTypes.array,
+    nameArr: PropTypes.array,
+    selection: PropTypes.number
+};
+
+export { Tabs };

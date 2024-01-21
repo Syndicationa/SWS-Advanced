@@ -1,31 +1,30 @@
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import './App.css';
-import { Header } from './components/MainPage/Header';
-import { SignUp } from './components/Account/SignUp';
-import { Account } from './components/Account/Account';
-import { GameList } from './components/GameList/GameList';
-import { SkirmishController } from './components/GameComponents/GameInterface/SkirmishController'
-import { createSystem, systemTemplate } from './functions/defs/system/system.mjs';
-import { createFaction } from './functions/defs/faction/faction.mjs';
-import { gPlayerMaker, playerMaker } from './functions/defs/player/player.mjs';
-import { exampleNetwork } from './functions/defs/techNetwork.mjs';
-import { SystemMap } from './components/GameComponents/GameInterface/SystemMap';
-import { getSolarDate } from './functions/date.mjs';
-import { tempData } from './tests/temporaryData.mjs';
-import { addPlayer, singleBattle } from './functions/defs/battle/battle.mjs';
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import "./App.css";
+import { Header } from "./components/MainPage/Header";
+import { SignUp } from "./components/Account/SignUp";
+import { Account } from "./components/Account/Account";
+import { GameList } from "./components/GameList/GameList";
+import { SkirmishController } from "./components/GameComponents/GameInterface/SkirmishController";
+// import { createSystem, systemTemplate } from "./functions/defs/system/system.mjs";
+// import { createFaction } from "./functions/defs/faction/faction.mjs";
+import { gPlayerMaker, playerMaker } from "./functions/defs/player/player.mjs";
+// import { exampleNetwork } from "./functions/defs/techNetwork.mjs";
+import { getSolarDate } from "./functions/date.mjs";
+import { tempData } from "./tests/temporaryData.mjs";
+import { addPlayer, singleBattle } from "./functions/defs/battle/battle.mjs";
 
-const systemMake = (user) => {
-    const player = playerMaker(user)({Faction: "Astute", Name: "Synism", Admin: true})
-    const faction = createFaction({
-        Name: "Astute",
-        Color: {Astute: "#0000ff"},
-        Players: [player],
-        Leader: 0,
-        Treasurers: [0],
-    });
-    return createSystem("The Solar Wars", systemTemplate.Maps, faction, exampleNetwork, player, Infinity);
-}
+// const systemMake = (user) => {
+//     const player = playerMaker(user)({Faction: "Astute", Name: "Synism", Admin: true})
+//     const faction = createFaction({
+//         Name: "Astute",
+//         Color: {Astute: "#0000ff"},
+//         Players: [player],
+//         Leader: 0,
+//         Treasurers: [0],
+//     });
+//     return createSystem("The Solar Wars", systemTemplate.Maps, faction, exampleNetwork, player, Infinity);
+// }
 
 const battleMake = user => {
     const user2 = {...user, ID: "B"};
@@ -36,14 +35,14 @@ const battleMake = user => {
 
     const battle = singleBattle(gplayer)({Map: "", PlayerCount: 2, Size:  {OverallSize: 64, StepSizes: [8, 1]}, Title: "Test Game", Discoverable: false, Online: false});
     return addPlayer(battle)(gplayer2);
-}
+};
 
 
-const input = {
-    system: {},
-    movCurs: () => {},
-    movCursTo: () => {}
-}
+// const input = {
+//     system: {},
+//     movCurs: () => {},
+//     movCursTo: () => {}
+// };
 
 function App() {
     const loggedIn = useSelector((state) => state.player.loggedIn);
@@ -70,7 +69,7 @@ function App() {
                 <button>I want to play online!</button>
             </>:
             <button style={{fontSize: "2em"}} onClick={() => setPage("Games")}>Play Game</button>
-            }
+        }
     </>);
 
     const renderMain = () => {
@@ -80,23 +79,25 @@ function App() {
             case "Sign Up":
                 return <SignUp setPage={setPage}  />; 
             case "Account":
-                return <Account />
+                return <Account />;
             case "Game":
-                return <GameList />
+                return <GameList />;
             default:
                 return homePage;
         }
-    }
+    };
+
+    const [v] = useState(true);
 
     return (
         <div className="App">
-            {true ? <SkirmishController g={battleMake(user)} Data={tempData} />:
-            <>
-                <Header page={page} setPage={setPage} />
-                <main>
-                    {renderMain()}
-                </main>
-            </>}
+            {v ? <SkirmishController g={battleMake(user)} Data={tempData} />:
+                <>
+                    <Header page={page} setPage={setPage} />
+                    <main>
+                        {renderMain()}
+                    </main>
+                </>}
         </div>
     );
 }

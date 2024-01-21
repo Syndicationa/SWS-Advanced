@@ -1,11 +1,8 @@
-import { last, replaceInArray, split } from "../../functions.mjs";
-import { cursorGenerator, vehicleMovementCursor, zoom } from "../cursor.mjs";
-import { playerTemplate, vehicleTemplate } from "../templates.mjs";
+import { last, replaceInArray } from "../../functions.mjs";
+import { vehicleMovementCursor, zoom } from "../cursor.mjs";
 import { attack } from "../vehicle/attack.mjs";
-import { moveShip } from "../vehicle/move.mjs";
-import { gShipFromID, getPlayShips, mergeShipArrays } from "../vehicle/retrieve.mjs";
+import { gShipFromID, getPlayShips } from "../vehicle/retrieve.mjs";
 import { utility } from "../vehicle/utility.mjs";
-import { makeVehicle } from "../vehicle/vehicle.mjs";
 import { addMove, setMove } from "./stage.mjs";
 
 export const pressFunction = Data => State => {
@@ -30,9 +27,9 @@ export const pressFunction = Data => State => {
             attackPress(Data, State);
             break;
         default:
-            throw Error("Invalid Stage")
+            throw Error("Invalid Stage");
     }
-}
+};
 
 const placementPress = (Data, State) => {
     const {
@@ -46,17 +43,19 @@ const placementPress = (Data, State) => {
     } = State;
     const vehicleOptions = Data.shipTypes[player.Faction];
     switch (impulse) {
-        case 0:
+        case 0: {
             setSelection(1);
             setSelection(0);
             setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
             setImpulse(1);
             break;
-        case 1:
+        }
+        case 1: {
             setCursor({...cursor, mode:"Rotate"});
             setImpulse(2);
             break;
-        case 2:
+        }
+        case 2: {
             setCursor({...cursor, mode: "Move"});
             const move = `${player.Faction}.${cursor.menu}.${JSON.stringify(cursor.loc)}.${JSON.stringify(cursor.rot)}`;
 
@@ -68,10 +67,11 @@ const placementPress = (Data, State) => {
 
             setImpulse(0);
             break;
+        }
         default:
-            throw Error("Unexpected Outcome")
+            throw Error("Unexpected Outcome");
     }
-}
+};
 
 const movementPress = (State) => {
     const {
@@ -90,19 +90,21 @@ const movementPress = (State) => {
     const vehicleOptions = getPlayShips(ID, display[x][y]);
     const vehicle = vehicleOptions[cursor.menu] ?? false;
     switch (impulse) {
-        case 0:
+        case 0: {
             if (vehicleOptions.length === 0) return;
             setSelection(1);
             setSelection(0);
             setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
             setImpulse(1);
             break;
-        case 1:
+        }
+        case 1: {
             setSelectedVehicle(vehicle);
             setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(vehicle, setSelectedVehicle)});
             setImpulse(2);
             break;
-        case 2:
+        }
+        case 2: {
             setCursor({...cursor, mode: "Move", data: []});
             const velocity = selectedVehicle.Velocity.vel; 
             const rotation = selectedVehicle.Location.rotation;
@@ -117,43 +119,48 @@ const movementPress = (State) => {
 
             setPlayerGame(playerGame => run(playerGame, move, {type: "M-", str: "", id: ID}));
 
-            setSelectedVehicle(undefined)
+            setSelectedVehicle(undefined);
 
             setImpulse(0);
             break;
+        }
         default:
-            throw Error("Unexpected Outcome")
+            throw Error("Unexpected Outcome");
     }
-}
+};
 
 const setupUtilityModes = (Data, State) => {
     const {cursor, setCursor, activeVehicles, setSelectedVehicle, selectedVehicle, setCurrentFunction} = State;
     const selected = gShipFromID(selectedVehicle.Ownership.Player,selectedVehicle.Ownership.vID, activeVehicles);
     setSelectedVehicle(selected);
     switch (cursor.menu) {
-        case 0: //Move
+        case 0: {//Move
             setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(selected, setSelectedVehicle, .25)});
             break;
-        case 1: //Attack
+        }
+        case 1: {//Attack
             setCurrentFunction(utility(Data, activeVehicles, selectedVehicle));
             setCursor({...cursor, mode: "Move", data: []});
             break;
-        case 2: //Utility
+        }
+        case 2: {//Utility
             break;
-        case 3:
+        }
+        case 3: {
             setCursor({...cursor, mode: "Move", data: []});
             break;
+        }
         default:
             throw Error("Unexpected Utility");
     }
-}
+};
 
 const resetUtility = (State) => {
     const {modes, setSelection, setCursor, cursor, setImpulse} = State;
     setSelection(0);
     setCursor({...cursor, mode: "Menu", data: modes, menu: 0});
     setImpulse(2);
-}
+};
 
 const utilityPress = (Data, State) => {
     const modes = ["Move", "Attack", "Utility", "Exit"];
@@ -186,27 +193,30 @@ const utilityPress = (Data, State) => {
             splitMove.findIndex(move => Number(move.split(".")[0]) === selectedVehicle.Ownership.vID);
 
     switch (impulse) {
-        case 0:
+        case 0: {
             if (vehicleOptions.length === 0) return;
             setSelection(0);
             setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
             setImpulse(1);
             break;
-        case 1:
+        }
+        case 1: {
             setSelectedVehicle(vehicle);
             resetUtility({...State, modes});
             break;
-        case 2:
+        }
+        case 2: {
             setupUtilityModes(Data, State);
             setImpulse(impulses[cursor.menu]);
             break;
+        }
         //#region Movement
-        case 3:
+        case 3: {
             //Wrap Up Movement
             const velocity = selectedVehicle.Velocity.vel; 
             const rotation = selectedVehicle.Location.rotation;
             const velRotMove = `${JSON.stringify(velocity)}:${JSON.stringify(rotation)}`;
-            const playedGenerateMove = `${selectedVehicle.Ownership.vID}.${velRotMove}..`
+            const playedGenerateMove = `${selectedVehicle.Ownership.vID}.${velRotMove}..`;
             const generatedMovementMove = vehicleIndex === -1 ? playedGenerateMove:
                 replaceInArray(splitMove[vehicleIndex].split("."), 1, velRotMove);
 
@@ -217,22 +227,25 @@ const utilityPress = (Data, State) => {
 
             resetUtility({...State, modes});
             break;
+        }
         //#endregion
         //#region Attack
-        case 4: //Select Target Part 1
+        case 4: {//Select Target Part 1
             if (allVehicles.length === 0) return;
             setSelection(0);
             setCursor({...cursor, data:allVehicles, mode:"Menu", menu: Math.max(cursor.menu, allVehicles.length - 1)});
             setImpulse(5);
             break;
-        case 5: //Select Target Part 2
-            setCurrentFunction(currentFunction(allVehicles[cursor.menu]))//Add target
+        }
+        case 5: {//Select Target Part 2
+            setCurrentFunction(currentFunction(allVehicles[cursor.menu]));//Add target
             setCursor({...cursor, data: utils, mode:"Menu", menu: Math.max(cursor.menu, utils.length - 1)});
             setImpulse(6);
             break;
-        case 6:
-            const [_, utilityMove, string] = currentFunction(utils[cursor.menu]);
-            const playedGeneratedUtility = `${selectedVehicle.Ownership.vID}..${utilityMove}.`
+        }
+        case 6: {
+            const [, utilityMove, string] = currentFunction(utils[cursor.menu]);
+            const playedGeneratedUtility = `${selectedVehicle.Ownership.vID}..${utilityMove}.`;
             const generatedUtilityMove = vehicleIndex === -1 ? playedGeneratedUtility:
                 replaceInArray(splitMove[vehicleIndex].split("."), 1, utilityMove);
 
@@ -243,16 +256,18 @@ const utilityPress = (Data, State) => {
             setAttackList(attackList => [...attackList, string]);
             resetUtility({...State, modes});
             break;
+        }
         //#endregion
         //#region Util
-        case 7:
+        case 7: {
             resetUtility({...State, modes});
             break;
+        }
         //#endregion
         default:
-            throw Error("Unexpected Outcome")
+            throw Error("Unexpected Outcome");
     }
-}
+};
 
 const attackPress = (State) => {
     const {
@@ -275,37 +290,42 @@ const attackPress = (State) => {
     const utils = selectedVehicle.Utils.Data;
 
     switch (impulse) {
-        case 0:
+        case 0: {
             if (vehicleOptions.length === 0) return;
             setSelection(0);
             setCursor({...cursor, data:vehicleOptions, mode:"Menu", menu: Math.max(cursor.menu, vehicleOptions.length - 1)});
             setImpulse(1);
             break;
-        case 1:
+        }
+        case 1: {
             setSelectedVehicle(vehicle);
             setCurrentFunction(attack(activeVehicles, vehicle));
             setCursor({...cursor, mode: "Move", data: []});
             setImpulse(2);
             break;
-        case 2: //Select Target Part 1
+        }
+        case 2: {//Select Target Part 1
             if (allVehicles.length === 0) return;
             setSelection(0);
             setCursor({...cursor, data:allVehicles, mode:"Menu", menu: Math.max(cursor.menu, allVehicles.length - 1)});
             setImpulse(3);
             break;
-        case 3: //Select Target Part 2
-            setCurrentFunction(currentFunction(allVehicles[cursor.menu]))//Add target
+        }
+        case 3: {//Select Target Part 2
+            setCurrentFunction(currentFunction(allVehicles[cursor.menu]));//Add target
             setSelectedVehicle([selectedVehicle, allVehicles[cursor.menu]]);
             setCursor({...cursor, data: utils, mode:"Menu", menu: Math.max(cursor.menu, utils.length - 1)});
             setImpulse(4);
             break;
-        case 4:
-            const [newVehicleArray, move, string] = currentFunction(utils[cursor.menu]);
+        }
+        case 4: {
+            const [newVehicleArray, , string] = currentFunction(utils[cursor.menu]);
             setActiveVehicles(newVehicleArray);
             setSelectedVehicle(gShipFromID(selectedVehicle.Ownership.Player,selectedVehicle.Ownership.vID, newVehicleArray));
             setAttackList([...attackList, string]);
             break;
+        }
         default:
-            throw Error("Unexpected Outcome")
+            throw Error("Unexpected Outcome");
     }
-}
+};

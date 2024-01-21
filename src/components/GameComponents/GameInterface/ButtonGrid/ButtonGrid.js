@@ -1,4 +1,4 @@
-import React from 'react';
+import { PropTypes } from "prop-types";
 import "../Interface.css";
 import ul from "./images/ul.svg";
 import ur from "./images/ur.svg";
@@ -10,17 +10,16 @@ import l from "./images/l.svg";
 import r from "./images/r.svg";
 
 import b from "./images/b.svg";
-import info from './images/info.svg';
+import info from "./images/info.svg";
 import zoomOut from "./images/zoom out.svg";
 import zoomIn from "./images/zoom in.svg";
 
-
-export const ButtonGrid = props => {
+const ButtonGrid = props => {
     const {move, system, stage} = props;
 
     let symbols = [[ul,u,ur],[l,"C",r],[dl,d,dr],[zoomOut,zoomIn,b, info,"ET","G","U"]];
     let letters = [["UL","U","UR"],["L","C","R"],["DL","D","DR"],["ZO","ZI","B","I","ET","G","U"]];
-    const classes = ["ZoomOut","ZoomIn","Back","InfoButton","EndTurn","Group","Ungroup"]
+    const classes = ["ZoomOut","ZoomIn","Back","InfoButton","EndTurn","Group","Ungroup"];
     const functions = [system.zoomOut, system.zoomIn, system.back, system.info, system.endTurn, system.group, system.ungroup];
 
     const click = (index, indey) => {
@@ -34,40 +33,40 @@ export const ButtonGrid = props => {
     switch (stage) {
         case 0:
             symbols[1][1] = "Place";
-        break;
+            break;
         case 1:
-            symbols[1][1] = "Pick Type"
-        break;
+            symbols[1][1] = "Pick Type";
+            break;
         case 2:
-            symbols[1][1] = "Pick Rot"
-        break;
+            symbols[1][1] = "Pick Rot";
+            break;
         case 10:
-            symbols[1][1] = "Pick"
-        break;
+            symbols[1][1] = "Pick";
+            break;
         case 11:
-            symbols[1][1] = "Pick"
-        break;
+            symbols[1][1] = "Pick";
+            break;
         case 12:
-            symbols[1][1] = "Move"
-        break;
+            symbols[1][1] = "Move";
+            break;
         case 13:
-            symbols[1][1] = "Pick Rot"
-        break;
+            symbols[1][1] = "Pick Rot";
+            break;
         case 20:
-            symbols[1][1] = "Pick Atk"
-        break;
+            symbols[1][1] = "Pick Atk";
+            break;
         case 21:
-            symbols[1][1] = "Pick"
-        break;
+            symbols[1][1] = "Pick";
+            break;
         case 22:
-            symbols[1][1] = "Pick Def"
-        break;
+            symbols[1][1] = "Pick Def";
+            break;
         case 23:
-            symbols[1][1] = "Pick"
-        break;
+            symbols[1][1] = "Pick";
+            break;
         case 24:
-            symbols[1][1] = "FIRE"
-        break;
+            symbols[1][1] = "FIRE";
+            break;
         default:
     }
 
@@ -81,22 +80,22 @@ export const ButtonGrid = props => {
                         css = {
                             gridArea:"b"+(ind*3 + index + 1),
                             color: (ind === 1 && index === 1 && stage === 24) ? "#FF0000":"#FFFFFF"
-                        }
+                        };
                     } else {
                         cssClass += classes[index];
                     }
                     return <button key={ind*3+index} onClick={() => click(ind,index)} 
-                            style={css} className={cssClass} >{
-                                symbol.length <= 3 ? symbol:
-                                <img src={symbol} alt={letters[ind][index]} />}</button>
-                })
+                        style={css} className={cssClass} >{
+                            symbol.length <= 3 ? symbol:
+                                <img src={symbol} alt={letters[ind][index]} />}</button>;
+                });
             })}
         </div>
-    )
-}
+    );
+};
 
 ButtonGrid.defaultProps = {
-    move: (v1, v2) => {console.log([v1,v2])},
+    move: (v1, v2) => {console.log([v1,v2]);},
     system: {
         zoomOut: () => console.log("ZOut"),
         zoomIn: () => console.log("ZIn"),
@@ -107,4 +106,20 @@ ButtonGrid.defaultProps = {
         ungroup: () => console.log("Ungroup"),
     },
     stage: 40
-}
+};
+
+ButtonGrid.propTypes = {
+    move: PropTypes.func,
+    system: PropTypes.exact({
+        zoomOut: PropTypes.func,
+        zoomIn: PropTypes.func,
+        back: PropTypes.func,
+        info: PropTypes.func,
+        endTurn: PropTypes.func,
+        group: PropTypes.func,
+        ungroup: PropTypes.func,
+    }),
+    stage: PropTypes.number
+};
+
+export { ButtonGrid };

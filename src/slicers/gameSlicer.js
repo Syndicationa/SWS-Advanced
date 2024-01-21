@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 //import { Player } from "../functions/defs";
-import { clone } from "../functions/functions";
-import { collection, doc, query, where, setDoc, getDoc, getDocs, addDoc } from "firebase/firestore";
+// import { clone } from "../functions/functions";
+import { collection, doc, query, getDoc, getDocs } from "firebase/firestore";
 import { database } from "../firebase";
 //import { updatePlayer } from "./playerActions";
 
@@ -14,7 +14,7 @@ const getGame = async (gameName) => {
     if (game.exists()) {
         return game.data();
     }
-}
+};
 
 const getGames = async (gameList) => {
     let games = [];
@@ -23,7 +23,7 @@ const getGames = async (gameList) => {
         games.push(game);
     }
     return games;
-}
+};
 
 export const fetchPlayerGames = createAsyncThunk(
     "game/fetchPlayerGames",
@@ -31,7 +31,7 @@ export const fetchPlayerGames = createAsyncThunk(
         const games = await getGames(gameList);
         return games;
     }
-)
+);
 
 export const fetchAvailableGames = createAsyncThunk(
     "game/fetchAvailableGames",
@@ -46,14 +46,14 @@ export const fetchAvailableGames = createAsyncThunk(
         });
         return gameData;
     }
-)
+);
 
 const gameSlice = createSlice({
     name: "game",
     initialState,
     reducers: {
         newGame (state) {
-            return;
+            return state;
         },
 
         updateGame (state, update) {
@@ -64,13 +64,13 @@ const gameSlice = createSlice({
         builder.addCase(fetchPlayerGames.fulfilled, (state, action) => {
             const games = action.payload;
             state.playerGames = games;
-        })
+        });
         builder.addCase(fetchAvailableGames.fulfilled, (state, action) => {
             const games = action.payload;
             state.allGames = games;
-        })
+        });
     }
-})
+});
 
 export const {newGame, updateGame} = gameSlice.actions;
 export default gameSlice.reducer;

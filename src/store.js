@@ -1,7 +1,7 @@
-import {configureStore} from '@reduxjs/toolkit'
-import gameReducer from './slicers/gameSlicer';
-import playerReducer from './slicers/playerSlicer';
-import dataReducer from './slicers/dataSlicer';
+import {configureStore} from "@reduxjs/toolkit";
+import gameReducer from "./slicers/gameSlicer";
+import playerReducer from "./slicers/playerSlicer";
+import dataReducer from "./slicers/dataSlicer";
 
 const reducer = {
     game:gameReducer,

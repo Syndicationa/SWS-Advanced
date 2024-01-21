@@ -1,4 +1,4 @@
-import { objectMap } from "../functions.mjs"
+import { objectMap } from "../functions.mjs";
 
 const hmgFactionTemplate = {
     fill: "#FFFFFF",
@@ -7,7 +7,7 @@ const hmgFactionTemplate = {
     id: 1,
     name: "Astute",
     abb: "ast"
-}
+};
 
 export const saveFileTemplate = {
     name: "grid",
@@ -19,16 +19,16 @@ export const saveFileTemplate = {
     hexes: [[null, "ast", null, "ast", null]],
     image: {},
     imageData: ""
-}
+};
 
 const resourceTemplate = {
     BuildingMaterials: 1,
     OtherMaterial: 0
-}
+};
 
 export const calculateResources = (maps = [saveFileTemplate], resources = {grid: resourceTemplate}) => {
     maps.reduce((acc, map) => {
-        const resourcesOnMap = calculateResourcesOnMap(map, resources[map.name])
+        const resourcesOnMap = calculateResourcesOnMap(map, resources[map.name]);
         if (acc === undefined) return resourcesOnMap;
         const factionData = {...acc, ...resourcesOnMap};
         return objectMap(factionData)((data, factionName) => {
@@ -39,10 +39,10 @@ export const calculateResources = (maps = [saveFileTemplate], resources = {grid:
                 const existingCount = acc[factionName][resourceName] ?? 0;
                 const newCount = data[resourceName] ?? 0;
                 return existingCount + newCount;
-            })
-        })
-    }, undefined)
-}
+            });
+        });
+    }, undefined);
+};
 
 export const calculateResourcesOnMap = (map = saveFileTemplate, resource) => {
     if (resource === undefined) return {};
@@ -51,7 +51,7 @@ export const calculateResourcesOnMap = (map = saveFileTemplate, resource) => {
         return objectMap(resource)((resource) => resource*count);
     });
     return resourcesPerFaction;
-}
+};
 
 export const calculateHexCount = (map = saveFileTemplate) => {
     const obj = {};
@@ -61,7 +61,7 @@ export const calculateHexCount = (map = saveFileTemplate) => {
     const isEdge = (farSide = 0) => (value) => value === 0 || value === farSide;
     const isBottomOrTop = isEdge(map.height - 1);
     const isLeftOrRight = isEdge(map.width -1 );
-    const isEven = v => v % 2 === 0
+    const isEven = v => v % 2 === 0;
     for (let r = 0; r < map.width; r++) {
         for (let c = 0;  c < map.height; c++) {
             s = map.factions[map.hexes[r][c] - 1].name;
@@ -71,9 +71,9 @@ export const calculateHexCount = (map = saveFileTemplate) => {
             else if (
                 (isLeftOrRight(r) && isEven(c)) ||
                 (isBottomOrTop(c) && isEven(r))) v = 0.5;
-            else v = 1
+            else v = 1;
             obj[s] += v;
         }
     }
     return obj;
-}
+};

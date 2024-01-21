@@ -7,17 +7,17 @@ import { data } from "../../../slicers/dataInit.mjs";
 
 //#region Application Funcs
 const shiftEnergy = (fState, target) => {
-	const fEnergy = fState.energy;
-	const MaxEnergy = target.Stats.MaxEnergy;
-	const tEnergy = target.State.energy;
+    const fEnergy = fState.energy;
+    const MaxEnergy = target.Stats.MaxEnergy;
+    const tEnergy = target.State.energy;
     const totalEn = fEnergy + tEnergy;
-	const overflow = totalEn - MaxEnergy;
+    const overflow = totalEn - MaxEnergy;
     const fOutEn = Math.max(0, overflow);
-	const tOutEn = totalEn - fOutEn;
+    const tOutEn = totalEn - fOutEn;
 
-	return {fState: {...fState, energy: fOutEn},
-			tState: {...target.State, energy: tOutEn}};
-}
+    return {fState: {...fState, energy: fOutEn},
+        tState: {...target.State, energy: tOutEn}};
+};
 
 const shiftAmmo = (fAmmo, tAmmo, fInd, tInd) => {
     const source = fAmmo.Ammo(fInd);
@@ -27,14 +27,14 @@ const shiftAmmo = (fAmmo, tAmmo, fInd, tInd) => {
     const sAmmo = Math.max(0, overflow);
     const rAmmo = totalAmmo - sAmmo;
     return {fAmmo: {...fAmmo, count: replaceInArray(fAmmo.count, fInd, sAmmo)},
-            tAmmo: {...tAmmo, count: replaceInArray(tAmmo.count, tInd, rAmmo)}}
-}
+        tAmmo: {...tAmmo, count: replaceInArray(tAmmo.count, tInd, rAmmo)}};
+};
 
 const updateFireRate = (Utils, util) => {
     const weapIndex = getUtilIndex(Utils.Data, util);
     const nFireCount = Utils.fireCount[weapIndex] + 1;
-    return {...Utils, fireCount: replaceInArray(Utils.fireCount, weapIndex, nFireCount)}
-}
+    return {...Utils, fireCount: replaceInArray(Utils.fireCount, weapIndex, nFireCount)};
+};
 
 const applyStatus = (target = vehicleTemplate, status = statusTemplate) => {
     const statuses = target.State.statuses;
@@ -47,7 +47,7 @@ const applyStatus = (target = vehicleTemplate, status = statusTemplate) => {
     const combinedStatus = typeStatus.combine(typeStatus, status);
 
     return {...target, State: {...target.State, statuses: [...nonTypeStatus, ...combinedStatus]}};
-}
+};
 
 const applySource = (source = vehicleTemplate, util = utilityTemplate) => {
     return {...source,
@@ -59,8 +59,8 @@ const applySource = (source = vehicleTemplate, util = utilityTemplate) => {
         },
         Ammo: consumeAmmo(source.Ammo, getAmmoOfWeap(util, source.Ammo)),
         Weap: updateFireRate(source.Utils, util)
-    }
-}
+    };
+};
 //#endregion
 
 //#region Utilities
@@ -70,16 +70,16 @@ const heal = (source, target, util = utilityTemplate, hitValue) => {
         modifiedShips: [],
         damage: [[0,0]],
         hit: 0
-    }
+    };
 
     const newSource = applySource(source, util);
-    const newTarget = applyDamage(util.Heal, target)
+    const newTarget = applyDamage(util.Heal, target);
 
     return {
         modifiedShips: [newSource, newTarget],
         damage: [[util.Heal, 0]],
         hit: 2
-    }
+    };
 };
 
 const resupply = (source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate, hitValue) => {
@@ -88,20 +88,20 @@ const resupply = (source = vehicleTemplate, target = vehicleTemplate, util = uti
         modifiedShips: [],
         damage: [[0,0]],
         hit: 0
-    }
+    };
 
     const sourceIndex = getAmmoOfWeap(util, source.Ammo);
     const targetIndex = getAmmo(util.dType, target.Ammo);
     const Ammos = shiftAmmo(source.Ammo, target.Ammo, sourceIndex, targetIndex);
 
     const newSource = {...source, Ammo: Ammos.fAmmo};
-    const newTarget = {...target, Ammo: Ammos.tAmmo}
+    const newTarget = {...target, Ammo: Ammos.tAmmo};
 
     return {
         modifiedShips: [newSource, newTarget],
         damage: [[source.Ammo.Ammo(sourceIndex).count - Ammos.fAmmo.Ammo(sourceIndex), 0]],
         hit: 2
-    }
+    };
 };
 
 const energyTransfer = (source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate, hitValue) => {
@@ -110,9 +110,9 @@ const energyTransfer = (source = vehicleTemplate, target = vehicleTemplate, util
         modifiedShips: [],
         damage: [[0,0]],
         hit: 0
-    }
+    };
 
-    const {fState, tState} = shiftEnergy(source.State.energy, target)
+    const {fState, tState} = shiftEnergy(source.State.energy, target);
 
     const newSource = {...source, State: fState};
     const newTarget = {...target, State: tState};
@@ -121,10 +121,10 @@ const energyTransfer = (source = vehicleTemplate, target = vehicleTemplate, util
         modifiedShips: [newSource, newTarget],
         damage: [[source.State.energy - fState.energy, 0]],
         hit: 2
-    }
+    };
 };
 
-const deployVehicle = (source = vehicleTemplate, vehicleArray = [vehicleTemplate], util = utilityTemplate, Data = data, hitValue) => {
+const deployVehicle = (source = vehicleTemplate, vehicleArray = [vehicleTemplate], util = utilityTemplate, Data = data) => {
     const shipNum = getPlayerShips(source, vehicleArray)
         .reduce(
             (acc,vehicle) => Math.max(acc, vehicle.Ownership.vID),0) + 1;
@@ -144,7 +144,7 @@ const deployVehicle = (source = vehicleTemplate, vehicleArray = [vehicleTemplate
         modifiedShips: [newSource, velocityFixedVehicle],
         damage: [[0, 0]],
         hit: 2
-    }
+    };
     
 };
 
@@ -158,7 +158,7 @@ const inflictStatus = (source = vehicleTemplate, target = vehicleTemplate, util 
         modifiedShips: [newSource],
         damage: [[0,0]],
         hit: 0
-    }
+    };
 
     const modifiedShips = targetName === "Self" ?
         [applyStatus(newSource, status)]:
@@ -168,8 +168,8 @@ const inflictStatus = (source = vehicleTemplate, target = vehicleTemplate, util 
         modifiedShips,
         damage: [[0, 0]],
         hit: 2
-    }
-}
+    };
+};
 //#endregion
 
 //Main Utility
@@ -212,10 +212,10 @@ export const utility = curry((Data, shipArray, source = vehicleTemplate, target 
         getUtilIndex(source.Utils.Data, util), 
         trueTarget.map((target) => target.Owner.Player), trueTarget.map((target) => target.Owner.vID), 
         hit
-    ]
+    ];
 
     const dataString = createDataStr(source, trueTarget, util, damage, hit);
-    return [merged, move, dataString]
+    return [merged, move, dataString];
 });
 
 export const applyUtility = curry((Data, shipArray, source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate, hit = 0) => {
@@ -251,5 +251,5 @@ export const applyUtility = curry((Data, shipArray, source = vehicleTemplate, ta
     const merged = mergeShipArrays(shipArray, modifiedShips);
 
     const dataString = createDataStr(source, trueTarget, util, damage, hit);
-    return [merged, dataString]
-})
+    return [merged, dataString];
+});

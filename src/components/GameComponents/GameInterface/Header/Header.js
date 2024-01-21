@@ -1,12 +1,12 @@
-import React from 'react'
-import { Phase } from './Phase';
+import { PropTypes } from "prop-types";
+import { Phase } from "./Phase";
 
-export const Header = props => {
-    const {stage, name, version, close, ...rest} = props;
+const Header = props => {
+    const {stage, name, ...rest} = props;
 
-    const stageNames = ["Place Ships","Movement Phase", "Utility Phase", "Attack Phase", "Recovery Phase"];
+    const stageNames = ["Place Ships","Movement Phase", "Utility Phase", "Attack Phase"];
 
-    const incrementStage = (stage) => (stage) % 4 + 1;
+    const incrementStage = (stage) => (stage) % 3 + 1;
 
     return (
         <header {...rest}>
@@ -17,5 +17,12 @@ export const Header = props => {
             </div>
             <h3>{name}</h3>
         </header>
-    )
-}
+    );
+};
+
+Header.propTypes = {
+    stage: PropTypes.number,
+    name: PropTypes.string
+};
+
+export { Header };

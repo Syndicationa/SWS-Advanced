@@ -55,7 +55,7 @@ const shipAAAA = {
             }
         ]
     }
-}
+};
 
 const shipBBBB = {
     Type: {
@@ -111,7 +111,7 @@ const shipBBBB = {
             }
         ]
     }
-}
+};
 
 export const tempData = {
     factionNames: factions,
@@ -121,4 +121,4 @@ export const tempData = {
         Astute: [shipAAAA],
         Blade: [shipBBBB]
     }
-}
+};

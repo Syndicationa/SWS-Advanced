@@ -1,34 +1,35 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { GameUI } from './GameUI'
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import { PropTypes } from "prop-types";
+import { GameUI } from "./GameUI";
 
-import { mergeArrays, replaceInArray } from '../../../functions/functions.mjs'
-import { magnitude, sub } from '../../../functions/vectors.mjs'
+import { replaceInArray } from "../../../functions/functions.mjs";
+import { magnitude, sub } from "../../../functions/vectors.mjs";
 
-import { singleBattleTemplate, vehicleTemplate } from '../../../functions/defs/templates.mjs'
-import { cursorGenerator, fixCursorPosition, moveCursor, moveCursorToPosition, zoom } from '../../../functions/defs/cursor.mjs'
-import { createDisplay, getFromDisp } from '../../../functions/defs/display.mjs'
+import { singleBattleTemplate, vehicleTemplate } from "../../../functions/defs/templates.mjs";
+import { cursorGenerator, fixCursorPosition, moveCursor, moveCursorToPosition, zoom } from "../../../functions/defs/cursor.mjs";
+import { createDisplay, getFromDisp } from "../../../functions/defs/display.mjs";
 
-import { pressFunction } from '../../../functions/defs/battle/control.mjs'
-import { nextPhase, runMove, runTurn } from '../../../functions/defs/battle/stage.mjs'
-import { mergeShipArrays } from '../../../functions/defs/vehicle/retrieve.mjs'
+import { pressFunction } from "../../../functions/defs/battle/control.mjs";
+import { nextPhase, runMove, runTurn } from "../../../functions/defs/battle/stage.mjs";
+import { mergeShipArrays } from "../../../functions/defs/vehicle/retrieve.mjs";
 
 const generateVehicleList = (vehicles = [vehicleTemplate], cursor = cursorGenerator(), setCursor = () => {}) => {
     const options = vehicles.map((vehicle, index) => {
         console.log(vehicle);
         if (vehicle.Name || !vehicle) return null;
-        const name = (vehicle.Appearance ?? {}).name ?? vehicle.Type.Class;
-        const currentHP = vehicle.State ? vehicle.State.hp:vehicle.Stats.MaxHP;
-        return <div className={`Option ${cursor.menu === index ? 'Selected':''}`}>
+        const name = vehicle.Appearance?.name ?? vehicle.Type.Class;
+        const currentHP = vehicle?.State?.hp ??vehicle.Stats.MaxHP;
+        return <div className={`Option ${cursor.menu === index ? "Selected":""}`} key={index}>
             {name}
             <div className='Health'>HP: {currentHP}/{vehicle.Stats.MaxHP}</div>
             <button className='SelectButton' onClick={() => setCursor({...cursor, menu: index})}>Select</button>
-        </div>
-    })
+        </div>;
+    });
     return options.filter(Boolean);
-}
+};
 
-export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
+const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
     const user = useSelector(state => state.player);
 
     const [game, setGame] = useState(g); //Core game that playerGames are built on
@@ -53,7 +54,7 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
 
     const activeVehicles = useMemo(() => playerGame.Vehicles, [playerGame.Vehicles]);
     const display = useMemo(() => createDisplay(game.Size.OverallSize)(selectedVehicle ? mergeShipArrays(activeVehicles, [selectedVehicle]): activeVehicles), 
-            [activeVehicles, selectedVehicle, game.Size.OverallSize]);
+        [activeVehicles, selectedVehicle, game.Size.OverallSize]);
     //#endregion
 
     //#region Players
@@ -67,7 +68,7 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
     const updatePlayer = useCallback((playerData) => {
         const playerIndex = players.findIndex((play) => play.User.ID === playerData.User.ID);
         const newPlayers = replaceInArray(players, playerIndex, playerData);
-        setGame(previousGame => {return {...previousGame, Players: newPlayers}});
+        setGame(previousGame => {return {...previousGame, Players: newPlayers};});
         return newPlayers;
     }, [players]);
 
@@ -77,24 +78,24 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
                 ...previousGame, 
                 Players: previousGame.Players.map(
                     playerData => {
-                        return {...playerData, hasMoved: false}
+                        return {...playerData, hasMoved: false};
                     })
-                }
+            };
         });
     }, [players]);
     //#endregion
 
     //#region Database
-    const dispatch = useDispatch();
+    // const dispatch = useDispatch();
     //Firebase snapshot
-    const [snapShot, setSnapShot] = useState(null);
+    // const [snapShot, setSnapShot] = useState(null);
     //#endregion
 
     //#region UI
     const [selection, setSelection] = useState(1);
     const list = useMemo(() => {
-        if (cursor.mode === "Menu") return generateVehicleList(cursor.data, cursor, setCursor)
-        else if (cursor.mode === "Move") return generateVehicleList(getFromDisp(display, cursor.loc, cursor.loc))
+        if (cursor.mode === "Menu") return generateVehicleList(cursor.data, cursor, setCursor);
+        else if (cursor.mode === "Move") return generateVehicleList(getFromDisp(display, cursor.loc, cursor.loc));
     }, [cursor]);
     const data = [`Position: ${cursor.loc} Region Data: ${cursor.region.xStep}`];
     const [attackList, setAttackList] = useState([]);
@@ -113,8 +114,8 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
             player,
             setSelection,
             setAttackList
-        }
-    }, [playerGame, moves, cursor, stage, impulse, activeVehicles, selectedVehicle, currentFunction, player])
+        };
+    }, [playerGame, moves, cursor, stage, impulse, activeVehicles, selectedVehicle, currentFunction, player]);
 
     const nextPlayer = useCallback(() => {
         if (local) {
@@ -123,12 +124,12 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
                 const newGame = {...previousGame, Moves: moves};
                 setPlayerGame(newGame);
                 return newGame;
-            })    
+            });    
         } else {
             setActive(false);
             //Do Database stuff
         }
-    }, [currentPlayer])
+    }, [currentPlayer]);
 
     const endTurn = useCallback(() => {
         const newPlayers = updatePlayer({...player, hasMoved: true});
@@ -139,7 +140,7 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
             return;
         }
         setGame(previousGame => {
-            const [changedGame, string] = turn({...previousGame, Moves: moves}, moves);
+            const [changedGame] = turn({...previousGame, Moves: moves}, moves);
             const game = nextPhase(changedGame);
             setPlayerGame(game);
             setMoves(game.Moves);
@@ -153,7 +154,7 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
             return;
         }
         //Database stuff
-    }, [player, moves, updatePlayer, nextPlayer])
+    }, [player, moves, updatePlayer, nextPlayer]);
 
     const input = useMemo(() => {
         return {
@@ -175,8 +176,8 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
                 (pos) => magnitude(sub(cursor.loc,fixCursorPosition(cursor, pos))) === 0 ? 
                     press(State): 
                     setCursor(moveCursorToPosition(cursor, pos))
-        }
-    }, [cursor, State, press])
+        };
+    }, [cursor, State, press]);
 
     const uiGame = useMemo(() => {
         return {
@@ -189,17 +190,26 @@ export const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
             display,
             list,
             selection,
-        }
-    }, [display, active, data, list, players, selection, stage, impulse, game, updatePlayer])
+            attackList
+        };
+    }, [display, active, data, list, players, selection, stage, impulse, game, updatePlayer]);
 
     const closeFunction = () => {
         //SaveGame
         close();
-    }
+    };
 
     useEffect(() => console.log(moves), [moves]);
 
     return (
         <GameUI game={uiGame} input={input} close={closeFunction} />
-    )
-}
+    );
+};
+
+SkirmishController.propTypes = {
+    g: PropTypes.object,
+    Data: PropTypes.object,
+    close: PropTypes.func,
+};
+
+export {SkirmishController};

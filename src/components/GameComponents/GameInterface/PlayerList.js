@@ -1,16 +1,25 @@
-import React from 'react'
-import { PlayerEditor } from '../../Player/PlayerEditor'
+import { PropTypes } from "prop-types";
+import { PlayerEditor } from "../../Player/PlayerEditor";
 
-export const PlayerList = ({players, cPlayer, local, updatePlayer, ...rest}) => {
-  return (
-    <div className="Players" props={rest}>
-        {local ?
-            players.map(player => {
-                return <PlayerEditor player={player} update={updatePlayer} inGame={true}/>
-            })
-            :
-            (<></>)
-        }
-    </div>
-  )
-}
+const PlayerList = ({players, local, updatePlayer, ...rest}) => {
+    return (
+        <div className="Players" {...rest}>
+            {local ?
+                players.map((player, index) => {
+                    return <PlayerEditor player={player} update={updatePlayer} inGame={true} key={index}/>;
+                })
+                :
+                (<></>)
+            }
+        </div>
+    );
+};
+
+PlayerList.propTypes = {
+    players: PropTypes.array,
+    cPlayer: PropTypes.number,
+    local: PropTypes.bool,
+    updatePlayer: PropTypes.func
+};
+
+export { PlayerList };

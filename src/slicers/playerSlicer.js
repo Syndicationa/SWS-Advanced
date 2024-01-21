@@ -1,9 +1,9 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getAuth, signInWithPopup } from '@firebase/auth';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { getAuth, signInWithPopup } from "@firebase/auth";
 import {collection, doc, setDoc, getDoc} from "firebase/firestore";
-import { gProvider, database } from '../firebase';
-import { fetchGames } from "./gameSlicer";
-import { clone } from '../functions/functions'
+import { gProvider, database } from "../firebase";
+// import { fetchGames } from "./gameSlicer";
+// import { clone } from '../functions/functions'
 
 const userRef = collection(database, "users");
 
@@ -22,7 +22,7 @@ const initialState = {
             layers: [8,16],
             gameType: "Deathmatch",
             joinability: "Public"
-            },
+        },
         colorSet: {
             Astute: "#0000ff",
             Blade: "#ff0000"
@@ -32,21 +32,21 @@ const initialState = {
         ID: "A"
     },
     loggedIn: false
-}
+};
 
 const getUserID = async () => {
-    console.log("Getting ID")
+    console.log("Getting ID");
     const auth = getAuth();
     const result = await signInWithPopup(auth, gProvider);
     if (!result) return false;
     const user = result.user;
-    const userID = user.reloadUserInfo.localId
+    const userID = user.reloadUserInfo.localId;
     if (!userID) {
         alert("Failed to retrieve your User ID, please try again later");
         return;
     }
     return userID;
-}
+};
 
 export const fetchPlayer = createAsyncThunk(
     "player/fetchPlayer",
@@ -75,14 +75,14 @@ export const createPlayer = createAsyncThunk(
 
         return playerData;
     }
-)
+);
 
 const playerSlice = createSlice({
     name: "player",
     initialState,
     reducers: {
         updatePlayer: (state, action) => {
-            const player = action.payload
+            const player = action.payload;
             setDoc(doc(userRef, player.userID), player);
             state.player = player;
         },
@@ -98,15 +98,15 @@ const playerSlice = createSlice({
             if (!player) return;
             state.player = player;
             state.loggedIn = true;
-        })
+        });
         builder.addCase(createPlayer.fulfilled, (state, action) => {
             const player = action.payload;
             if (!player) return;
             state.player = player;
             state.loggedIn = true;
-        })
+        });
     }
-})
+});
 
 export const { updatePlayer, logOutPlayer} = playerSlice.actions;
 

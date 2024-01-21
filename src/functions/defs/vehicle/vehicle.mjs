@@ -1,7 +1,7 @@
-import {curry, rectangle, isInRectangle, compose} from '../../functions.mjs';
-import { compareArray } from '../../functions.mjs';
-import { ammoTemplate, utilityTemplate, weaponTemplate } from '../templates.mjs';
-import { getDefWeaps, updateActiveDef } from './retrieve.mjs';
+import {curry, rectangle, isInRectangle, compose} from "../../functions.mjs";
+import { compareArray } from "../../functions.mjs";
+import { ammoTemplate, utilityTemplate, weaponTemplate } from "../templates.mjs";
+import { getDefWeaps, updateActiveDef } from "./retrieve.mjs";
 
 const addEE = (weapons = {Data: [weaponTemplate]}, utils = {Data: [utilityTemplate]}, ammo = {Data: [ammoTemplate]}, HP) => {
     const hasExplode = weapons.Data.some((weapon) => weapon.Type === "Destruct");
@@ -24,25 +24,25 @@ const addEE = (weapons = {Data: [weaponTemplate]}, utils = {Data: [utilityTempla
         ...weapons,
         Data: [...weapons.Data, explodeWeap],
         fireCount: [...weapons.fireCount, 0]
-    }
+    };
 
     const nUtils = hasEnergy ? utils: {
         ...utils,
         Data: [...utils.Data, energyUtil],
         fireCount: [...utils.fireCount, 0]
-    }
+    };
 
     const newAmmo = [...(hasEnergy ? []:[energyAmmo]), ...(hasExplode ? []:[explodeAmmo])];
-    const newCount = newAmmo.map(() => 0)
+    const newCount = newAmmo.map(() => 0);
 
     const nAmmo = {
         ...ammo,
         Data: [...ammo.Data, ...newAmmo],
         count: [...ammo.count, ...newCount]
-    }
+    };
 
     return {Weap: nWeaps, Utils: nUtils, Ammo: nAmmo};
-}
+};
 
 export const makeVehicle = (source, playerID, vID, pos, r, parent = "") => {
     const {
@@ -63,25 +63,25 @@ export const makeVehicle = (source, playerID, vID, pos, r, parent = "") => {
 
     const origWeap = weap.fireCount !== undefined ? weap:
         {Data: weap, fireCount: new Array(weap.length).fill(0),
-        Weap (i) {
-            return {...this.Data[i], fireCount: this.fireCount[i]}
-        }};
+            Weap (i) {
+                return {...this.Data[i], fireCount: this.fireCount[i]};
+            }};
 
     const origUtils = utils.fireCount !== undefined ? utils:
         {Data: utils, fireCount: new Array(utils.length).fill(0),
-        Util (i) {
-            return {...this.Data[i], fireCount: this.fireCount[i]}
-        }};
+            Util (i) {
+                return {...this.Data[i], fireCount: this.fireCount[i]};
+            }};
 
     const origAmmo = ammo.count !== undefined ? ammo:
         {Data: ammo, 
             count: ammo.map((ammoType) => 
-            ammoType.sCount ?? ammoType.MCount ?? Infinity),
-        Ammo (i) {
-            return {...this.Data[i], count: this.count[i]}
-        }};
+                ammoType.sCount ?? ammoType.MCount ?? Infinity),
+            Ammo (i) {
+                return {...this.Data[i], count: this.count[i]};
+            }};
 
-    const {Weap, Utils, Ammo} = addEE(origWeap, origUtils, origAmmo, Stats.MaxHP)
+    const {Weap, Utils, Ammo} = addEE(origWeap, origUtils, origAmmo, Stats.MaxHP);
 
     const defWeaps = getDefWeaps(Weap.Data);
     const shields = def.Shields ?? []; 
@@ -92,7 +92,7 @@ export const makeVehicle = (source, playerID, vID, pos, r, parent = "") => {
         Shields: shields,
         sDamage: shields.map(() => 0),
         sActive: shields.map(() => false),
-    }
+    };
     const Defenses = {
         ...origDWeap, ...origShields
     };
@@ -107,11 +107,11 @@ export const makeVehicle = (source, playerID, vID, pos, r, parent = "") => {
         Appearance, State,
         Weap, Utils, Ammo, Defenses,
         Location, Velocity
-    })
-}
+    });
+};
 
 export const applyStatuses = (vehicle) => {
-    const statuses = vehicle.State.statuses.map((status) => {return {...status, time: status.time - 1}});
+    const statuses = vehicle.State.statuses.map((status) => {return {...status, time: status.time - 1};});
     const nVeh = statuses.reduce((accVeh, status) => {
         if (status.time === 0) return status.reset(accVeh);
         return status.apply(accVeh);
@@ -119,15 +119,15 @@ export const applyStatuses = (vehicle) => {
     const trimmedStatuses = statuses.reduce((acc, status) => status.time === 0 ? acc:[...acc, status],[]);
 
     return {...nVeh, State: {...nVeh.State, statuses: trimmedStatuses}};
-}
+};
 
 export const updateArea = curry((areaFunc, ship) => {
-	const loc = ship.Location;
-	const {Size, area} = ship.Appearance;
-	const shipReturn = (area) => {return {...ship, Appearance: {...ship.Appearance, area}}};
-	if (ship.State.hp <= 0) return shipReturn([]);
-	return shipReturn(areaFunc(loc, Size, area));
-})
+    const loc = ship.Location;
+    const {Size, area} = ship.Appearance;
+    const shipReturn = (area) => {return {...ship, Appearance: {...ship.Appearance, area}};};
+    if (ship.State.hp <= 0) return shipReturn([]);
+    return shipReturn(areaFunc(loc, Size, area));
+});
 
 export const reArea = curry((old, both, locInfo, size) => {
     const {prevLoc, loc, rotation} = locInfo;
@@ -151,15 +151,15 @@ export const reArea = curry((old, both, locInfo, size) => {
             const xory = i % 2;
             if (i > 1) return Math.ceil(Math.max(val, current[xory]));
             return Math.floor(Math.min(val, current[xory]));
-        })
-    }, [])
+        });
+    }, []);
 
     for (let x = extremes[0]; x <= extremes[2]; x++) {
         for (let y = extremes[1]; y <= extremes[3]; y++) {
             if (isInRectangle([x + 0.5,y + 0.5], rect)) {
                 const alreadyIn = Area.some((loc) => {
-                    return compareArray(loc, [x,y])
-                })
+                    return compareArray(loc, [x,y]);
+                });
                 if (!alreadyIn) {
                     Area.push([x,y]);
                 }
@@ -167,7 +167,7 @@ export const reArea = curry((old, both, locInfo, size) => {
         }
     }
     return Area;
-})
+});
 
 // const shiftArea = curry(([dx, dy], locInfo= locInfoTemplate, size = [1,1], area = areaTemplate) => {
 //     let areaLen = reArea(true, false)(locInfo, size, area).length;
