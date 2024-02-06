@@ -1,7 +1,6 @@
 import { last, replaceInArray } from "../../functions.mjs";
 import { vehicleMovementCursor, zoom } from "../cursor.mjs";
 import { attack } from "../vehicle/attack.mjs";
-import { velZero } from "../vehicle/move.mjs";
 import { gShipFromID, getPlayShips } from "../vehicle/retrieve.mjs";
 import { utility } from "../vehicle/utility.mjs";
 import { addMove, setMove } from "./stage.mjs";
@@ -25,7 +24,7 @@ export const pressFunction = Data => State => {
             utilityPress(Data, State);
             break;
         case 3:
-            attackPress(Data, State);
+            attackPress(State);
             break;
         default:
             throw Error("Invalid Stage");
@@ -137,11 +136,11 @@ const setupUtilityModes = (Data, State) => {
     setListType("Vehicle");
     switch (cursor.menu) {
         case 0: {//Move
-            setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(velZero(selected), setSelectedVehicle, .25)});
+            setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(selected, setSelectedVehicle, true)});
             break;
         }
         case 1: {//Attack
-            setCurrentFunction(utility(Data, activeVehicles, selected));
+            setCurrentFunction(() => utility(Data, activeVehicles, selectedVehicle));
             setCursor({...cursor, mode: "Move", data: []});
             break;
         }
@@ -151,6 +150,7 @@ const setupUtilityModes = (Data, State) => {
         case 3: {
             setImpulse(0);
             setCursor({...cursor, mode: "Move", data: []});
+            setSelectedVehicle(undefined);
             break;
         }
         default:
@@ -222,7 +222,9 @@ const utilityPress = (Data, State) => {
             const velRotMove = `${JSON.stringify(velocity)}:${JSON.stringify(rotation)}`;
             const playedGenerateMove = `${selectedVehicle.Ownership.vID}.${velRotMove}..`;
             const generatedMovementMove = vehicleIndex === -1 ? playedGenerateMove:
-                replaceInArray(splitMove[vehicleIndex].split("."), 1, velRotMove);
+                replaceInArray(splitMove[vehicleIndex].split("."), 1, velRotMove).join(".");
+
+            console.log(generatedMovementMove);
 
             if (vehicleIndex === -1) setMoves(addMove(moves, ID, generatedMovementMove));
             else setMoves(setMove(moves, ID, `U-${replaceInArray(splitMove, vehicleIndex, generatedMovementMove).join(";")}`));
@@ -242,7 +244,7 @@ const utilityPress = (Data, State) => {
             break;
         }
         case 5: {//Select Target Part 2
-            setCurrentFunction(currentFunction(allVehicles[cursor.menu]));//Add target
+            setCurrentFunction(currentFunction => currentFunction(allVehicles[cursor.menu]));//Add target
             setCursor({...cursor, data: utils, mode:"Menu", menu: Math.min(cursor.menu, utils.length - 1)});
             setImpulse(6);
             break;
@@ -251,7 +253,7 @@ const utilityPress = (Data, State) => {
             const [, utilityMove, string] = currentFunction(utils[cursor.menu]);
             const playedGeneratedUtility = `${selectedVehicle.Ownership.vID}..${utilityMove}.`;
             const generatedUtilityMove = vehicleIndex === -1 ? playedGeneratedUtility:
-                replaceInArray(splitMove[vehicleIndex].split("."), 1, utilityMove);
+                replaceInArray(splitMove[vehicleIndex].split("."), 2, utilityMove).join(".");
 
             if (vehicleIndex === -1) setMoves(addMove(moves, ID, generatedUtilityMove));
             else setMoves(setMove(moves, ID, `U-${replaceInArray(splitMove, vehicleIndex, generatedUtilityMove).join(";")}`));
@@ -280,15 +282,18 @@ const attackPress = (State) => {
         cursor, setCursor, 
         setSelection, 
         activeVehicles, setActiveVehicles, 
-        Display, 
+        display, 
         currentFunction, setCurrentFunction,
         selectedVehicle, setSelectedVehicle,
         attackList, setAttackList
     } = State;
 
+    console.log(cursor);
+    console.log(State);
+
     const [x,y] = cursor.loc;
-    const vehicleOptions = getPlayShips(player.User.ID, Display[x][y]);
-    const allVehicles = Display[x][y];
+    const vehicleOptions = getPlayShips(player.User.ID, display[x][y]);
+    const allVehicles = display[x][y];
 
     const vehicle = vehicleOptions[cursor.menu] ?? selectedVehicle;
     const utils = selectedVehicle.Utils.Data;
@@ -303,7 +308,7 @@ const attackPress = (State) => {
         }
         case 1: {
             setSelectedVehicle(vehicle);
-            setCurrentFunction(attack(activeVehicles, vehicle));
+            setCurrentFunction(() => attack(activeVehicles, vehicle));
             setCursor({...cursor, mode: "Move", data: []});
             setImpulse(2);
             break;
@@ -316,7 +321,7 @@ const attackPress = (State) => {
             break;
         }
         case 3: {//Select Target Part 2
-            setCurrentFunction(currentFunction(allVehicles[cursor.menu]));//Add target
+            setCurrentFunction(currentFunction => currentFunction(allVehicles[cursor.menu]));//Add target
             setSelectedVehicle([selectedVehicle, allVehicles[cursor.menu]]);
             setCursor({...cursor, data: utils, mode:"Menu", menu: Math.min(cursor.menu, utils.length - 1)});
             setImpulse(4);

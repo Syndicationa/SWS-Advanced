@@ -41,7 +41,7 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
 
     const activeVehicles = useMemo(() => playerGame.Vehicles, [playerGame.Vehicles]);
     const display = useMemo(() => createDisplay(game.Size.OverallSize)(selectedVehicle ? mergeShipArrays(activeVehicles, [selectedVehicle]): activeVehicles), 
-        [activeVehicles, selectedVehicle, game.Size.OverallSize]);
+        [activeVehicles, selectedVehicle, game.Size.OverallSize, playerGame]);
     //#endregion
 
     //#region Players
@@ -109,7 +109,7 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
 
     const nextPlayer = useCallback(() => {
         if (local) {
-            setGame(previousGame => {
+            setGame(previousGame => { 
                 setCurrentPlayer(currentPlayer + 1);
                 const newGame = {...previousGame, Moves: moves};
                 setPlayerGame(newGame);

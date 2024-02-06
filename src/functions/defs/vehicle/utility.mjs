@@ -1,4 +1,4 @@
-import { clone, curry, replaceInArray } from "../../functions.mjs";
+import { clone, curry, replaceInArray, compareArray, sumArrays } from "../../functions.mjs";
 import { statusTemplate, utilityTemplate, vehicleTemplate } from "../templates.mjs";
 import { applyDamage, calcGenHitChance, calcHit, calcRangeHC, consumeAmmo } from "./attack.mjs";
 import { getAmmo, getAmmoOfWeap, getPlayerShips, getUtilIndex, mergeShipArrays } from "./retrieve.mjs";
@@ -176,7 +176,8 @@ const inflictStatus = (source = vehicleTemplate, target = vehicleTemplate, util 
 
 const createDataStr = () => "";
 
-export const utility = curry((Data, shipArray, source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate) => {
+export const utility = curry((Data, shipArray, source, target, util) => {
+    console.log(Data, shipArray, source, target, util);
     const {Type} = util;
 
     let modifiedShips = [];
@@ -210,12 +211,12 @@ export const utility = curry((Data, shipArray, source = vehicleTemplate, target 
     const merged = mergeShipArrays(shipArray, modifiedShips);
     const move = [
         getUtilIndex(source.Utils.Data, util), 
-        trueTarget.map((target) => target.Owner.Player), trueTarget.map((target) => target.Owner.vID), 
+        trueTarget.map((target) => target.Ownership.Player), trueTarget.map((target) => target.Ownership.vID), 
         hit
     ];
 
     const dataString = createDataStr(source, trueTarget, util, damage, hit);
-    return [merged, move, dataString];
+    return [merged, JSON.stringify(move), dataString];
 });
 
 export const applyUtility = curry((Data, shipArray, source = vehicleTemplate, target = vehicleTemplate, util = utilityTemplate, hit = 0) => {
@@ -246,10 +247,28 @@ export const applyUtility = curry((Data, shipArray, source = vehicleTemplate, ta
         default:
             break;
     }
-    modifiedShips = modifiedShips.map(updateArea(reArea(true, false)));
+    modifiedShips = modifiedShips.map(updateArea(reArea(false, false)));
 
     const merged = mergeShipArrays(shipArray, modifiedShips);
 
     const dataString = createDataStr(source, trueTarget, util, damage, hit);
     return [merged, dataString];
 });
+
+export const finalizeUtility = V => {
+    const {Velocity, Location, State, Appearance} = V;
+    const hasMoved = compareArray([0,0], Velocity.vel);
+    const cState =  {...State, hasFired: false, hasMoved};
+    const newVel = sumArrays(Velocity.vel, Velocity.prevVel);
+    const cVel = {...Velocity, prevVel: newVel, vel: newVel};
+    const cLoc = {...Location, prevLoc: Location.loc, loc: sumArrays(Location.loc, newVel)};
+    const cApp = {...Appearance, area: reArea(true, false, cLoc, Appearance.Size)};
+    const cVeh = {
+        ...V,
+        State: cState,
+        Velocity: cVel,
+        Location: cLoc,
+        Appearance: cApp
+    };
+    return cVeh;
+};
