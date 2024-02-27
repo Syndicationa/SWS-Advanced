@@ -125,7 +125,7 @@ const movementPress = (State) => {
             break;
         }
         default:
-            throw Error("Unexpected Outcome");
+            throw Error(`Unexpected Outcome: ${impulse}`);
     }
 };
 
@@ -271,32 +271,33 @@ const utilityPress = (Data, State) => {
         }
         //#endregion
         default:
-            throw Error("Unexpected Outcome");
+            throw Error(`Unexpected Outcome: ${impulse}`);
     }
 };
 
 const attackPress = (State) => {
     const {
-        player, 
-        impulse, setImpulse, 
-        cursor, setCursor, 
-        setSelection, 
-        activeVehicles, setActiveVehicles, 
-        display, 
-        currentFunction, setCurrentFunction,
+        setPlayerGame,
+        moves, setMoves,
+        cursor, setCursor,
+        run,
+        impulse, setImpulse,
+        activeVehicles, display,
         selectedVehicle, setSelectedVehicle,
-        attackList, setAttackList
+        currentFunction, setCurrentFunction,
+        player,
+        setSelection,
+        setAttackList
     } = State;
 
-    console.log(cursor);
-    console.log(State);
+    const ID = player.User.ID;
 
     const [x,y] = cursor.loc;
     const vehicleOptions = getPlayShips(player.User.ID, display[x][y]);
     const allVehicles = display[x][y];
 
     const vehicle = vehicleOptions[cursor.menu] ?? selectedVehicle;
-    const utils = selectedVehicle.Utils.Data;
+    const weapons = selectedVehicle?.Weap?.Data;
 
     switch (impulse) {
         case 0: {
@@ -322,16 +323,24 @@ const attackPress = (State) => {
         }
         case 3: {//Select Target Part 2
             setCurrentFunction(currentFunction => currentFunction(allVehicles[cursor.menu]));//Add target
-            setSelectedVehicle([selectedVehicle, allVehicles[cursor.menu]]);
-            setCursor({...cursor, data: utils, mode:"Menu", menu: Math.min(cursor.menu, utils.length - 1)});
+            setCursor({...cursor, data: weapons, mode:"Menu", menu: Math.min(cursor.menu, weapons.length - 1)});
             setImpulse(4);
             break;
         }
         case 4: {
-            const [newVehicleArray, , string] = currentFunction(utils[cursor.menu]);
-            setActiveVehicles(newVehicleArray);
-            setSelectedVehicle(gShipFromID(selectedVehicle.Ownership.Player,selectedVehicle.Ownership.vID, newVehicleArray));
-            setAttackList([...attackList, string]);
+            const [, attackMove, string] = currentFunction(weapons[cursor.menu]);
+            setCursor({...cursor, mode: "Move", data: []});
+
+            console.log(attackMove);
+
+            setMoves(addMove(moves, ID, attackMove));
+
+            setPlayerGame(playerGame => run(playerGame, attackMove, {type: "A-", str: "", id: ID}));
+
+            setSelectedVehicle(undefined);
+
+            setImpulse(0);
+            setAttackList(attackList => [...attackList, string]);
             break;
         }
         default:

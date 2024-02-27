@@ -70,12 +70,11 @@ const calcInterceptChance = compose(calcDefShip, defensesInArea);
 export const calcGenHitChance = (attacker, target, weap) => {
     const {Whit, Wran} = weap;
     const Acc = attacker.Stats.Acc;
-    const Mov = target.State.mov;
+    const Mov = target.Stats.Mov;
     const dist = distance(attacker.Location.prevLoc, target.Location.prevLoc);
 
     let hitChance = (Whit + Acc) + (-25*Math.tanh((Mov- 15)/5) + 25);
     hitChance /= (dist > Wran) ? (dist - Wran + 1):1;
-
     return [hitChance, hitChance];
 };
 
@@ -182,7 +181,7 @@ const applyAttacker = (attacker, weap) => {
 const applyTarget = ([damage, sDamage], target) => {
     if (target === undefined) return {};
     else if (target instanceof Array)
-        return target.map((ship, i) => applyTarget(ship, [damage[i], sDamage[i]]));
+        return target.map((ship, i) => applyTarget([damage[i], sDamage[i]], ship));
 
     return consumeShield(applyDamage(damage, target), sDamage);
 };
@@ -336,6 +335,7 @@ const newDamage = (damage = [0,0], hp = 0) => {
 };
 
 const interceptDamage = (shipList, hitList, attacker, target, weapon) => {
+    if (hitList.length === 0) return {damages: [], targetArray: [], weap: weapon};
     const position = hitList.slice(-1);
     let ran = Math.random()*position;
     let weap = weapon;
@@ -345,8 +345,8 @@ const interceptDamage = (shipList, hitList, attacker, target, weapon) => {
     let damage;
     let hp;
 
-    let targetArray;
-    let damages;
+    let targetArray = [];
+    let damages = [];
     while (weap.Watk > 0) {
         targetIndex = hitList.findIndex(greaterThan(ran));
         newTarget = shipList[targetIndex];
@@ -372,14 +372,14 @@ const interceptDamage = (shipList, hitList, attacker, target, weapon) => {
 
 const interceptAttack = (attacker, target, weapon, shipArray) => {
     const line = generateLine(attacker, target[0]);
-    const targetAndPrevious = shipsOnLine(line, shipArray, target);
-    const hitPreTarget = generateHitList(targetAndPrevious);
+    const targetAndPrevious = shipsOnLine(line, shipArray, target[0]);
+    const hitPreTarget = generateHitList(targetAndPrevious, target[0]);
     const newAttacker = applyAttacker(attacker, weapon);
 
     const {damages, targetArray, weap} = 
-        interceptDamage(targetAndPrevious, hitPreTarget, attacker, target, weapon);
+        interceptDamage(targetAndPrevious, hitPreTarget, attacker, target[0], weapon);
 
-    const hit = calcHit(calcGenHitChance(attacker, target, weap));
+    const hit = calcHit(calcGenHitChance(attacker, target[0], weap));
     
     if (weap.Watk <= 0) return {
         modifiedShips: [newAttacker, ...targetArray], 
@@ -391,9 +391,9 @@ const interceptAttack = (attacker, target, weapon, shipArray) => {
     let newTarget = target;
     let postTargetWeapon = weap;
 
-    if (hit < 2) {
+    if (hit === 2) {
         ({damage, newTarget} = performDamage(attacker, target, weap));
-        postTargetWeapon = {...weap, Watk: damage - target.State.hp};
+        postTargetWeapon = {...weap, Watk: damage - target[0].State.hp};
     }
 
     if (postTargetWeapon.Watk <= 0) return {
@@ -404,22 +404,22 @@ const interceptAttack = (attacker, target, weapon, shipArray) => {
     };
 
     const newLine = genNewLine(line, shipArray);
-    const postTarget = shipsOnLine(newLine, target).pop();
-    const hitPostTarget = generateHitList(postTarget, target);
+    const postTarget = shipsOnLine(newLine, target[0]).slice(1);
+    const hitPostTarget = generateHitList(postTarget, target[0]);
 
-    const {postDamages, postTargets} = interceptDamage(postTarget, hitPostTarget, target);
+    const {damages: postDamages, targetArray: postTargets} = interceptDamage(postTarget, hitPostTarget, attacker, target, postTargetWeapon);
 
     return {
-        modifiedShips: [newAttacker, ...targetArray, newTarget, ...postTargets], 
+        modifiedShips: [newAttacker, ...targetArray, ...newTarget, ...postTargets], 
         damage: [...damages, damage, ...postDamages], 
         hit: [...damages.map(() => 2), hit, ...postDamages.map(() => 2)], 
-        trueTarget: [...targetArray, newTarget, ...postTargets]
+        trueTarget: [...targetArray, ...newTarget, ...postTargets]
     };
 };
 
 const genericAttack = (attacker, target, weapon, shipArray) => {
     const trueHit = 
-        attacker.State.statuses.find(status => status.Type === "True Hit").function ?? (() => false);
+        attacker.State.statuses.find(status => status.Type === "True Hit")?.function ?? (() => false);
 
     if (trueHit(target)) return {
         ...standardAttack(attacker, target, weapon, shipArray),
@@ -515,11 +515,12 @@ export const attack = curry((shipArray, attacker, target, weapon) => {
     modifiedShips = modifiedShips.map(updateArea(reArea(true, false)));
 
     const merged = mergeShipArrays(shipArray, modifiedShips);
-    const move = [
-        attacker.Ownership.vID, getWeapIndex(attacker.Weap.Data, weapon), 
-        trueTarget.map((target) => target.Owner.Player), trueTarget.map((target) => target.Owner.vID), 
-        hit
-    ];
+    const move = 
+    `${attacker.Ownership.vID}.${
+        getWeapIndex(attacker.Weap.Data, weapon)}.${
+        JSON.stringify(trueTarget.map((target) => target.Ownership.Player))}.${
+        JSON.stringify(trueTarget.map((target) => target.Ownership.vID))}.${
+        hit}`;
 
     const dataString = createDataStr(attacker, trueTarget, weapon, damage, hit);
     return [merged, move, dataString];
@@ -571,6 +572,7 @@ export const applyAttack = (shipArray = [vehicleTemplate], attacker = vehicleTem
 
     const merged = mergeShipArrays(shipArray, modifiedShips);
 
+    console.log(damage);
     const dataString = createDataStr(attacker, target, weapon, damage, hit);
     return [merged, dataString];
 };

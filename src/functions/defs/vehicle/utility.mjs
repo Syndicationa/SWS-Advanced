@@ -177,7 +177,6 @@ const inflictStatus = (source = vehicleTemplate, target = vehicleTemplate, util 
 const createDataStr = () => "";
 
 export const utility = curry((Data, shipArray, source, target, util) => {
-    console.log(Data, shipArray, source, target, util);
     const {Type} = util;
 
     let modifiedShips = [];
