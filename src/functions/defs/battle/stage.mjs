@@ -5,6 +5,19 @@ import { applyAttack } from "../vehicle/attack.mjs";
 import { filter, map, objectMap, pipe, pop, split } from "../../functions.mjs";
 import { applyUtility, finalizeUtility } from "../vehicle/utility.mjs";
 
+export const runGame = Data => State => {
+    const {Turns, ...rest} = State.Moves;
+    const run = runTurn(Data);
+    const moves = Turns.map((_,i) => {
+        _;
+        return objectMap(rest)((arr) => [arr[i]]);
+    });
+    return moves.reduce(([state], move, i) => {
+        const [nState, str] = run(state, move);
+        return [{...nState, Vehicles: finalizeStage(nState.Vehicles, Turns[i])}, str];
+    }, [State]);
+};
+
 export const runTurn = Data => (State, Moves) => {
     const keys = Object.keys(Moves);
 
@@ -112,6 +125,7 @@ export const runMove = Data => (State, Move, {type, id, str}) => {
 
 
         const [nVehs, info] = applyAttack(vehicleArr, attacker, targets, attacker.Weap.Weap(weapID), hit);
+        console.log(info);
         return {
             ...State,
             Vehicles: nVehs,
@@ -133,38 +147,38 @@ export const setMove = (moves = {}, ID = "", move = "") => {
 };
 
 export const updateShips = pipe(map(ship => applyStatuses(ship)), filter(ship => ship.State.hp));
+export const finalizeStage = (Vehicles, stage) => {
+    console.log(Vehicles);
+    const updatedVehicles = updateShips(Vehicles);
+    switch (stage) {
+        case 0:
+            return updatedVehicles;
+        case 1:
+            return map(finalizeMove, updatedVehicles);
+        case 2:
+            return map(finalizeUtility, updatedVehicles);
+        case 3:
+            return updatedVehicles;
+        default:
+            throw Error("Unknown Stage");
+    }
+};
 
 export const nextPhase = (State) => {
     const stageNext =  ["M-", "U-", "A-", "M-"];
     const stage = State.Stage;
+    const nextStage = (stage % 3) + 1;
     const moves = State.Moves;
     const nMoves = objectMap(moves)((move, key) => {
-        if (key === "Phase") return [...move, "Next"];
+        if (key === "Turns") return [...move, nextStage];
+        if (key === "Data") return [...move, ""];
         return [...move, stageNext[stage]];});
-    const Vehicles = updateShips(State.Vehicles);
+    const Vehicles = finalizeStage(State.Vehicles, stage);
 
-    if (stage === 0) {
-        return {
-            ...State,
-            Stage: 1,
-            Vehicles,
-            Moves: nMoves
-        };
-    } else if (stage === 1) {
-        const newVehicles = map(finalizeMove, Vehicles);
-        return {
-            ...State,
-            Stage: 2,
-            Vehicles: newVehicles,
-            Moves: nMoves
-        };
-    } else if (stage === 2) {
-        const newVehicles = map(finalizeUtility, Vehicles);
-        return {
-            ...State,
-            Stage: 3,
-            Vehicles: newVehicles,
-            Moves: nMoves
-        };
-    }
+    return {
+        ...State,
+        Stage: nextStage,
+        Vehicles,
+        Moves: nMoves
+    };
 };

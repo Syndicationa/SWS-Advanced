@@ -11,7 +11,7 @@ import { cursorGenerator, fixCursorPosition, moveCursor, moveCursorToPosition, z
 import { createDisplay, getFromDisp } from "../../../functions/defs/display.mjs";
 
 import { pressFunction } from "../../../functions/defs/battle/control.mjs";
-import { nextPhase, runMove, runTurn } from "../../../functions/defs/battle/stage.mjs";
+import { nextPhase, runGame, runMove, runTurn } from "../../../functions/defs/battle/stage.mjs";
 import { mergeShipArrays } from "../../../functions/defs/vehicle/retrieve.mjs";
 
 import { generateButtonedVehicles, generateStringList, generateVehicleList } from "../../../functions/listGenerator.mjs";
@@ -19,8 +19,8 @@ import { generateButtonedVehicles, generateStringList, generateVehicleList } fro
 const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
     const user = useSelector(state => state.player);
 
-    const [game, setGame] = useState(g); //Core game that playerGames are built on
-    const [playerGame, setPlayerGame] = useState(g); //Game used for the player's turns
+    const [game, setGame] = useState(() => runGame(Data)(g)[0]); //Core game that playerGames are built on
+    const [playerGame, setPlayerGame] = useState(game); //Game used for the player's turns
     const [moves, setMoves] = useState(g.Moves);
     const [cursor, setCursor] = useState(cursorGenerator(game.Size));
 
@@ -132,6 +132,7 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
         setGame(previousGame => {
             const [changedGame] = turn({...previousGame, Moves: moves}, moves);
             const game = nextPhase(changedGame);
+            console.log(game.Moves);
             setPlayerGame(game);
             setMoves(game.Moves);
             return game;
