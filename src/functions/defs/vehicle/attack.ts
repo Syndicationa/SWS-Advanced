@@ -1,11 +1,11 @@
 import { compose, curry, map, compareArray, sumArrays} from "../../functions";
 import { replaceInArray } from "../../functions";
 import { updateActiveDef, mergeVehicleArrays, getActiveShields, getShieldIndex, vehiclesOnLine, sameVehicle } from "./retrieve";
-import {getWeapIndex, getActiveDefs, getAmmoOfWeap, getAmmo, getPlayerVehicles, vehiclesInRadius} from "./retrieve";
+import {getWeapIndex, getActiveDefs, getAmmoOfTool, getAmmo, getPlayerVehicles, vehiclesInRadius} from "./retrieve";
 import { updateArea, reArea } from "./vehicle";
 import { sub, unitDotProduct, distance } from "../../vectors";
 import { vehicle } from "../../types/vehicleTypes";
-import { line, locationVector, rotationVector, weapon, weaponWithCount } from "../../types/types";
+import { line, locationVector, rotationVector, statusUtil, weapon, weaponWithCount } from "../../types/types";
 import {hit, hitOptions, hitNumbers} from "../../types/types";
 
 
@@ -78,8 +78,8 @@ const calcDefVehicle = (vehicleArray: vehicle[], tLoc: locationVector) => {
 
 const calcInterceptChance = compose(calcDefVehicle, defensesInArea);
 
-export const calcGenHitChance = (attacker: vehicle, target: vehicle, weap: weapon): [hit: number, intercept: number] => {
-    const {Whit, Wran} = weap;
+export const calcGenHitChance = (attacker: vehicle, target: vehicle, tool: weapon | statusUtil): [hit: number, intercept: number] => {
+    const {Whit, Wran} = tool;
     const Acc = attacker.Stats.Acc;
     const Mov = target.Stats.Mov;
     const dist = distance(attacker.Location.prevLoc, target.Location.prevLoc);
@@ -183,7 +183,7 @@ const applyAttacker = (attacker: vehicle, weap: weapon): vehicle => {
             energy: Math.min(attacker.Stats.MaxEnergy, attacker.State.energy - weap.EnergyCost),
             hasFired: true,
         },
-        Ammo: consumeAmmo(attacker.Ammo, getAmmoOfWeap(weap, attacker.Ammo)),
+        Ammo: consumeAmmo(attacker.Ammo, getAmmoOfTool(weap, attacker.Ammo)),
         Weap: updateFireRate(attacker.Weap, weap)
     };
 };
@@ -206,7 +206,7 @@ const consumeDefAmmo = (loc: locationVector) => (vehicle: vehicle) => {
         getActiveDefs(vehicle.Defenses)
             .filter((w) => dist <= weaponData[w].Wran)
             .map(index => weaponData[index]);
-    const ammos = weapons.map((weapon) => getAmmoOfWeap(weapon, vehicle.Ammo));
+    const ammos = weapons.map((weapon) => getAmmoOfTool(weapon, vehicle.Ammo));
     const nAmmo = ammos.reduce((acc, ammo) => consumeAmmo(acc, ammo),vehicle.Ammo);
     return updateActiveDef({
         ...vehicle,

@@ -15,7 +15,7 @@ export const getDefWeaps = (weapDataList: weapon[]): number[] => {
 export const updateActiveDef = (vehicle: vehicle) => {
     const {wActive: cWact, Weapons} = vehicle.Defenses;
     const wActive = cWact.map((val, i) => {
-        const Count = vehicle.Ammo.Ammo(getAmmoOfWeap(vehicle.Weap.Weap(Weapons[i]), vehicle.Ammo)).count;
+        const Count = vehicle.Ammo.Ammo(getAmmoOfTool(vehicle.Weap.Weap(Weapons[i]), vehicle.Ammo)).count;
         return val && (Count > 0);
     });
     return {...vehicle, Defenses: {...vehicle.Defenses, wActive}};
@@ -37,9 +37,8 @@ export const getActiveDefs = (defenses: vehicle["Defenses"]) => defenses.Weapons
 
 export const getActiveShields = (shields: {Shields: shield[], sActive: boolean[]}): shield[] => shields.Shields.filter((s, i) => shields.sActive[i]);
 
-export const getAmmoOfWeap = (weapon: weapon, ammo: vehicle["Ammo"]) => {
-    if (weapon.aType === undefined) return -1;
-    const ammoType = weapon.aType;
+export const getAmmoOfTool = (tool: weapon | util, ammo: vehicle["Ammo"]) => {
+    const ammoType = tool.aType;
     return getAmmo(ammoType, ammo);
 };
 

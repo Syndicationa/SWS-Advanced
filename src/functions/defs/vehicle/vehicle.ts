@@ -54,7 +54,7 @@ const addEE = (weapons: vehicle["Weap"], utils: vehicle["Utils"], ammo: vehicle[
 
 export const makeVehicle = (source: baseVehicle | vehicle, 
     playerID: string, vID: number, 
-    pos: locationVector, r: rotationVector, parent: string): vehicle => {
+    pos: locationVector, r: rotationVector, parent: string = ""): vehicle => {
     
     const {
         Type: Type, Stats: Stats, 
