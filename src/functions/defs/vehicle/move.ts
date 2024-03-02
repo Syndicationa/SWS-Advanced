@@ -1,11 +1,13 @@
-import {curry, rotate} from "../../functions.mjs";
-import { compareArray, sumArrays } from "../../functions.mjs";
-import { distance, magnitude } from "../../vectors.mjs";
-import { vehicleTemplate } from "../templates.mjs";
-import {updateArea, reArea} from "./vehicle.mjs";
+import { rotate } from "../../functions";
+import { compareArray, sumArrays } from "../../functions";
+import { addVectors, distance, magnitude, multiplyVector } from "../../vectors";
+import {updateArea, reArea} from "./vehicle";
+
+import { vehicle } from "../../types/vehicleTypes";
+import { rotationVector, velocityVector } from "../../types/types";
 
 
-export const canMove = (ship, addVel, utility = false) => {
+export const canMove = (ship: vehicle, addVel: velocityVector, utility: boolean = false) => {
     const {energy} = ship.State;
     const {MovEnergy, Mov} = ship.Stats;
     const {vel, prevVel} = ship.Velocity;
@@ -23,32 +25,32 @@ export const canMove = (ship, addVel, utility = false) => {
     return (acceleration <= Math.ceil(Mov*moveRatio) && remainingEnergy >= 0);
 };
 
-const calculateMovEnergy = (energy = 0, MovEnergy = 0, add = true) => {
+const calculateMovEnergy = (energy: number, MovEnergy: number, add: boolean = true) => {
     if (add) return energy + MovEnergy;
     return energy - MovEnergy;
 };
 
-export const generateVelocity = (Vehicle = vehicleTemplate, addVel = [0,0]) => {
+export const generateVelocity = (Vehicle: vehicle, addVel: velocityVector): {vel: velocityVector, rot: rotationVector} => {
     const {Velocity, Location} = Vehicle;
     const rot = Location.rotation;
     const vel = Velocity.vel;
     const [rotation, movY] = addVel;
 
-    const relativeVel = rot.map((v) => v*-movY);
+    const relativeVel = multiplyVector(rot, -movY);
 
-    const nVel = sumArrays(vel, relativeVel);
+    const nVel = addVectors(vel, relativeVel);
     const nRot = rotate(rot, rotation);
 
     return {vel: nVel, rot: nRot};
 };
 
-const mShip = curry((render, Vehicle, Velocity, utility = false) => {
+const mShip = (render: (v: vehicle) => vehicle) => (Vehicle: vehicle, Velocity: {vel: velocityVector, rot: rotationVector}, utility: boolean = false) => {
     const {vel, rot} = Velocity;
     const {Velocity: vVel, Location: vLoc, Appearance: vApp, State: vState, Stats: vStat} = Vehicle;
 
     //Create new objects
     const cVel = {...vVel, vel};
-    const cLoc = {...vLoc, loc: sumArrays(vLoc.prevLoc, vel), rotation: rot};
+    const cLoc = {...vLoc, loc: addVectors(vLoc.prevLoc, vel), rotation: rot};
     const cApp = {...vApp, area: []};
     const acc = utility ? magnitude(vel):distance(vVel.prevVel, vel);
     //const cSteps = moveData.length > 0 ? moveData.length: sumArrays(vel, negateArray(vVel.vel)).reduce(absSum, 0);
@@ -62,16 +64,17 @@ const mShip = curry((render, Vehicle, Velocity, utility = false) => {
         State: cState
     };
     return render(nVehicle);
-});
+};
 
 export const movingShip = mShip(updateArea(reArea(true, true)));
 export const moveShip = mShip(updateArea(reArea(false, false)));
 
-export const finalizeMove = V => {
+export const finalizeMove = (V: vehicle): vehicle => {
     const {Velocity, Location, State, Appearance} = V;
     const hasMoved = compareArray(Velocity.prevVel, Velocity.vel);
     const cState =  {...State, hasFired: false, hasMoved};
-    const cVel = {...Velocity, prevVel: Velocity.vel, vel: [0,0]};
+    const veloctiyForUtil: velocityVector = [0,0];
+    const cVel = {...Velocity, prevVel: Velocity.vel, vel: veloctiyForUtil};
     const cLoc = {...Location, prevLoc: Location.loc, loc: Location.loc};
     const cApp = {...Appearance, area: reArea(true, false, cLoc, Appearance.Size)};
     const cVeh = {

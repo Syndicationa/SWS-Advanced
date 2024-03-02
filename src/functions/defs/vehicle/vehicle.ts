@@ -1,24 +1,32 @@
-import {curry, rectangle, isInRectangle, compose} from "../../functions.mjs";
-import { compareArray } from "../../functions.mjs";
-import { ammoTemplate, utilityTemplate, weaponTemplate } from "../templates.mjs";
-import { getDefWeaps, updateActiveDef } from "./retrieve.mjs";
+import {curry, rectangle, isInRectangle, compareArray} from "../../functions";
+import { ammo, locationVector, rotationVector, sizeVector, util, weapon } from "../../types/types";
+import { baseVehicle, vehicle } from "../../types/vehicleTypes";
+import { getDefWeaps, updateActiveDef } from "./retrieve";
 
-const addEE = (weapons = {Data: [weaponTemplate]}, utils = {Data: [utilityTemplate]}, ammo = {Data: [ammoTemplate]}, HP) => {
+type combo = {Weap: vehicle["Weap"], Utils: vehicle["Utils"], Ammo: vehicle["Ammo"]};
+
+const addEE = (weapons: vehicle["Weap"], utils: vehicle["Utils"], ammo: vehicle["Ammo"], HP: number): combo => {
     const hasExplode = weapons.Data.some((weapon) => weapon.Type === "Destruct");
     const hasEnergy = utils.Data.some((utility) => utility.Type === "Energy");
 
-    const energyUtil = {Name: "Energy Transfer", Type:"Energy", aType:"Energy", EnergyCost: 0, FireRate: Infinity};
+    const energyUtil: util = {
+        Name: "Energy Transfer", 
+        Type:"Energy", 
+        aType:"Energy", 
+        EnergyCost: 0, 
+        HeatLoad: 0, 
+        FireRate: Infinity, 
+        Wran: 5
+    };
     const energyAmmo = {Name: "Energy", MCount: Infinity};
     
     const Watk = Math.round(20*Math.log10(HP)) + 20;
     const Wran = Math.round((8/3)*Math.log10(HP));
     const WRatk = Math.floor(-Watk/(Wran + 1));
-    const explodeWeap =  {Name: "Self Destruct", Type:"Destruct", aType:"Explodium", 
+    const explodeWeap: weapon =  {Name: "Self Destruct", Type:"Destruct", aType:"Explodium", 
         Watk, Whit: 75, Wran, WRatk, 
         EnergyCost: 0, FireRate: 1};
-    const explodeAmmo = {Name: "Explodium", MCount: Infinity};
-
-    
+    const explodeAmmo: ammo = {Name: "Explodium", MCount: Infinity};
 
     const nWeaps = hasExplode ? weapons: {
         ...weapons,
@@ -44,63 +52,72 @@ const addEE = (weapons = {Data: [weaponTemplate]}, utils = {Data: [utilityTempla
     return {Weap: nWeaps, Utils: nUtils, Ammo: nAmmo};
 };
 
-export const makeVehicle = (source, playerID, vID, pos, r, parent = "") => {
+export const makeVehicle = (source: baseVehicle | vehicle, 
+    playerID: string, vID: number, 
+    pos: locationVector, r: rotationVector, parent: string): vehicle => {
+    
     const {
-        Type: type, Stats: stats, 
-        State: state, Appearance: app, 
-        Weap: weap, Utils: utils, Ammo: ammo, Defenses: def} = source;
+        Type: Type, Stats: Stats, 
+        Appearance: app, 
+        Weap: weap, Utils: utils, 
+        Ammo: ammo, Defenses: def} = source;
+
     const Ownership = {Player: playerID, vID: vID};
-    const Type = type;
-    const Stats = stats;
-    const Appearance = {area: [], name: type.Class, visible: true, ...app};
+    const Appearance = {area: [], name: Type.Class, visible: true, ...app};
 
-    const State = state ?? {
-        hp: stats.MaxHP, maxHP: stats.MaxHP, 
-        energy: stats.MaxEnergy,
+    const State = "State" in source ? source.State: {
+        hp: Stats.MaxHP, maxHP: Stats.MaxHP, 
+        energy: Stats.MaxEnergy,
         heat: 0,
+        intercept: 5,
         hasMoved: false, hasFired: false, 
-        statuses: []};
+        statuses: []
+    };
 
-    const origWeap = weap.fireCount !== undefined ? weap:
-        {Data: weap, fireCount: new Array(weap.length).fill(0),
-            Weap (i) {
-                return {...this.Data[i], fireCount: this.fireCount[i]};
-            }};
+    const origWeap: vehicle["Weap"] = "fireCount" in weap ? weap: {
+        Data: weap, 
+        fireCount: new Array(weap.length).fill(0),
+        Weap (i) {
+            return {...this.Data[i], fireCount: this.fireCount[i]};
+        }
+    };
 
-    const origUtils = utils.fireCount !== undefined ? utils:
-        {Data: utils, fireCount: new Array(utils.length).fill(0),
-            Util (i) {
-                return {...this.Data[i], fireCount: this.fireCount[i]};
-            }};
+    const origUtils: vehicle["Utils"] = "fireCount" in utils ? utils: {
+        Data: utils, fireCount: new Array(utils.length).fill(0),
+        Util (i) {
+            return {...this.Data[i], fireCount: this.fireCount[i]};
+        }
+    };
 
-    const origAmmo = ammo.count !== undefined ? ammo:
-        {Data: ammo, 
-            count: ammo.map((ammoType) => 
-                ammoType.sCount ?? ammoType.MCount ?? Infinity),
-            Ammo (i) {
-                return {...this.Data[i], count: this.count[i]};
-            }};
+    const origAmmo: vehicle["Ammo"] = "count" in ammo ? ammo: {
+        Data: ammo, 
+        count: ammo.map((ammoType) => 
+            ammoType.sCount ?? ammoType.MCount ?? Infinity),
+        Ammo (i) {
+            return {...this.Data[i], count: this.count[i]};
+        }
+    };
 
     const {Weap, Utils, Ammo} = addEE(origWeap, origUtils, origAmmo, Stats.MaxHP);
 
     const defWeaps = getDefWeaps(Weap.Data);
     const shields = def.Shields ?? []; 
-    const origDWeap = def.wActive !== undefined ? def:{
-        Weapons: defWeaps, wActive: defWeaps.fill(true),
+    const origDWeap = "wActive" in def ? def:{
+        Weapons: defWeaps, wActive: defWeaps.map(() => true),
     };
-    const origShields = def.sActive !== undefined ? def:{
+    const origShields = "sActive" in def ? def:{
         Shields: shields,
         sDamage: shields.map(() => 0),
         sActive: shields.map(() => false),
     };
-    const Defenses = {
+    const Defenses: vehicle["Defenses"] = {
         ...origDWeap, ...origShields
     };
 
-    const Location = {prevLoc: pos, loc: pos, rotation: [...r], parent};
-    const Velocity = {vel: [0,0], prevVel: [0,0]};
+    const Location: vehicle["Location"] = {prevLoc: pos, loc: pos, rotation: [...r], parent};
+    const Velocity: vehicle["Velocity"] = {vel: [0,0], prevVel: [0,0]};
 
-    const updateShip = compose(updateActiveDef, updateArea(reArea(true, false)));
+    const updateShip = (vehicle: vehicle) => updateActiveDef(updateArea(reArea(true, false))(vehicle));
 
     return updateShip({
         Ownership, Type, Stats,
@@ -110,7 +127,7 @@ export const makeVehicle = (source, playerID, vID, pos, r, parent = "") => {
     });
 };
 
-export const applyStatuses = (vehicle) => {
+export const applyStatuses = (vehicle: vehicle): vehicle => {
     const statuses = vehicle.State.statuses.map((status) => {return {...status, time: status.time - 1};});
     const nVeh = statuses.reduce((accVeh, status) => {
         if (status.time === 0) return status.reset(accVeh);
@@ -121,17 +138,17 @@ export const applyStatuses = (vehicle) => {
     return {...nVeh, State: {...nVeh.State, statuses: trimmedStatuses}};
 };
 
-export const updateArea = curry((areaFunc, ship) => {
+export const updateArea = (areaFunc) => (ship: vehicle): vehicle => {
     const loc = ship.Location;
     const {Size, area} = ship.Appearance;
-    const shipReturn = (area) => {return {...ship, Appearance: {...ship.Appearance, area}};};
+    const shipReturn = (area: locationVector[]): vehicle => {return {...ship, Appearance: {...ship.Appearance, area}};};
     if (ship.State.hp <= 0) return shipReturn([]);
     return shipReturn(areaFunc(loc, Size, area));
-});
+};
 
-export const reArea = curry((old, both, locInfo, size) => {
+export const reArea = curry((old: boolean, both: boolean, locInfo: vehicle["Location"], size: sizeVector) => {
     const {prevLoc, loc, rotation} = locInfo;
-    let Area = [];
+    let Area: locationVector[] = [];
     const location = old ? prevLoc : loc;
 
     //The both parameter covers the chance that both that both positions must be covered
