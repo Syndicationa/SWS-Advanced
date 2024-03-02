@@ -30,7 +30,7 @@ export const generateWeaponList = (weapons:weapon[]) => {
     const options = weapons.map((weapon) => {
         const name = weapon.Name;
         
-        return <>{name}<div className='Health'>HP: {currentHP}/{vehicle.Stats.MaxHP}</div></>;
+        return <>{name}<div className='Health'></div></>;
     });
     return options.filter(Boolean);
 };
