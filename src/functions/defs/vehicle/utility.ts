@@ -1,8 +1,8 @@
-import { clone, curry, replaceInArray, compareArray, sumArrays } from "../../functions.ts";
+import { clone, curry, replaceInArray, compareArray, sumArrays } from "../../functions";
 import { statusTemplate, utilityTemplate, vehicleTemplate } from "../templates.mjs";
-import { applyDamage, calcGenHitChance, calcHit, calcRangeHC, consumeAmmo } from "./attack.ts";
-import { getAmmo, getAmmoOfWeap, getPlayerVehicles, getUtilIndex, mergeVehicleArrays } from "./retrieve.ts";
-import { makeVehicle, reArea, updateArea } from "./vehicle.ts";
+import { applyDamage, calcGenHitChance, calcHit, calcRangeHC, consumeAmmo } from "./attack";
+import { getAmmo, getAmmoOfWeap, getPlayerVehicles, getUtilIndex, mergeVehicleArrays } from "./retrieve";
+import { makeVehicle, reArea, updateArea } from "./vehicle";
 import { data } from "../../../slicers/dataInit.mjs";
 
 //#region Application Funcs

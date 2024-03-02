@@ -3,7 +3,7 @@ import { finalizeMove, moveShip } from "../vehicle/move.ts";
 import { gVehicleFromID, mergeVehicleArrays } from "../vehicle/retrieve.ts";
 import { applyAttack } from "../vehicle/attack.ts";
 import { filter, map, objectMap, pipe, pop, split } from "../../functions.ts";
-import { applyUtility, finalizeUtility } from "../vehicle/utility.mjs";
+import { applyUtility, finalizeUtility } from "../vehicle/utility.ts";
 
 export const runGame = Data => State => {
     const {Turns, ...rest} = State.Moves;
