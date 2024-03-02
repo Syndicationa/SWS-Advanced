@@ -1,4 +1,4 @@
-import { map, sumArrays } from "../functions.mjs";
+import { map, sumArrays } from "../functions.js";
 import { exampleMapElement } from "./system/map.mjs";
 
 const rad = (ang) => {

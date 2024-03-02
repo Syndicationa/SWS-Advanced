@@ -1,5 +1,5 @@
 import { getFromDisp } from "./defs/display.mjs";
-import { intDivideVector, sub } from "./vectors.mjs";
+import { intDivideVector, sub } from "./vectors.ts";
 import { saveFileTemplate } from "./defs/planets.mjs";
 
 export const grSize = (region) => (region.hy - region.ly + 1)/region.yStep;

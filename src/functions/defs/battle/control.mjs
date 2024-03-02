@@ -1,7 +1,7 @@
-import { last, replaceInArray } from "../../functions.mjs";
-import { vehicleMovementCursor, zoom } from "../cursor.mjs";
-import { attack } from "../vehicle/attack.mjs";
-import { gShipFromID, getPlayShips } from "../vehicle/retrieve.mjs";
+import { last, replaceInArray } from "../../functions.ts";
+import { vehicleMovementCursor, zoom } from "../cursor.ts";
+import { attack } from "../vehicle/attack.ts";
+import { gVehicleFromID, getPlayVehicles } from "../vehicle/retrieve.ts";
 import { utility } from "../vehicle/utility.mjs";
 import { addMove, setMove } from "./stage.mjs";
 
@@ -87,7 +87,7 @@ const movementPress = (State) => {
     } = State;
     const ID = player.User.ID;
     const [x,y] = cursor.loc;
-    const vehicleOptions = getPlayShips(ID, display[x][y]);
+    const vehicleOptions = getPlayVehicles(ID, display[x][y]);
     const vehicle = vehicleOptions[cursor.menu] ?? false;
     switch (impulse) {
         case 0: {
@@ -131,7 +131,7 @@ const movementPress = (State) => {
 
 const setupUtilityModes = (Data, State) => {
     const {cursor, setCursor, activeVehicles, setSelectedVehicle, selectedVehicle, setCurrentFunction, setListType, setImpulse} = State;
-    const selected = gShipFromID(selectedVehicle.Ownership.Player,selectedVehicle.Ownership.vID, activeVehicles);
+    const selected = gVehicleFromID(selectedVehicle.Ownership.Player,selectedVehicle.Ownership.vID, activeVehicles);
     setSelectedVehicle(selected);
     setListType("Vehicle");
     switch (cursor.menu) {
@@ -184,7 +184,7 @@ const utilityPress = (Data, State) => {
     } = State;
     const ID = player.User.ID;
     const [x,y] = cursor.loc;
-    const vehicleOptions = getPlayShips(player.User.ID, display[x][y]);
+    const vehicleOptions = getPlayVehicles(player.User.ID, display[x][y]);
     const allVehicles = display[x][y];
     const vehicle = vehicleOptions[cursor.menu] ?? selectedVehicle;
     const utils = selectedVehicle ? selectedVehicle.Utils.Data:undefined;
@@ -293,7 +293,7 @@ const attackPress = (State) => {
     const ID = player.User.ID;
 
     const [x,y] = cursor.loc;
-    const vehicleOptions = getPlayShips(player.User.ID, display[x][y]);
+    const vehicleOptions = getPlayVehicles(player.User.ID, display[x][y]);
     const allVehicles = display[x][y];
 
     const vehicle = vehicleOptions[cursor.menu] ?? selectedVehicle;
@@ -328,7 +328,7 @@ const attackPress = (State) => {
             break;
         }
         case 4: {
-            const [, attackMove, string] = currentFunction(weapons[cursor.menu]);
+            const attackMove = currentFunction(weapons[cursor.menu]);
             setCursor({...cursor, mode: "Move", data: []});
 
             console.log(attackMove);
@@ -340,7 +340,7 @@ const attackPress = (State) => {
             setSelectedVehicle(undefined);
 
             setImpulse(0);
-            setAttackList(attackList => [...attackList, string]);
+            setAttackList(attackList => [...attackList, ""]);
             break;
         }
         default:

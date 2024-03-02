@@ -20,7 +20,7 @@ const shipAAAA = {
     Weap: [
         {
             Name: "Pew Pew", Type: "Generic",
-            Watk: 100, Whit: 0, Eran: 1, WRatk: -1,
+            Watk: 100, Whit: 0, WRatk: 0,
             Defensive: false, Wcov: 0,
             Wran: 100, WMran: 0, Wrot: 2,
             FireRate: 10, EnergyCost: 5, HeatLoad: 5,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { PropTypes } from "prop-types";
-import { minMax } from "../../../functions/functions.mjs";
+import { minMax } from "../../../functions/functions";
 
 const Tabs = ({childArr, nameArr, selection = 0}) => {
     const [selected, setSelected] = useState(selection);

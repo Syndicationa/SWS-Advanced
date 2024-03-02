@@ -1,4 +1,4 @@
-import { inBounds, map } from "../functions.mjs";
+import { inBounds, map } from "../functions.ts";
 
 //Creates a display struct
 export const createDisplay = (size = 1) => (shipArray = []) => {

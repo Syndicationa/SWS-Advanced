@@ -1,4 +1,4 @@
-import { convertLocation, cursorGenerator, zoom } from "../functions/defs/cursor.mjs"
+import { convertLocation, cursorGenerator, zoom } from "../functions/defs/cursor.js"
 
 const oldPos = [[0,1],[0,7]]
 const stepSize = [8,1]

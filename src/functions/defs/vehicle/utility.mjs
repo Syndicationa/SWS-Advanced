@@ -1,8 +1,8 @@
-import { clone, curry, replaceInArray, compareArray, sumArrays } from "../../functions.mjs";
+import { clone, curry, replaceInArray, compareArray, sumArrays } from "../../functions.ts";
 import { statusTemplate, utilityTemplate, vehicleTemplate } from "../templates.mjs";
-import { applyDamage, calcGenHitChance, calcHit, calcRangeHC, consumeAmmo } from "./attack.mjs";
-import { getAmmo, getAmmoOfWeap, getPlayerShips, getUtilIndex, mergeShipArrays } from "./retrieve.mjs";
-import { makeVehicle, reArea, updateArea } from "./vehicle.mjs";
+import { applyDamage, calcGenHitChance, calcHit, calcRangeHC, consumeAmmo } from "./attack.ts";
+import { getAmmo, getAmmoOfWeap, getPlayerVehicles, getUtilIndex, mergeVehicleArrays } from "./retrieve.ts";
+import { makeVehicle, reArea, updateArea } from "./vehicle.ts";
 import { data } from "../../../slicers/dataInit.mjs";
 
 //#region Application Funcs
@@ -125,7 +125,7 @@ const energyTransfer = (source = vehicleTemplate, target = vehicleTemplate, util
 };
 
 const deployVehicle = (source = vehicleTemplate, vehicleArray = [vehicleTemplate], util = utilityTemplate, Data = data) => {
-    const shipNum = getPlayerShips(source, vehicleArray)
+    const shipNum = getPlayerVehicles(source, vehicleArray)
         .reduce(
             (acc,vehicle) => Math.max(acc, vehicle.Ownership.vID),0) + 1;
     const deployedVehicle = 
@@ -207,7 +207,7 @@ export const utility = curry((Data, shipArray, source, target, util) => {
     }
     modifiedShips = modifiedShips.map(updateArea(reArea(true, false)));
 
-    const merged = mergeShipArrays(shipArray, modifiedShips);
+    const merged = mergeVehicleArrays(shipArray, modifiedShips);
     const move = [
         getUtilIndex(source.Utils.Data, util), 
         trueTarget.map((target) => target.Ownership.Player), trueTarget.map((target) => target.Ownership.vID), 
@@ -248,7 +248,7 @@ export const applyUtility = curry((Data, shipArray, source = vehicleTemplate, ta
     }
     modifiedShips = modifiedShips.map(updateArea(reArea(false, false)));
 
-    const merged = mergeShipArrays(shipArray, modifiedShips);
+    const merged = mergeVehicleArrays(shipArray, modifiedShips);
 
     const dataString = createDataStr(source, trueTarget, util, damage, hit);
     return [merged, dataString];

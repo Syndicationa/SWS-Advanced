@@ -1,4 +1,4 @@
-import { objectMap } from "../functions.mjs";
+import { objectMap } from "../functions.ts";
 
 const hmgFactionTemplate = {
     fill: "#FFFFFF",

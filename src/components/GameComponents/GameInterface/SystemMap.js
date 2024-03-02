@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PropTypes } from "prop-types";
 import { GameUI } from "./GameUI";
-import { cursorGenerator, moveCursor, moveCursorToPosition } from "../../../functions/defs/cursor.mjs";
+import { cursorGenerator, moveCursor, moveCursorToPosition } from "../../../functions/defs/cursor.js";
 import { systemTemplate, systemToGame } from "../../../functions/defs/system/system.mjs";
 
 
