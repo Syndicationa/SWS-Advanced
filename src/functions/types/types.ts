@@ -80,6 +80,10 @@ export type ammo = {
     MCount: number  //Maximum amount of ammo
 };
 
+export type hit = "Miss" | "Intercept" | "Hit";
+export const hitOptions: hit[] = ["Miss", "Intercept", "Hit"];
+export const hitNumbers: {[a in hit]: number} = {Miss: 0, Intercept: 1, Hit: 2};
+
 type stealth = {Cloak: false} | {Cloak: true, StealthLevel: 0, StealthCost: 0};
 
 export type shield = stealth & {

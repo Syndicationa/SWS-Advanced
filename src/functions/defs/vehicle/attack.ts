@@ -6,14 +6,11 @@ import { updateArea, reArea } from "./vehicle";
 import { sub, unitDotProduct, distance } from "../../vectors";
 import { vehicle } from "../../types/vehicleTypes";
 import { line, locationVector, rotationVector, weapon, weaponWithCount } from "../../types/types";
+import {hit, hitOptions, hitNumbers} from "../../types/types";
 
 
 type damage = [vehicleDamage: number, shieldDamage: number];
 type damages = damage[];
-
-type hit = "Miss" | "Intercept" | "Hit";
-const hitOptions: hit[] = ["Miss", "Intercept", "Hit"];
-const hitNumbers: {[a in hit]: number} = {Miss: 0, Intercept: 1, Hit: 2};
 
 type attackReturn = {modifiedVehicles: vehicle[], damage: damages};
 type targetArray = [primaryVehicle:vehicle, ...rest: vehicle[]];
@@ -473,7 +470,7 @@ const rammingAttack = (attacker: vehicle, target: vehicle[], weapon: weapon, hit
 };
 //#endregion
 
-export const attack = curry((vehicleArray: vehicle[], attacker: vehicle, target: vehicle, weapon: weapon) => {
+export const attack = curry((vehicleArray: vehicle[], attacker: vehicle, target: vehicle, weapon: weapon): string => {
     const {Type, Eran, Wran} = weapon;
 
     const location = (Eran === undefined ? attacker:target).Location.prevLoc;
@@ -508,7 +505,7 @@ export const attack = curry((vehicleArray: vehicle[], attacker: vehicle, target:
     return move;
 });
 
-export const applyAttack = (vehicleArray: vehicle[], attacker: vehicle, target: vehicle[], weapon: weapon, hitValue: number) => {
+export const applyAttack = (vehicleArray: vehicle[], attacker: vehicle, target: vehicle[], weapon: weapon, hitValue: number): [merged: vehicle[], dataString: string] => {
     const Type = weapon.Type;
     const hit: hit = hitOptions[hitValue];
 
