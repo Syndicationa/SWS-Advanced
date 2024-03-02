@@ -491,7 +491,7 @@ export const attack = curry((vehicleArray: vehicle[], attacker: vehicle, target:
             hit = calcRangeHC(attacker, target[0], weapon.Wran);
             break;
         case "Destruct":
-            hit = calcRangeHC(attacker, target[0], weapon.Wran);
+            hit = "Hit";
             break;
         default:
             throw Error("Unknown Weapon");

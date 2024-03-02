@@ -12,9 +12,9 @@ import { pressFunction } from "../../../functions/defs/battle/control";
 import { nextPhase, runGame, runMove, runTurn } from "../../../functions/defs/battle/stage";
 import { mergeVehicleArrays } from "../../../functions/defs/vehicle/retrieve";
 
-import { generateButtonedVehicles, generateStringList, generateVehicleList } from "../../../functions/listGenerator";
+import { generateButtonedVehicles, generateButtonedWeapons, generateStringList, generateVehicleList } from "../../../functions/listGenerator";
 import { locationVector, singleBattle, velocityVector } from "../../../functions/types/types";
-import { isStringArray, isVehicleArray } from "../../../functions/types/cursorTypes";
+import { isStringArray, isVehicleArray, isWeaponArray } from "../../../functions/types/cursorTypes";
 
 type props = {
     g: singleBattle,
@@ -89,10 +89,11 @@ export const SkirmishController = ({g, Data, close}: props) => {
     const list = useMemo(() => {
         if (isStringArray(cursor.data)) return generateStringList(cursor.data, cursor, setCursor);
         if (isVehicleArray(cursor.data)) return generateButtonedVehicles(cursor.data, cursor, setCursor);
+        if (isWeaponArray(cursor.data)) return generateButtonedWeapons(cursor.data, cursor, setCursor);
         return generateVehicleList(getFromDisp(display, cursor.loc, cursor.loc));
     }, [cursor]);
     const data = [`Position: ${cursor.loc} Region Data: ${cursor.region.xStep}`];
-    const [attackList, setAttackList] = useState([]);
+    const [attackList, setAttackList] = useState([] as string[]);
     //#endregion
 
     const State = useMemo(() => {

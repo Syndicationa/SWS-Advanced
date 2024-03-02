@@ -1,9 +1,8 @@
 import { cursor, setCursor } from "./types/cursorTypes";
-import { ReactNode } from "react";
 import { vehicle } from "./types/vehicleTypes";
 import { weapon } from "./types/types";
 
-const generateButtonedItem = (innerJSX: ReactNode, index: number, selected: boolean, cursor: cursor, setCursor: setCursor) => 
+const generateButtonedItem = (innerJSX: JSX.Element, index: number, selected: boolean, cursor: cursor, setCursor: setCursor) => 
     (<div className={`Option ${selected ? "Selected":""}`} key={index}>
         {innerJSX}
         <button className='SelectButton' onClick={() => setCursor({...cursor, menu: index})}>Select</button>
@@ -35,5 +34,8 @@ export const generateWeaponList = (weapons:weapon[]) => {
     return options.filter(Boolean);
 };
 
-export const generateButtonedVehicles = (vehicles: vehicle[], cursor: cursor, setCursor: setCursor) => 
-    generateVehicleList(vehicles).map((jsx, i) => generateButtonedItem(jsx, i, i === cursor.menu, cursor, setCursor));
+const generateButtonedVersion = <T,>(func: ((a: T[]) => JSX.Element[])) => (list: T[], cursor: cursor, setCursor: setCursor) => 
+    func(list).map((jsx, i) => generateButtonedItem(jsx, i, i === cursor.menu, cursor, setCursor));
+
+export const generateButtonedVehicles = generateButtonedVersion(generateVehicleList);
+export const generateButtonedWeapons = generateButtonedVersion(generateWeaponList);
