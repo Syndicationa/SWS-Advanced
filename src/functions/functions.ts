@@ -1,6 +1,6 @@
-//import { Player, Ship } from "./defs";
+import { locationVector, rotationVector, sizeVector } from "./types/types";
 
-export const clone = (obj, asObject = false) => {
+export const clone = (obj: object, asObject = false) => {
     // Handle the 3 simple types, and null or undefined
     if (null == obj || "object" != typeof obj) return obj;
 
@@ -31,6 +31,7 @@ export const clone = (obj, asObject = false) => {
     if (obj instanceof Object) {
         copy = {};
         for (const attr in obj) {
+            if (!("prototype" in obj && typeof obj.prototype === "object" && obj.prototype !== null && "hasOwnProperty" in obj.prototype)) throw Error("I hope");
             if (obj.prototype.hasOwnProperty.call(attr)) copy[attr] = clone(obj[attr], asObject);
         }
         return {...obj, ...copy};
@@ -39,16 +40,16 @@ export const clone = (obj, asObject = false) => {
     //throw new Error("Unable to copy obj! Its type isn't supported.");
 };
 
-export const compareArray = (arr1 = [], arr2 = [], length = 0) => {
+export const compareArray = (arr1: Array<unknown>, arr2: Array<unknown>, length?: number): boolean => {
     if (!length) {
         length = arr1.length;
     }
-    let array1 = arr1.slice(0,length);
-    let array2 = arr2.slice(0,length);
+    const array1 = arr1.slice(0,length);
+    const array2 = arr2.slice(0,length);
     return JSON.stringify(array1) === JSON.stringify(array2);
 };
 
-export const rectangle = (location = [], size = [], rot = [0,1]) => {
+export const rectangle = (location: locationVector, size: sizeVector, rot: rotationVector): locationVector[] => {
     //if (size.length !== 2) return;
     const {PI: pi, cos, sin, atan2, round, sign} = Math;
 
@@ -60,16 +61,18 @@ export const rectangle = (location = [], size = [], rot = [0,1]) => {
     const widthEven = width % 2 === 0;
     const heightEven = height % 2 === 0;
     const sizeEven = widthEven || heightEven;
-    const centerAngle = pi*(angle - (widthEven + !heightEven))/4;
+    const wE = widthEven ? 1:0;
+    const hE = !heightEven ? 1:0;
+    const centerAngle = pi*(angle - (wE + hE))/4;
     const centerOffsetX = 0.5 + 0.5*(sizeEven ? (sign(round(sin(centerAngle)*1000))): 0);
     const centerOffsetY = 0.5 + 0.5*(sizeEven ? (sign(round(cos(centerAngle)*1000))): 0);
 
-    const center = sumArrays(location, [centerOffsetX, centerOffsetY]);
+    const center: locationVector = [location[0] + centerOffsetX, location[1] + centerOffsetY];
     
-    const pX = (cX, w, h, rot) => cX + 0.5*(w*cos(rot) - h*sin(rot));
-    const pY = (cY, w, h, rot) => cY + 0.5*(w*sin(rot) + h*cos(rot));
+    const pX = (cX: number, w: number, h: number, rot: number) => cX + 0.5*(w*cos(rot) - h*sin(rot));
+    const pY = (cY: number, w: number, h: number, rot: number) => cY + 0.5*(w*sin(rot) + h*cos(rot));
 
-    const point = ([cX, cY], w, h, rot) => [pX(cX, w, h, rot), pY(cY, w, h, rot)];
+    const point = ([cX, cY]: locationVector, w: number, h: number, rot: number): locationVector => [pX(cX, w, h, rot), pY(cY, w, h, rot)];
 
     return [point(center, -width, -height, radAngle),
         point(center, width, -height, radAngle),
@@ -77,7 +80,7 @@ export const rectangle = (location = [], size = [], rot = [0,1]) => {
         point(center, -width, height, radAngle)];
 };
 
-export const isInRectangle = (point, rectanglePoints) => {
+export const isInRectangle = (point: locationVector, rectanglePoints: locationVector[]) => {
     return rectanglePoints.every((point1, index, array) => {
         const point2 = array[(index + 1) % 4];
         const d = (point2[0] - point1[0]) * (point[1] - point1[1]) - (point[0] - point1[0]) * (point2[1] - point1[1]);
@@ -85,38 +88,38 @@ export const isInRectangle = (point, rectanglePoints) => {
     });
 };
 
-export const absSum = (v1 = 0, v2 = 0) => {
+export const absSum = (v1: number = 0, v2: number = 0) => {
     return Math.abs(v1) + Math.abs(v2);
 };
 
 //main- Array of Objects
 //supplement- Array of Items to add to objects
 //name- Name of key of the items
-export const composeObjArr = (main = [{}], supplement = [], name = "") => {
+export const composeObjArr = (main: object[], supplement: Array<unknown>, name: string) => {
     return main.map((obj, i) => {return {...obj, [name]: supplement[i]};});
 };
 
-export const last = arr => arr.slice(-1);
+export const last = <T>(arr: T[]) => arr.slice(-1);
 
-export const first = arr => arr[0];
+export const first = <T>(arr: T[]) => arr[0];
 
-export const pop = arr => arr.slice(0,-1);
+export const pop = <T>(arr: T[]) => arr.slice(0,-1);
 
-export const pull = arr => arr.slice(1);
+export const pull = <T>(arr: T[]) => arr.slice(1);
 
-export const split = (arr, position) => [arr.slice(0, position), arr.slice(position)];
+export const split = <T>(arr: T[], position: number) => [arr.slice(0, position), arr.slice(position)];
 
-const defaultObjMapFunc = (value) => {return value;};
+type ObjectMappingFunction = (value: unknown, key?: string, object?: object) => unknown;
 
-export const objectMap = obj => (func = defaultObjMapFunc) => Object.keys(obj).reduce(
-    (acc, key) => {return {...acc, [key]: func(obj[key], key)};}
+export const objectMap = obj => (func: ObjectMappingFunction) => Object.keys(obj).reduce(
+    (acc, key) => {return {...acc, [key]: func(obj[key], key, obj)};}
     , {});
 
 export const replaceInArray = (arr, index, info) => [...arr.slice(0,index), info, ...arr.slice(index + 1)];
 
-export const funcOnArrays = (func) => (arr1 = [], arr2 = []) => arr1.map((val, i) => func(val, arr2[i]));
+export const funcOnArrays = <a, b, c>(func: (a: a, b: b) => c) => (arr1: a[], arr2: b[]):c[] => arr1.map((val, i) => func(val, arr2[i]));
 
-export const sumArrays = funcOnArrays((a, b) => a+b);
+export const sumArrays = funcOnArrays((a: number, b: number) => a+b);
 
 export const maxOnArrays = funcOnArrays(Math.max);
 
@@ -140,7 +143,7 @@ export const pipe = (...funcList) => (...i) => funcList.reduce((acc, f) => {
     } catch {
         return f(acc);
     }
-}, ...i);
+}, i);
 
 export const curry = (func) => {
     const curried = (arr) => (...args) => {
@@ -168,7 +171,7 @@ export const removeDuplicates = (equFunc, mergeFunc, arr) => reduce((acc, v) => 
 export const mergeArrays = curry((equFunc, mergeFunc, arr1, arr2) => 
     removeDuplicates(equFunc, mergeFunc, [...arr1, ...arr2]));
 
-export const reverseArray = (arr) => arr[0].map((_,i) => arr.map((v) => v[i]));
+export const reverseArray = <t>(arr: t[][]) => arr[0].map((_,i) => arr.map((v) => v[i]));
 
 export const sliceReduce = curry((fn, arr, [ls, hs]) => 
     arr.slice(ls, hs).reduce(fn, []));
@@ -179,7 +182,7 @@ export const minMax = (number = 0, lowerBound = 0, higherBound = 0) =>
 export const inBounds = (number = 0, lowerBound = 0, higherBound = 0) => 
     (number >= lowerBound) && (number < higherBound);
 
-export const rotate = (rotation = [0,0], direction = 0) => {
+export const rotate = (rotation: rotationVector, direction: number): rotationVector => {
     const {round, cos, sin, PI: pi, atan2} = Math;
     const [xr,yr] = rotation;
     const trueDirection = direction % 8;
