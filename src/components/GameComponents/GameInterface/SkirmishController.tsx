@@ -8,8 +8,8 @@ import { magnitude, sub } from "../../../functions/vectors";
 import { cursorGenerator, fixCursorPosition, moveCursor, moveCursorToPosition, zoom } from "../../../functions/defs/cursor";
 import { createDisplay, getFromDisp } from "../../../functions/defs/display.mjs";
 
-import { pressFunction } from "../../../functions/defs/battle/control.mjs";
-import { nextPhase, runGame, runMove, runTurn } from "../../../functions/defs/battle/stage.mjs";
+import { pressFunction } from "../../../functions/defs/battle/control.js";
+import { nextPhase, runGame, runMove, runTurn } from "../../../functions/defs/battle/stage.js";
 import { mergeVehicleArrays } from "../../../functions/defs/vehicle/retrieve";
 
 import { generateButtonedVehicles, generateStringList, generateVehicleList } from "../../../functions/listGenerator";

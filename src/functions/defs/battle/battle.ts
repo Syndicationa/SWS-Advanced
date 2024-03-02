@@ -1,4 +1,4 @@
-import { last, pop } from "../../functions.ts";
+import { last, pop } from "../../functions";
 import { playerTemplate } from "../templates.mjs";
 
 export const battleTemplate = {

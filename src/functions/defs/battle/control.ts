@@ -1,9 +1,9 @@
-import { last, replaceInArray } from "../../functions.ts";
-import { vehicleMovementCursor, zoom } from "../cursor.ts";
-import { attack } from "../vehicle/attack.ts";
-import { gVehicleFromID, getPlayVehicles } from "../vehicle/retrieve.ts";
-import { utility } from "../vehicle/utility.ts";
-import { addMove, setMove } from "./stage.mjs";
+import { last, replaceInArray } from "../../functions.js";
+import { vehicleMovementCursor, zoom } from "../cursor.js";
+import { attack } from "../vehicle/attack.js";
+import { gVehicleFromID, getPlayVehicles } from "../vehicle/retrieve.js";
+import { utility } from "../vehicle/utility.js";
+import { addMove, setMove } from "./stage.js";
 
 export const pressFunction = Data => State => {
     const {stage, cursor, setCursor} = State;

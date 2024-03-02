@@ -1,9 +1,9 @@
-import { applyStatuses, makeVehicle, updateArea, reArea } from "../vehicle/vehicle.ts";
-import { finalizeMove, moveShip } from "../vehicle/move.ts";
-import { gVehicleFromID, mergeVehicleArrays } from "../vehicle/retrieve.ts";
-import { applyAttack } from "../vehicle/attack.ts";
-import { filter, map, objectMap, pipe, pop, split } from "../../functions.ts";
-import { applyUtility, finalizeUtility } from "../vehicle/utility.ts";
+import { applyStatuses, makeVehicle, updateArea, reArea } from "../vehicle/vehicle.js";
+import { finalizeMove, moveShip } from "../vehicle/move.js";
+import { gVehicleFromID, mergeVehicleArrays } from "../vehicle/retrieve.js";
+import { applyAttack } from "../vehicle/attack.js";
+import { filter, map, objectMap, pipe, pop, split } from "../../functions.js";
+import { applyUtility, finalizeUtility } from "../vehicle/utility.js";
 
 export const runGame = Data => State => {
     const {Turns, ...rest} = State.Moves;

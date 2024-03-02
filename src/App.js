@@ -12,7 +12,7 @@ import { gPlayerMaker, playerMaker } from "./functions/defs/player/player.mjs";
 // import { exampleNetwork } from "./functions/defs/techNetwork.mjs";
 import { getSolarDate } from "./functions/date.mjs";
 import { tempData } from "./tests/temporaryData.mjs";
-import { addPlayer, singleBattle } from "./functions/defs/battle/battle.mjs";
+import { addPlayer, singleBattle } from "./functions/defs/battle/battle.js";
 
 // const systemMake = (user) => {
 //     const player = playerMaker(user)({Faction: "Astute", Name: "Synism", Admin: true})

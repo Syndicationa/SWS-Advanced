@@ -1,5 +1,5 @@
-import { addPlayMove, singleBattle } from "../functions/defs/battle/battle.mjs";
-import { nextPhase, runMove, runTurn } from "../functions/defs/battle/control.mjs";
+import { addPlayMove, singleBattle } from "../functions/defs/battle/battle.js";
+import { nextPhase, runMove, runTurn } from "../functions/defs/battle/control.js";
 import { gPlayerMaker, playerMaker } from "../functions/defs/player/player.mjs";
 import { militaVessels, mcrnVessels } from "./convertShips.mjs";
 import readline from "readline";
