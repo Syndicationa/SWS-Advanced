@@ -1,4 +1,4 @@
-import { locationVector, rotationVector, utilWithCount, velocityVector, weaponWithCount } from "./types";
+import { locationVector, rotationVector, util, velocityVector, weapon } from "./types";
 import { vehicle } from "./vehicleTypes";
 
 export type region = {
@@ -19,7 +19,7 @@ export type cursor = {
     parent: string,
     rot: rotationVector,
     menu: number,
-    data: string[] | vehicle[] | weaponWithCount[] | utilWithCount[] | ((c: cursor, v: velocityVector) => cursor) | undefined,
+    data: string[] | vehicle[] | weapon[] | util[] | ((c: cursor, v: velocityVector) => cursor) | undefined,
     grid: GridInfo,
     region: region,
     mode: cursorModes
@@ -31,7 +31,7 @@ export const isStringArray = (a: cursor["data"]): a is string[] =>
     Array.isArray(a) && typeof a[0] === "string";
 export const isVehicleArray = (a: cursor["data"]): a is vehicle[] => 
     Array.isArray(a) && typeof a[0] === "object" && "State" in a[0];
-export const isWeaponArray = (a: cursor["data"]): a is weaponWithCount[] => 
+export const isWeaponArray = (a: cursor["data"]): a is weapon[] => 
     Array.isArray(a) && typeof a[0] === "object" && "Watk" in a[0];
-export const isUtilArray = (a: cursor["data"]): a is utilWithCount[] => 
+export const isUtilArray = (a: cursor["data"]): a is util[] => 
     Array.isArray(a) && typeof a[0] === "object" && !("Watk" in a[0]);

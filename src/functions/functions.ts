@@ -111,11 +111,11 @@ export const split = <T>(arr: T[], position: number) => [arr.slice(0, position),
 
 type ObjectMappingFunction = (value: unknown, key?: string, object?: object) => unknown;
 
-export const objectMap = obj => (func: ObjectMappingFunction) => Object.keys(obj).reduce(
+export const objectMap = (obj: object) => (func: ObjectMappingFunction): object => Object.keys(obj).reduce(
     (acc, key) => {return {...acc, [key]: func(obj[key], key, obj)};}
     , {});
 
-export const replaceInArray = (arr, index, info) => [...arr.slice(0,index), info, ...arr.slice(index + 1)];
+export const replaceInArray = <T>(arr: T[], index: number, info:T) => [...arr.slice(0,index), info, ...arr.slice(index + 1)];
 
 export const funcOnArrays = <a, b, c>(func: (a: a, b: b) => c) => (arr1: a[], arr2: b[]):c[] => arr1.map((val, i) => func(val, arr2[i]));
 

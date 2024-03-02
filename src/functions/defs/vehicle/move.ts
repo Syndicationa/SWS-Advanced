@@ -76,7 +76,7 @@ export const finalizeMove = (V: vehicle): vehicle => {
     const veloctiyForUtil: velocityVector = [0,0];
     const cVel = {...Velocity, prevVel: Velocity.vel, vel: veloctiyForUtil};
     const cLoc = {...Location, prevLoc: Location.loc, loc: Location.loc};
-    const cApp = {...Appearance, area: reArea(true, false, cLoc, Appearance.Size)};
+    const cApp = {...Appearance, area: reArea(true, false)(cLoc, Appearance.Size)};
     const cVeh = {
         ...V,
         State: cState,
@@ -84,5 +84,6 @@ export const finalizeMove = (V: vehicle): vehicle => {
         Location: cLoc,
         Appearance: cApp
     };
+    console.log(cVeh);
     return cVeh;
 };

@@ -1,4 +1,4 @@
-import {curry, rectangle, isInRectangle, compareArray} from "../../functions";
+import { rectangle, isInRectangle, compareArray} from "../../functions";
 import { ammo, locationVector, rotationVector, sizeVector, util, weapon } from "../../types/types";
 import { baseVehicle, vehicle } from "../../types/vehicleTypes";
 import { getDefWeaps, updateActiveDef } from "./retrieve";
@@ -146,14 +146,14 @@ export const updateArea = (areaFunc) => (ship: vehicle): vehicle => {
     return shipReturn(areaFunc(loc, Size, area));
 };
 
-export const reArea = curry((old: boolean, both: boolean, locInfo: vehicle["Location"], size: sizeVector) => {
+export const reArea = (old: boolean, both: boolean) => (locInfo: vehicle["Location"], size: sizeVector) => {
     const {prevLoc, loc, rotation} = locInfo;
     let Area: locationVector[] = [];
     const location = old ? prevLoc : loc;
 
     //The both parameter covers the chance that both that both positions must be covered
     if (both) {
-        Area = reArea(!old, false, locInfo, size);
+        Area = reArea(!old, false)(locInfo, size);
     }
 
     //if a ship is a 1x1 then all Area needs to be is itself
@@ -184,7 +184,7 @@ export const reArea = curry((old: boolean, both: boolean, locInfo: vehicle["Loca
         }
     }
     return Area;
-});
+};
 
 // const shiftArea = curry(([dx, dy], locInfo= locInfoTemplate, size = [1,1], area = areaTemplate) => {
 //     let areaLen = reArea(true, false)(locInfo, size, area).length;

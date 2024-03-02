@@ -182,6 +182,7 @@ const createDataStr = (source: vehicle, target: vehicle, util: util, number: num
 };
 
 export const utility = curry((source: vehicle, target: vehicle, util: util): string => {
+    console.log(source, target, util);
     const {Type} = util;
     let hit: hit;
 
@@ -214,7 +215,7 @@ export const utility = curry((source: vehicle, target: vehicle, util: util): str
     return JSON.stringify(move);
 });
 
-export const applyUtility = curry((Data, shipArray: vehicle[], source: vehicle, target: vehicle, util: util, hit: hit): [merged: vehicle[], dataString: string] => {
+export const applyUtility = (Data, shipArray: vehicle[], source: vehicle, target: vehicle, util: util, hit: hit): [merged: vehicle[], dataString: string] => {
     const {Type} = util;
 
     let modifiedVehicles: vehicle[] = [];
@@ -243,13 +244,13 @@ export const applyUtility = curry((Data, shipArray: vehicle[], source: vehicle, 
         default:
             throw Error("Unknown Type of Utility");
     }
-    modifiedVehicles = modifiedVehicles.map(updateArea(reArea(false, false)));
+    modifiedVehicles = modifiedVehicles.map(updateArea(reArea(true, false)));
 
     const merged = mergeVehicleArrays(shipArray, modifiedVehicles);
 
     const dataString = createDataStr(source, altTarget, util, number, hit);
     return [merged, dataString];
-});
+};
 
 export const finalizeUtility = (vehicle: vehicle): vehicle => {
     const {Velocity, Location, State, Appearance} = vehicle;
@@ -258,7 +259,7 @@ export const finalizeUtility = (vehicle: vehicle): vehicle => {
     const newVel = addVectors(Velocity.vel, Velocity.prevVel);
     const cVel = {...Velocity, prevVel: newVel, vel: newVel};
     const cLoc = {...Location, prevLoc: Location.loc, loc: addVectors(Location.loc, newVel)};
-    const cApp = {...Appearance, area: reArea(true, false, cLoc, Appearance.Size)};
+    const cApp = {...Appearance, area: reArea(true, false)(cLoc, Appearance.Size)};
     const cVeh = {
         ...vehicle,
         State: cState,
