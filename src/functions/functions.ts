@@ -145,41 +145,52 @@ export const pipe = (...funcList) => (...i) => funcList.reduce((acc, f) => {
     }
 }, i);
 
-export const curry = (func) => {
-    const curried = (arr) => (...args) => {
-        const nArr = [...arr, ...args];
-        if (nArr.length >= func.length) return func(...nArr);
-        return curried(nArr);
+type f = (...args: unknown[]) => unknown;
+type equalFunc<T> = (a: T, b: T) => boolean;
+type mergeFunc<T> = (a: T, b: T) => T; 
+
+type Curry<T extends unknown[], R> = {data: unknown[]} &
+    (<U extends unknown[]>(...args: U) =>
+        U["length"] extends T["length"]
+        ? R
+        : Curry<[...T, ...U], R>);
+
+const curry = <T extends unknown[], R>(func: (...args: T) => R, length: number = func.length): Curry<T, R> => {
+    const curried = (...args: unknown[]): R | Curry<T, R> => {
+        if (args.length >= length) return func(...(args as T));
+        const nextFunction = (...nextArgs: unknown[]) => curried(...args, ...nextArgs);
+        nextFunction.data = [...args];
+        return nextFunction as Curry<T, R>;
     };
-    return curried([]);
+    return curried as Curry<T, R>;
 };
 
-export const map = curry((func, arr) => arr.map(func));
+export const map = curry((func: f, arr: unknown[]) => arr.map(func));
 
-export const filter = curry((func, arr) => arr.filter(func));
+export const filter = curry((func: f, arr: unknown[]) => arr.filter(func));
 
-export const reduce = curry((func, arr, start) => arr.reduce(func, start));
+export const reduce = curry((func: f, arr: unknown[], start) => arr.reduce(func, start));
 
-export const indexInArray = (equFunc, arr, val) => arr.findIndex((v) => equFunc(v, val));
+export const indexInArray = <T>(equFunc: equalFunc<T>, arr: T[], val: T): number => arr.findIndex((v) => equFunc(v, val));
 
-export const removeDuplicates = (equFunc, mergeFunc, arr) => reduce((acc, v) => {
+export const removeDuplicates = <T>(equFunc: equalFunc<T>, mergeFunc: mergeFunc<T>, arr: T[]) => reduce((acc, v) => {
     const i = indexInArray(equFunc, acc, v);
     if (i === -1) return [...acc, v];
     return replaceInArray(acc, i, mergeFunc(acc[i], v));
 },arr,[]);
 
-export const mergeArrays = curry((equFunc, mergeFunc, arr1, arr2) => 
+export const mergeArrays = curry(<T>(equFunc: equalFunc<T>, mergeFunc: mergeFunc<T>, arr1: T[], arr2: T[]) => 
     removeDuplicates(equFunc, mergeFunc, [...arr1, ...arr2]));
 
 export const reverseArray = <t>(arr: t[][]) => arr[0].map((_,i) => arr.map((v) => v[i]));
 
-export const sliceReduce = curry((fn, arr, [ls, hs]) => 
+export const sliceReduce = curry(<T>(fn: f, arr: T[], [ls, hs]: [low: number, high: number]) => 
     arr.slice(ls, hs).reduce(fn, []));
 
-export const minMax = (number = 0, lowerBound = 0, higherBound = 0) => 
+export const minMax = (number: number, lowerBound: number, higherBound: number): number => 
     Math.min(Math.max(number, lowerBound), higherBound);
 
-export const inBounds = (number = 0, lowerBound = 0, higherBound = 0) => 
+export const inBounds = (number: number, lowerBound: number, higherBound: number): boolean => 
     (number >= lowerBound) && (number < higherBound);
 
 export const rotate = (rotation: rotationVector, direction: number): rotationVector => {
