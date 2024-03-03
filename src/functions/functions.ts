@@ -155,7 +155,7 @@ type Curry<T extends unknown[], R> = {data: unknown[]} &
         ? R
         : Curry<[...T, ...U], R>);
 
-const curry = <T extends unknown[], R>(func: (...args: T) => R, length: number = func.length): Curry<T, R> => {
+export const curry = <T extends unknown[], R>(func: (...args: T) => R, length: number = func.length): Curry<T, R> => {
     const curried = (...args: unknown[]): R | Curry<T, R> => {
         if (args.length >= length) return func(...(args as T));
         const nextFunction = (...nextArgs: unknown[]) => curried(...args, ...nextArgs);
