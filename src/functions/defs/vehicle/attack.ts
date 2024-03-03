@@ -1,4 +1,4 @@
-import { compose, curry, map, compareArray, sumArrays} from "../../functions";
+import { compose, curry, compareArray, sumArrays} from "../../functions";
 import { replaceInArray } from "../../functions";
 import { updateActiveDef, mergeVehicleArrays, getActiveShields, getShieldIndex, vehiclesOnLine, sameVehicle } from "./retrieve";
 import {getWeapIndex, getActiveDefs, getAmmoOfTool, getAmmo, getPlayerVehicles, vehiclesInRadius} from "./retrieve";
@@ -433,7 +433,7 @@ const missileAttack = (attacker: vehicle, target: vehicle[], weapon: weapon, veh
 
     const newVehicleArray = mergeVehicleArrays(getPlayerVehicles(newTarget[0], vehicleArray), newTarget);
 
-    const returnTarget = map(consumeDefAmmo(target[0].Location.loc), newVehicleArray);
+    const returnTarget = newVehicleArray.map(consumeDefAmmo(target[0].Location.loc));
     
     return {
         modifiedVehicles: [newAttacker, ...returnTarget],

@@ -165,11 +165,11 @@ export const curry = <T extends unknown[], R>(func: (...args: T) => R, length: n
     return curried as Curry<T, R>;
 };
 
-export const map = curry((func: f, arr: unknown[]) => arr.map(func));
+export const map = curry(<T, Y>(func: (item: T, index?: number, arr?: T[]) => Y, arr: T[]): Y[] => arr.map(func));
 
-export const filter = curry((func: f, arr: unknown[]) => arr.filter(func));
+export const filter = curry(<T>(func: (item: T, index?: number, arr?: T[]) => boolean, arr: T[]): T[] => arr.filter(func));
 
-export const reduce = curry((func: f, arr: unknown[], start) => arr.reduce(func, start));
+export const reduce = curry(<T, X>(func: (accumulator: X,item: T, index?: number, arr?: T[]) => X, arr: T[], start: X) => arr.reduce(func, start));
 
 export const indexInArray = <T>(equFunc: equalFunc<T>, arr: T[], val: T): number => arr.findIndex((v) => equFunc(v, val));
 
