@@ -165,3 +165,5 @@ export type singleBattle = {
     Display: vehicle[][][],
     Size: {OverallSize: number, StepSizes: number[]},
 };
+
+export type display = vehicle[][][];
