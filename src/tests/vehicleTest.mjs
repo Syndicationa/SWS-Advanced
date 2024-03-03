@@ -1,6 +1,6 @@
 import { militaVessels, mcrnVessels } from "./convertShips.mjs";
 import { makeVehicle } from "../functions/defs/vehicle/vehicle.js";
-import { createDisplay, getFromDisp } from "../functions/defs/display.mjs";
+import { createDisplay, getFromDisp } from "../functions/defs/display.js";
 import { absSum, map, negateArray, reduce, sumArrays } from "../functions/functions.js";
 import { attackShip, calcHitChance, canFire, cleanAttackInput } from "../functions/defs/vehicle/attack.js";
 import { moveShip } from "../functions/defs/vehicle/move.js";

@@ -5,7 +5,7 @@ import { militaVessels, mcrnVessels } from "./convertShips.mjs";
 import readline from "readline";
 import { clone, compareArray, last, objectMap, sumArrays, pop } from "../functions/functions.js";
 import { stringify } from "./disp.mjs";
-import { createDisplay } from "../functions/defs/display.mjs";
+import { createDisplay } from "../functions/defs/display.js";
 import { getAmmoOfWeap, getPlayShips, shipsInPosition } from "../functions/defs/vehicle/retrieve.js";
 import { canMove } from "../functions/defs/vehicle/move.js";
 import { sub } from "../functions/vectors.js";
