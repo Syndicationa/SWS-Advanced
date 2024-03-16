@@ -41,7 +41,8 @@ type Stats = {
     MaxHeat: number, CoolingRate: number, OverHeat: number,
     MaxEnergy: number, GenEnergy: number, MovEnergy: number,
     Acc: number, Def: number, Mov: number, FMov?: number,
-    StealthLevel?: number, Communication?: number, Intercept?: number
+    StealthLevel?: number, ScannerLevel?: number,
+    Communication?: number, Intercept?: number
 };
 
 type group<t> = {

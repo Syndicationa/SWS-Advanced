@@ -50,7 +50,6 @@ export type weaponWithCount = weapon & {fireCount: number};
 //#region Utility
 type baseUtil = {
     Name: string,
-    WMran?: number, //Minimum Range
     Wrot?: number, //Rotation bounds
 
     FireRate: number, //Uses per phase
@@ -153,11 +152,7 @@ export type singleBattle = {
     Losses: vehicle[],
     Retreated: vehicle[],
     Vehicles: vehicle[],
-    Moves: {
-        Data: string[],
-        Turns: string[],
-        [key: string]: string[]
-    },
+    Moves: {Data: string[], Turns: number[]} & {[key: string]: string[]},
     Stage: number,
     Map: "Space",
     Type: {Type: "Unique", Discoverable: false, Joinable: false, Online: false},

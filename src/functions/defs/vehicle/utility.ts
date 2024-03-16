@@ -1,11 +1,16 @@
-import { clone, curry, replaceInArray, compareArray } from "../../functions";
+import { clone, replaceInArray, compareArray } from "../../functions";
 import { applyDamage, calcGenHitChance, calcHit, calcRangeHC, consumeAmmo } from "./attack";
 import { getAmmo, getAmmoOfTool, getPlayerVehicles, getUtilIndex, mergeVehicleArrays } from "./retrieve";
-import { makeVehicle, reArea, updateArea } from "./vehicle";
+import { makeVehicle, oldArea } from "./vehicle";
 import { data } from "../../../slicers/dataInit.mjs";
 import { vehicle } from "../../types/vehicleTypes";
 import { deployingUtil, energyUtil, healingUtil, hit, hitNumbers, resupplyingUtil, status, statusUtil, util } from "../../types/types";
 import { addVectors } from "../../vectors";
+
+export const canUtil = (source: vehicle, target: vehicle, util: util): boolean => {
+    if (util.Type === "Deploying") return true;
+    return calcRangeHC(source, target, util.Wran) === "Hit";
+};
 
 //#region Application Funcs
 const shiftEnergy = (fState: vehicle["State"], target: vehicle): {fState: vehicle["State"], tState: vehicle["State"]} => {
@@ -150,6 +155,20 @@ const deployVehicle = (source: vehicle, vehicleArray: vehicle[], util: deploying
 
 //Main Utility
 
+// case "Healing":
+//     return `${fName} heals ${tName} for ${-damage} HP.\n`;
+// case "Resupplying": 
+// case "Energy":
+//     return `${fName} sends Energy to ${tName}.\n`;case "Healing":
+//     return `${fName} heals ${tName} for ${-damage} HP.\n`;
+// case "Resupplying": {
+//     const ammoNum = getAmmo(weap.dType, tVehicle.Ammo);
+//     const ammoName = tVehicle.Ammo.Ammo(ammoNum).Name;
+//     return `${fName} resupplies ${tName}'s ${ammoName} round supply.\n`;
+// }
+// case "Energy":
+//     return `${fName} sends Energy to ${tName}.\n`;
+
 const createDataStr = (source: vehicle, target: vehicle, util: util, number: number, hit: hit) => {
     const {Type} = util;
 
@@ -164,9 +183,11 @@ const createDataStr = (source: vehicle, target: vehicle, util: util, number: num
         case "Healing":
             if (hit === "Hit") return `${fName} healed ${tName} for ${number} HP.\n`;
             else return `${fName} wasn't in range to heal ${tName}`;
-        case "Resupplying":
-            if (hit === "Hit") return `${fName} sent ${tName} ${number} rounds of ammo.\n`;
-            else return `${fName} wasn't in range to resupply ${tName}`;
+        case "Resupplying": {
+            const ammoNum = getAmmo(util.dType, target.Ammo);
+            const ammoName = target.Ammo.Ammo(ammoNum).Name;
+            return `${fName} resupplies ${tName} ${number} ${ammoName} rounds.\n`;
+        }
         case "Energy":
             if (hit === "Hit") return `${fName} sent ${tName} ${number} Energy.\n`;
             else return `${fName} wasn't in range to tranfer energy to ${tName}`;
@@ -181,7 +202,7 @@ const createDataStr = (source: vehicle, target: vehicle, util: util, number: num
     return "";
 };
 
-export const utility = curry((source: vehicle, target: vehicle, util: util): string => {
+export const utility = (source: vehicle, target: vehicle, util: util): string => {
     console.log(source, target, util);
     const {Type} = util;
     let hit: hit;
@@ -213,7 +234,7 @@ export const utility = curry((source: vehicle, target: vehicle, util: util): str
         hitNumbers[hit]
     ];
     return JSON.stringify(move);
-});
+};
 
 export const applyUtility = (Data, shipArray: vehicle[], source: vehicle, target: vehicle, util: util, hit: hit): [merged: vehicle[], dataString: string] => {
     const {Type} = util;
@@ -244,7 +265,7 @@ export const applyUtility = (Data, shipArray: vehicle[], source: vehicle, target
         default:
             throw Error("Unknown Type of Utility");
     }
-    modifiedVehicles = modifiedVehicles.map(updateArea(reArea(true, false)));
+    modifiedVehicles = modifiedVehicles.map(oldArea);
 
     const merged = mergeVehicleArrays(shipArray, modifiedVehicles);
 
@@ -253,19 +274,17 @@ export const applyUtility = (Data, shipArray: vehicle[], source: vehicle, target
 };
 
 export const finalizeUtility = (vehicle: vehicle): vehicle => {
-    const {Velocity, Location, State, Appearance} = vehicle;
+    const {Velocity, Location, State} = vehicle;
     const hasMoved = compareArray([0,0], Velocity.vel);
     const cState =  {...State, hasFired: false, hasMoved};
     const newVel = addVectors(Velocity.vel, Velocity.prevVel);
     const cVel = {...Velocity, prevVel: newVel, vel: newVel};
     const cLoc = {...Location, prevLoc: Location.loc, loc: addVectors(Location.loc, newVel)};
-    const cApp = {...Appearance, area: reArea(true, false)(cLoc, Appearance.Size)};
     const cVeh = {
         ...vehicle,
         State: cState,
         Velocity: cVel,
         Location: cLoc,
-        Appearance: cApp
     };
-    return cVeh;
+    return oldArea(cVeh);
 };

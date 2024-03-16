@@ -1,8 +1,8 @@
-import { compose, curry, compareArray, sumArrays} from "../../functions";
+import { compose, compareArray, sumArrays} from "../../functions";
 import { replaceInArray } from "../../functions";
 import { updateActiveDef, mergeVehicleArrays, getActiveShields, getShieldIndex, vehiclesOnLine, sameVehicle } from "./retrieve";
-import {getWeapIndex, getActiveDefs, getAmmoOfTool, getAmmo, getPlayerVehicles, vehiclesInRadius} from "./retrieve";
-import { updateArea, reArea } from "./vehicle";
+import {getWeapIndex, getActiveDefs, getAmmoOfTool, getPlayerVehicles, vehiclesInRadius} from "./retrieve";
+import { oldArea } from "./vehicle";
 import { sub, unitDotProduct, distance } from "../../vectors";
 import { vehicle } from "../../types/vehicleTypes";
 import { line, locationVector, rotationVector, statusUtil, weapon, weaponWithCount } from "../../types/types";
@@ -23,25 +23,31 @@ export const inFiringRot = (fLoc: locationVector, tLoc: locationVector, fRot:rot
     return result <= wRot;
 };
 
-type canFireWeapon = {weapon: weaponWithCount, ammoCount: number};
+export const canFire = (attacker: vehicle, target: vehicle, weapon: weapon | weaponWithCount): boolean => {
+    const {prevLoc:attackerLocation, rotation} = attacker.Location;
+    const targetLocation = target.Location.prevLoc;
+    const {energy, heat} = attacker.State;
+    const {Mov, MaxHeat} = attacker.Stats;
 
-export const canFire = curry((fVehicle: vehicle, tLoc: locationVector, weap: canFireWeapon): boolean => {
-    const {prevLoc:fLoc, rotation} = fVehicle.Location;
-    const {energy: fEnergy} = fVehicle.State;
-    const {Mov} = fVehicle.Stats;
-    const {weapon, ammoCount} = weap;
+    const fireCount = 
+        "fireCount" in weapon 
+            ? weapon.fireCount
+            : attacker.Weap.fireCount[getWeapIndex(attacker.Weap.Data, weapon)];
+    const ammoCount = getAmmoOfTool(weapon, attacker.Ammo);
+    const heatLoad = "HeatLoad" in weapon ? weapon.HeatLoad:0;
 
     const trueWrot = (weapon.Wrot ?? 0) + Math.round(Mov / 6);
     const offsetValue = weapon.Offset ?? [0, -1];
 
     const hasAmmo = (ammoCount > 0);
-    const hasEnergy = fEnergy >= weapon.EnergyCost;
-    const fireRate = weapon.fireCount < weapon.FireRate;
-    const range = weapon.WMran === undefined || weapon.WMran <= distance(fLoc, tLoc);
-    const validRotation = weapon.Wrot === undefined || inFiringRot(fLoc, tLoc, rotation, trueWrot, offsetValue);
+    const hasEnergy = energy >= weapon.EnergyCost;
+    const isCoolEnough = heat + heatLoad <= MaxHeat;
+    const fireRate = fireCount < weapon.FireRate;
+    const range = weapon.WMran === undefined || weapon.WMran <= distance(attackerLocation, targetLocation);
+    const validRotation = weapon.Wrot === undefined || inFiringRot(attackerLocation, targetLocation, rotation, trueWrot, offsetValue);
 
-    return hasAmmo && hasEnergy && fireRate && range && validRotation;
-});
+    return hasAmmo && hasEnergy && isCoolEnough && fireRate && range && validRotation;
+};
 
 //#region Hit Chance Helpers
 
@@ -140,7 +146,7 @@ const calcShieldDamage = (target: vehicle, damage: number) => {
     return [vehicleDamage, shieldDamage];
 };
 
-const calculateDamage = (attacker: vehicle, target: vehicle[], weapon: weapon): damages => {
+export const calculateDamage = (attacker: vehicle, target: vehicle[], weapon: weapon): damages => {
     const hasEran = weapon.Eran !== undefined;
 
     return target.map((vehicle, i) => {
@@ -177,10 +183,15 @@ export const applyDamage = (damage: number, target: vehicle): vehicle => {
 };
 
 const applyAttacker = (attacker: vehicle, weap: weapon): vehicle => {
+    const {energy: initEnergy, heat: initHeat} = attacker.State;
+    const energy = initEnergy - weap.EnergyCost;
+    const heat = initHeat + ("HeatLoad" in weap ? weap.HeatLoad: 0);
+    //Escaping the other bounds is prevented by canFire
     return {...attacker,
         State: {
             ...attacker.State,
-            energy: Math.min(attacker.Stats.MaxEnergy, attacker.State.energy - weap.EnergyCost),
+            energy: Math.min(attacker.Stats.MaxEnergy, energy),
+            heat: Math.max(0, heat),
             hasFired: true,
         },
         Ammo: consumeAmmo(attacker.Ammo, getAmmoOfTool(weap, attacker.Ammo)),
@@ -235,7 +246,7 @@ const consumeShield = (vehicle, sDam) => {
     };
 };
 
-const createDataStr = (fVehicle, tVehicle, weap, damage, hit) => {
+const createDataStr = (fVehicle: vehicle, tVehicle: vehicle | vehicle[], weap: weapon, damage, hit) => {
     if (tVehicle instanceof Array) return tVehicle.reduce((acc, vehicle, i) => 
         acc + createDataStr(fVehicle, vehicle, weap, damage[i], hit), "");
     
@@ -257,15 +268,6 @@ const createDataStr = (fVehicle, tVehicle, weap, damage, hit) => {
             } else {
                 return `${fName} misses ${tName}.\n`;
             }
-        case "Healing":
-            return `${fName} heals ${tName} for ${-damage} HP.\n`;
-        case "Resupplying": {
-            const ammoNum = getAmmo(weap.dType, tVehicle.Ammo);
-            const ammoName = tVehicle.Ammo.Ammo(ammoNum).Name;
-            return `${fName} resupplies ${tName}'s ${ammoName} round supply.\n`;
-        }
-        case "Energy":
-            return `${fName} sends Energy to ${tName}.\n`;
         default:
             throw Error("Unexpected Weapon Type");
     }
@@ -442,6 +444,7 @@ const missileAttack = (attacker: vehicle, target: vehicle[], weapon: weapon, veh
 };
 
 const selfDestruct = (attacker: vehicle, target: vehicle[], weapon: weapon, hit: hit): attackReturn => {
+    //FIX SOON
     const newAttacker = {...attacker, State: {...attacker.State, hp: 0, maxHP: 0}};
     if (hit !== "Hit") return {
         modifiedVehicles: [newAttacker],
@@ -470,7 +473,7 @@ const rammingAttack = (attacker: vehicle, target: vehicle[], weapon: weapon, hit
 };
 //#endregion
 
-export const attack = curry((vehicleArray: vehicle[], attacker: vehicle, target: vehicle, weapon: weapon): string => {
+export const attack = (vehicleArray: vehicle[], attacker: vehicle, target: vehicle, weapon: weapon): string => {
     const {Type, Eran, Wran} = weapon;
 
     const location = (Eran === undefined ? attacker:target).Location.prevLoc;
@@ -503,7 +506,7 @@ export const attack = curry((vehicleArray: vehicle[], attacker: vehicle, target:
         JSON.stringify(trueTarget.map((target) => target.Ownership.vID))}.${
         hitNumbers[hit]}`;
     return move;
-});
+};
 
 export const applyAttack = (vehicleArray: vehicle[], attacker: vehicle, target: vehicle[], weapon: weapon, hitValue: number): [merged: vehicle[], dataString: string] => {
     const Type = weapon.Type;
@@ -548,7 +551,7 @@ export const applyAttack = (vehicleArray: vehicle[], attacker: vehicle, target: 
             throw Error("Unknown Weapon");
     }
 
-    modifiedVehicles = modifiedVehicles.map(updateArea(reArea(true, false)));
+    modifiedVehicles = modifiedVehicles.map(oldArea);
 
     const merged = mergeVehicleArrays(vehicleArray, modifiedVehicles);
     const dataString = createDataStr(attacker, target, weapon, damage, hit);
