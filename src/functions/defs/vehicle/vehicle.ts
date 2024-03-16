@@ -1,6 +1,7 @@
 import { rectangle, isInRectangle, compareArray} from "../../functions";
-import { ammo, locationVector, rotationVector, sizeVector, util, weapon } from "../../types/types";
+import { ammo, locationVector, player, rotationVector, sizeVector, util, weapon } from "../../types/types";
 import { baseVehicle, vehicle } from "../../types/vehicleTypes";
+import { distance } from "../../vectors";
 import { getDefWeaps, updateActiveDef } from "./retrieve";
 
 type combo = {Weap: vehicle["Weap"], Utils: vehicle["Utils"], Ammo: vehicle["Ammo"]};
@@ -127,6 +128,19 @@ export const makeVehicle = (source: baseVehicle | vehicle,
     });
 };
 
+export const determineStealth = (Vehicles: vehicle[], vehicle: vehicle, player: player): vehicle => {
+    if (vehicle.Ownership.Player === player.User.ID || vehicle.Stats.StealthLevel === undefined) 
+        return {...vehicle, Appearance: {...vehicle.Appearance, visible: true}};
+    for (const viewer of Vehicles) {
+        if (viewer.Ownership.Player === player.User.ID) continue;
+        const range = vehicle.Stats.StealthLevel + (viewer.Stats.ScannerLevel ?? 0);
+        if (distance(viewer.Location.prevLoc, vehicle.Location.prevLoc) <= range)
+            return {...vehicle, Appearance: {...vehicle.Appearance, visible: true}};
+    }
+    console.log("Stealthy!");
+    return {...vehicle, Appearance: {...vehicle.Appearance, visible: false}};
+};
+
 export const applyStatuses = (vehicle: vehicle): vehicle => {
     const statuses = vehicle.State.statuses.map((status) => {return {...status, time: status.time - 1};});
     const nVeh = statuses.reduce((accVeh, status) => {
@@ -138,15 +152,21 @@ export const applyStatuses = (vehicle: vehicle): vehicle => {
     return {...nVeh, State: {...nVeh.State, statuses: trimmedStatuses}};
 };
 
-export const updateArea = (areaFunc) => (ship: vehicle): vehicle => {
-    const loc = ship.Location;
-    const {Size, area} = ship.Appearance;
-    const shipReturn = (area: locationVector[]): vehicle => {return {...ship, Appearance: {...ship.Appearance, area}};};
-    if (ship.State.hp <= 0) return shipReturn([]);
-    return shipReturn(areaFunc(loc, Size, area));
+const shipReturn = (area: locationVector[], vehicle: vehicle): vehicle => {
+    return {...vehicle, Appearance: {...vehicle.Appearance, area}};
 };
 
-export const reArea = (old: boolean, both: boolean) => (locInfo: vehicle["Location"], size: sizeVector) => {
+type areaFunction = (location: vehicle["Location"], Size: sizeVector) => locationVector[];
+
+const updateArea = (areaFunc: areaFunction) => (vehicle: vehicle): vehicle => {
+    const loc = vehicle.Location;
+    const {Size, visible} = vehicle.Appearance;
+    console.log(visible);
+    if (vehicle.State.hp <= 0 || !visible) return shipReturn([], vehicle);
+    return shipReturn(areaFunc(loc, Size), vehicle);
+};
+
+const reArea = (old: boolean, both: boolean): areaFunction => (locInfo: vehicle["Location"], size: sizeVector) => {
     const {prevLoc, loc, rotation} = locInfo;
     let Area: locationVector[] = [];
     const location = old ? prevLoc : loc;
@@ -185,6 +205,10 @@ export const reArea = (old: boolean, both: boolean) => (locInfo: vehicle["Locati
     }
     return Area;
 };
+
+export const oldArea = updateArea(reArea(true, false));
+export const newArea = updateArea(reArea(false, false));
+export const bothArea = updateArea(reArea(true, true));
 
 // const shiftArea = curry(([dx, dy], locInfo= locInfoTemplate, size = [1,1], area = areaTemplate) => {
 //     let areaLen = reArea(true, false)(locInfo, size, area).length;

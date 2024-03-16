@@ -6,7 +6,7 @@ import { replaceInArray } from "../../../functions/functions";
 import { magnitude, sub } from "../../../functions/vectors";
 
 import { cursorGenerator, fixCursorPosition, moveCursor, moveCursorToPosition, zoom } from "../../../functions/defs/cursor";
-import { createDisplay, getFromDisp } from "../../../functions/defs/display.mjs";
+import { createDisplay, getFromDisp } from "../../../functions/defs/display";
 
 import { pressFunction } from "../../../functions/defs/battle/control";
 import { nextPhase, runGame, runMove, runTurn } from "../../../functions/defs/battle/stage";
@@ -15,10 +15,14 @@ import { mergeVehicleArrays } from "../../../functions/defs/vehicle/retrieve";
 import { generateButtonedVehicles, generateButtonedWeapons, generateStringList, generateVehicleList } from "../../../functions/listGenerator";
 import { locationVector, singleBattle, velocityVector } from "../../../functions/types/types";
 import { isStringArray, isVehicleArray, isWeaponArray } from "../../../functions/types/cursorTypes";
+import { vehicle } from "../../../functions/types/vehicleTypes";
+import { currentArgs } from "../../../functions/types/FunctionTypes";
+import { Data } from "../../../functions/types/data";
+import { determineStealth, oldArea } from "../../../functions/defs/vehicle/vehicle";
 
 type props = {
     g: singleBattle,
-    Data: object,
+    Data: Data,
     close: () => void,
 };
 
@@ -42,8 +46,8 @@ export const SkirmishController = ({g, Data, close}: props) => {
     const [impulse, setImpulse] = useState(0);
     const [active, setActive] = useState(true);
 
-    const [selectedVehicle, setSelectedVehicle] = useState();
-    const [currentFunction, setCurrentFunction] = useState();
+    const [selectedVehicle, setSelectedVehicle] = useState<vehicle | undefined>();
+    const [currentArgs, setCurrentArgs] = useState<currentArgs>([]);
 
     const activeVehicles = useMemo(() => playerGame.Vehicles, [playerGame.Vehicles]);
     const display = useMemo(() => createDisplay(game.Size.OverallSize)(selectedVehicle ? mergeVehicleArrays(activeVehicles, [selectedVehicle]): activeVehicles), 
@@ -93,7 +97,7 @@ export const SkirmishController = ({g, Data, close}: props) => {
         return generateVehicleList(getFromDisp(display, cursor.loc, cursor.loc));
     }, [cursor]);
     const data = [`Position: ${cursor.loc} Region Data: ${cursor.region.xStep}`];
-    const [attackList, setAttackList] = useState([] as string[]);
+    const [attackList, setAttackList] = useState<string[]>([]);
     //#endregion
 
     const State = useMemo(() => {
@@ -105,12 +109,12 @@ export const SkirmishController = ({g, Data, close}: props) => {
             stage, impulse, setImpulse,
             activeVehicles, display,
             selectedVehicle, setSelectedVehicle,
-            currentFunction, setCurrentFunction,
+            currentArgs, setCurrentArgs,
             player,
             setSelection,
             setAttackList
         };
-    }, [playerGame, moves, cursor, stage, impulse, activeVehicles, selectedVehicle, currentFunction, player]);
+    }, [playerGame, moves, cursor, stage, impulse, activeVehicles, selectedVehicle, currentArgs, player]);
 
     const nextPlayer = useCallback(() => {
         if (local) {
@@ -136,7 +140,7 @@ export const SkirmishController = ({g, Data, close}: props) => {
         }
         setGame(previousGame => {
             const [changedGame] = turn({...previousGame, Moves: moves}, moves);
-            const game = nextPhase(changedGame);
+            const game = nextPhase(changedGame, players[0]);
             console.log(game.Moves);
             setPlayerGame(game);
             setMoves(game.Moves);

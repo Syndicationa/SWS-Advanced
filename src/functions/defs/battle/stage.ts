@@ -1,15 +1,16 @@
-import { applyStatuses, makeVehicle, updateArea, reArea } from "../vehicle/vehicle";
+import { applyStatuses, makeVehicle, determineStealth, oldArea } from "../vehicle/vehicle";
 import { finalizeMove, moveShip } from "../vehicle/move";
 import { gVehicleFromID, mergeVehicleArrays } from "../vehicle/retrieve";
 import { applyAttack } from "../vehicle/attack";
-import { filter, map, objectMap, pipe, pop, split } from "../../functions";
+import { objectMap, pop, split } from "../../functions";
 import { applyUtility, finalizeUtility } from "../vehicle/utility";
-import { singleBattle } from "../../types/types";
+import { player, singleBattle } from "../../types/types";
 import { vehicle } from "../../types/vehicleTypes";
+import { Data } from "../../types/data";
 
 type runReturn = [State: singleBattle, str: string];
 
-export const runGame = Data => (State: singleBattle): runReturn => {
+export const runGame = (Data: Data) => (State: singleBattle): runReturn => {
     const {Turns} = State.Moves;
     const run = runTurn(Data);
     const moves = Turns.map((_,i) => {
@@ -23,7 +24,7 @@ export const runGame = Data => (State: singleBattle): runReturn => {
     }, [State, ""]);
 };
 
-export const runTurn = Data => (State: singleBattle, Moves: singleBattle["Moves"]): runReturn => {
+export const runTurn = (Data: Data) => (State: singleBattle, Moves: singleBattle["Moves"]): runReturn => {
     const keys = Object.keys(Moves);
 
     let str = "";
@@ -43,7 +44,7 @@ export const runTurn = Data => (State: singleBattle, Moves: singleBattle["Moves"
     return [nState, str];
 };
 
-export const runMove = Data => (State: singleBattle, Move: string, {type, id, str}: {type: string, id: string, str: string}): runReturn => {
+export const runMove = (Data: Data) => (State: singleBattle, Move: string, {type, id, str}: {type: string, id: string, str: string}): runReturn => {
     const substrs = Move.split(".");
     if (Move === "") return [State, ""];
     const vehicleArr = State.Vehicles;
@@ -77,7 +78,7 @@ export const runMove = Data => (State: singleBattle, Move: string, {type, id, st
     if (type === "U-") { //Utility
         const [vehicleID, utilMovement, utilApplication, updates] = substrs;
         const vehicle = gVehicleFromID(id, Number(vehicleID), vehicleArr);
-        let nVehicle = updateArea(reArea(true, false))(vehicle);
+        let nVehicle = oldArea(vehicle);
         let info = "";
 
         if (utilMovement !== "") {
@@ -146,10 +147,14 @@ export const setMove = (moves: singleBattle["Moves"], ID: string, move: string) 
     return {...moves, [ID]: [...previousMoves, move]};
 };
 
-export const updateShips = pipe(map(ship => applyStatuses(ship)), filter(ship => ship.State.hp));
-export const finalizeStage = (Vehicles, stage) => {
-    const updatedVehicles = updateShips(Vehicles) as vehicle[];
-    console.log(stage);
+export const updateVehicles = (Vehicles: vehicle[], player?: player): vehicle[] => 
+    Vehicles
+        .map(applyStatuses)
+        .map((vehicle,i, arr) => player ? determineStealth(arr, vehicle, player): vehicle)
+        .filter((ship: vehicle) => ship.State.hp);
+
+export const finalizeStage = (Vehicles: vehicle[], stage: number, player?: player) => {
+    const updatedVehicles = updateVehicles(Vehicles, player);
     switch (stage) {
         case 0:
             return updatedVehicles;
@@ -164,7 +169,7 @@ export const finalizeStage = (Vehicles, stage) => {
     }
 };
 
-export const nextPhase = (State: singleBattle): singleBattle => {
+export const nextPhase = (State: singleBattle, player?: player): singleBattle => {
     const stageNext =  ["M-", "U-", "A-", "M-"];
     const stage = State.Stage;
     const nextStage = (stage % 3) + 1;
@@ -174,7 +179,7 @@ export const nextPhase = (State: singleBattle): singleBattle => {
         if (key === "Data") return [...move, ""];
         return [...move, stageNext[stage]];
     }) as singleBattle["Moves"];
-    const Vehicles = finalizeStage(State.Vehicles, stage);
+    const Vehicles = finalizeStage(State.Vehicles, stage, player);
 
     return {
         ...State,

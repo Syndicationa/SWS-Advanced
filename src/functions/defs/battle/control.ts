@@ -1,4 +1,5 @@
 import { last, replaceInArray } from "../../functions";
+import { currentArgs, hasRequiredArgs, isAttackArgs, isUtilityArgs } from "../../types/FunctionTypes";
 import { cursor } from "../../types/cursorTypes";
 import { player, singleBattle } from "../../types/types";
 import { vehicle } from "../../types/vehicleTypes";
@@ -8,7 +9,7 @@ import { gVehicleFromID, getPlayVehicles } from "../vehicle/retrieve";
 import { utility } from "../vehicle/utility";
 import { addMove, runMove, setMove } from "./stage";
 
-type setFunction<T> = ((t: T | ((previous: T) => T)) => void);
+type setFunction<T> = React.Dispatch< React.SetStateAction<T> >;
 
 type State = {
     playerGame: singleBattle, 
@@ -25,8 +26,8 @@ type State = {
     display: vehicle[][][],
     selectedVehicle: vehicle | undefined,
     setSelectedVehicle: setFunction<vehicle | undefined>,
-    currentFunction: typeof attack | typeof utility | undefined,
-    setCurrentFunction: setFunction<typeof attack | typeof utility | undefined>,
+    currentArgs: currentArgs,
+    setCurrentArgs: setFunction<currentArgs>,
     player: player,
     setSelection: setFunction<number>,
     setAttackList: setFunction<string[]>
@@ -158,7 +159,7 @@ const movementPress = (State: State): void => {
 };
 
 const setupUtilityModes = (Data, State: State): void => {
-    const {cursor, setCursor, activeVehicles, setSelectedVehicle, selectedVehicle, setCurrentFunction, setImpulse} = State;
+    const {cursor, setCursor, activeVehicles, setSelectedVehicle, selectedVehicle, setCurrentArgs, setImpulse} = State;
     if (selectedVehicle === undefined) throw Error("Vehicle was lost");
     const selected = gVehicleFromID(selectedVehicle.Ownership.Player,selectedVehicle.Ownership.vID, activeVehicles);
     setSelectedVehicle(selected);
@@ -168,7 +169,7 @@ const setupUtilityModes = (Data, State: State): void => {
             break;
         }
         case 1: {//Attack
-            setCurrentFunction(() => utility(selectedVehicle));
+            setCurrentArgs([selectedVehicle]);
             setCursor({...cursor, mode: "Move", data: []});
             break;
         }
@@ -204,7 +205,7 @@ const utilityPress = (Data, State: State): void => {
         impulse, setImpulse,
         display,
         selectedVehicle, setSelectedVehicle,
-        currentFunction, setCurrentFunction,
+        currentArgs, setCurrentArgs,
         player,
         setSelection,
         setAttackList
@@ -218,7 +219,6 @@ const utilityPress = (Data, State: State): void => {
 
     const lastMove = last(moves[ID])[0];
     const splitMove = lastMove.slice(2).split(";").slice(0, -1);
-    console.log(lastMove);
     const vehicleIndex = 
         splitMove.length === 1 || selectedVehicle === undefined ? 
             -1:
@@ -274,15 +274,17 @@ const utilityPress = (Data, State: State): void => {
             break;
         }
         case 5: {//Select Target Part 2
-            if (utils === undefined) throw Error("Vehicle was lost");
-            setCurrentFunction(currentFunction => currentFunction(allVehicles[cursor.menu]));//Add target
+            if (utils === undefined || currentArgs.length !== 1) throw Error("Vehicle was lost");
+            setCurrentArgs([...currentArgs, allVehicles[cursor.menu]]);//Add target
             setCursor({...cursor, data: utils, mode:"Menu", menu: Math.min(cursor.menu, utils.length - 1)});
             setImpulse(6);
             break;
         }
         case 6: {
-            if (utils === undefined || currentFunction === undefined || selectedVehicle === undefined) throw Error("Vehicle was lost");
-            const utilityMove = currentFunction(utils[cursor.menu]);
+            if (utils === undefined || selectedVehicle === undefined) throw Error("Vehicle was lost");
+            const finalArgs = [...currentArgs, utils[cursor.menu]] as currentArgs;
+            if (!isUtilityArgs(finalArgs) || !hasRequiredArgs(utility, finalArgs)) throw Error("Args for utility failed to materialize");
+            const utilityMove = utility(...finalArgs) as unknown as string;
             const playedGeneratedUtility = `${selectedVehicle.Ownership.vID}..${utilityMove}.`;
             const generatedUtilityMove = vehicleIndex === -1 ? playedGeneratedUtility:
                 replaceInArray(splitMove[vehicleIndex].split("."), 2, utilityMove).join(".");
@@ -319,7 +321,7 @@ const attackPress = (State: State): void => {
         impulse, setImpulse,
         activeVehicles, display,
         selectedVehicle, setSelectedVehicle,
-        currentFunction, setCurrentFunction,
+        currentArgs, setCurrentArgs,
         player,
         setSelection,
         setAttackList
@@ -344,7 +346,7 @@ const attackPress = (State: State): void => {
         }
         case 1: {
             setSelectedVehicle(vehicle);
-            setCurrentFunction(() => attack(activeVehicles, vehicle));
+            setCurrentArgs([activeVehicles, vehicle]);
             setCursor({...cursor, mode: "Move", data: []});
             setImpulse(2);
             break;
@@ -357,19 +359,19 @@ const attackPress = (State: State): void => {
             break;
         }
         case 3: {//Select Target Part 2
-            if (weapons === undefined) throw Error("Vehicle was lost");
-            setCurrentFunction(currentFunction => currentFunction(allVehicles[cursor.menu]));//Add target
+            if (weapons === undefined || currentArgs.length !== 2 || !isAttackArgs(currentArgs)) throw Error("Vehicle was lost");
+            setCurrentArgs([...currentArgs, allVehicles[cursor.menu]]);//Add target
             setCursor({...cursor, data: weapons, mode:"Menu", menu: Math.min(cursor.menu, weapons.length - 1)});
             setImpulse(4);
             break;
         }
         case 4: {
-            if (selectedVehicle === undefined || weapons === undefined || currentFunction === undefined) throw Error("Vehicle was lost");
-            const attackMove = currentFunction(weapons[cursor.menu]);
+            if (selectedVehicle === undefined || weapons === undefined) throw Error("Vehicle was lost");
+            const finalArgs = [...currentArgs, weapons[cursor.menu]] as currentArgs;
+            if (!isAttackArgs(finalArgs) || !hasRequiredArgs(attack, finalArgs)) throw Error("Args for utility failed to materialize");
+            const attackMove = attack(...finalArgs);
             setCursor({...cursor, mode: "Move", data: []});
-
-            console.log(attackMove);
-
+            
             setMoves(addMove(moves, ID, attackMove));
 
             setPlayerGame(playerGame => {

@@ -1,7 +1,7 @@
 import { rotate } from "../../functions";
 import { compareArray, sumArrays } from "../../functions";
 import { addVectors, distance, magnitude, multiplyVector } from "../../vectors";
-import {updateArea, reArea} from "./vehicle";
+import { bothArea, newArea, oldArea } from "./vehicle";
 
 import { vehicle } from "../../types/vehicleTypes";
 import { rotationVector, velocityVector } from "../../types/types";
@@ -66,24 +66,21 @@ const mShip = (render: (v: vehicle) => vehicle) => (Vehicle: vehicle, Velocity: 
     return render(nVehicle);
 };
 
-export const movingShip = mShip(updateArea(reArea(true, true)));
-export const moveShip = mShip(updateArea(reArea(false, false)));
+export const movingShip = mShip(bothArea);
+export const moveShip = mShip(newArea);
 
 export const finalizeMove = (V: vehicle): vehicle => {
-    const {Velocity, Location, State, Appearance} = V;
+    const {Velocity, Location, State} = V;
     const hasMoved = compareArray(Velocity.prevVel, Velocity.vel);
     const cState =  {...State, hasFired: false, hasMoved};
     const veloctiyForUtil: velocityVector = [0,0];
     const cVel = {...Velocity, prevVel: Velocity.vel, vel: veloctiyForUtil};
     const cLoc = {...Location, prevLoc: Location.loc, loc: Location.loc};
-    const cApp = {...Appearance, area: reArea(true, false)(cLoc, Appearance.Size)};
     const cVeh = {
         ...V,
         State: cState,
         Velocity: cVel,
         Location: cLoc,
-        Appearance: cApp
     };
-    console.log(cVeh);
-    return cVeh;
+    return oldArea(cVeh);
 };
