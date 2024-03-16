@@ -98,6 +98,6 @@ export const mergeVehicle = (vehicle1: vehicle, vehicle2: vehicle) => {
     return {...vehicle1, ...vehicle2};
 };
 
-export const mergeVehicleArrays: (a: vehicle[], v: vehicle[]) => vehicle[] = mergeArrays(sameVehicle, mergeVehicle);
+export const mergeVehicleArrays: (a: vehicle[], v: vehicle[]) => vehicle[] = mergeArrays(sameVehicle, mergeVehicle) as (a: vehicle[], v: vehicle[]) => vehicle[];
 
 //import { getDefWeaps, updateActiveDef, getWeapIndex, getActiveDefs, getAmmoOfWeap, getAmmo, sameVehicle, getVehicleIndex, getPlayerVehicles } from './retrieve.mjs';

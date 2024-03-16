@@ -36,39 +36,31 @@ const battleMake = user => {
     const battle = singleBattle(gplayer)({Map: "", PlayerCount: 2, Size:  {OverallSize: 16, StepSizes: [1]}, Title: "Test Game", Discoverable: false, Online: false});
     return {
         ...addPlayer(battle)(gplayer2),
-        Stage: 2,
+        Stage: 3,
         Moves: {
             "Data": [
                 "A.B;",
                 "",
                 "",
                 "",
-                "",
-                ""
             ],
             Turns: [
                 0,
                 1,
                 2,
                 3,
-                1,
-                2
             ],
             A: [
                 "P-Astute.0.[2,2].[1,0];Astute.0.[3,2].[1,0];",
                 "M-0.[2,2].[1,1];1.[2,2].[1,1];",
                 "U-0.[1,1]:[1,1]..;1.[1,1]:[1,1]..;",
                 "A-",
-                "M-",
-                "U-"
             ],
             B: [
                 "P-Blade.0.[13,2].[-1,0];Blade.0.[12,2].[-1,0];",
                 "M-3.[-2,2].[-1,1];2.[-2,2].[-1,1];",
                 "U-3.[-1,1]:[-1,1]..;2.[-1,1]:[-1,1]..;",
                 "A-",
-                "M-",
-                "U-"
             ]
         }
     };
@@ -124,7 +116,7 @@ function App() {
         }
     };
 
-    const [v] = useState(true);
+    const [v] = useState(false);
 
     return (
         <div className="App">
