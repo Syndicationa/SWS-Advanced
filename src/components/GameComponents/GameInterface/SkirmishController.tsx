@@ -93,7 +93,7 @@ export const SkirmishController = ({g, Data, close}: props) => {
     const list = useMemo(() => {
         if (isStringArray(cursor.data)) return generateStringList(cursor.data, cursor, setCursor);
         if (isVehicleArray(cursor.data)) return generateButtonedVehicles(cursor.data, cursor, setCursor);
-        if (isWeaponArray(cursor.data)) return generateButtonedWeapons(cursor.data, cursor, setCursor);
+        if (isWeaponArray(cursor.data)) return generateButtonedWeapons(cursor.data, cursor, setCursor, currentArgs);
         return generateVehicleList(getFromDisp(display, cursor.loc, cursor.loc));
     }, [cursor]);
     const data = [`Position: ${cursor.loc} Region Data: ${cursor.region.xStep}`];
@@ -120,7 +120,13 @@ export const SkirmishController = ({g, Data, close}: props) => {
         if (local) {
             setGame(previousGame => { 
                 setCurrentPlayer(currentPlayer + 1);
-                const newGame = {...previousGame, Moves: moves};
+                const visibleVehicles = previousGame.Vehicles.map((vehicle, i, vehicleArray) => 
+                    determineStealth(vehicleArray, vehicle, players[currentPlayer + 1]));
+                const newGame = {
+                    ...previousGame, 
+                    Moves: moves, 
+                    Vehicles: visibleVehicles.map((vehicle) => oldArea(vehicle))
+                };
                 setPlayerGame(newGame);
                 return newGame;
             });    

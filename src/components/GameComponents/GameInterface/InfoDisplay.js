@@ -7,9 +7,11 @@ const InfoDisplay = props => {
         info = info[0];
     }
 
+    console.log(title);
+
     return (
         <div {...rest}>
-            <h3>{title}</h3>
+            {title !== "" && title !== undefined ? <h3>{title}</h3>: ""}
             <ul>
                 {info.map((value, index) => {
                     return (<li key={index}>{value}</li>);
