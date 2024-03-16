@@ -1,4 +1,4 @@
-import { getFromDisp } from "./defs/display.js";
+import { getFromDisp } from "./defs/display.ts";
 import { intDivideVector, sub } from "./vectors.ts";
 import { saveFileTemplate } from "./defs/planets.mjs";
 

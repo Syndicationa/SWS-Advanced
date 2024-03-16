@@ -1,3 +1,4 @@
+import { Curry, equalFunc, mergeFunc, f } from "./types/FunctionTypes";
 import { locationVector, rotationVector, sizeVector } from "./types/types";
 
 export const clone = (obj: object, asObject = false) => {
@@ -144,16 +145,6 @@ export const pipe = (...funcList) => (...i) => funcList.reduce((acc, f) => {
         return f(acc);
     }
 }, i);
-
-type f = (...args: unknown[]) => unknown;
-type equalFunc<T> = (a: T, b: T) => boolean;
-type mergeFunc<T> = (a: T, b: T) => T; 
-
-type Curry<T extends unknown[], R> = {data: unknown[]} &
-    (<U extends unknown[]>(...args: U) =>
-        U["length"] extends T["length"]
-        ? R
-        : Curry<[...T, ...U], R>);
 
 export const curry = <T extends unknown[], R>(func: (...args: T) => R, length: number = func.length): Curry<T, R> => {
     const curried = (...args: unknown[]): R | Curry<T, R> => {
