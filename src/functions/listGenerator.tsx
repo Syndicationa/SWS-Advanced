@@ -1,9 +1,10 @@
 import { cursor, setCursor } from "./types/cursorTypes";
-import { vehicle } from "./types/vehicleTypes";
+import { baseVehicle, vehicle } from "./types/vehicleTypes";
 import { weapon } from "./types/types";
 import { currentArgs, isAttackArgs } from "./types/FunctionTypes";
 import { calcDefHitChance, calcGenHitChance, calcRangeHC, calculateDamage, canFire } from "./defs/vehicle/attack";
 import { InfoDisplay } from "../components/GameComponents/GameInterface/InfoDisplay";
+import { retrieveDefenseList } from "./defs/vehicle/retrieve";
 
 const generateButtonedItem = (innerJSX: JSX.Element, index: number, selected: boolean, cursor: cursor, setCursor: setCursor) => 
     (<div className={`Option ${selected ? "Selected":""}`} key={index}>
@@ -20,8 +21,9 @@ export const generateStringList = (strings: string[], cursor: cursor, setCursor:
 };
 
 type listGenerator<T, Other> = (a: T[], other?: Other, menu?: number) => JSX.Element[];
+type sortOfVehicle = vehicle[] | baseVehicle[];
 
-export const generateVehicleList = (vehicles: vehicle[]) => {
+export const generateVehicleList = (vehicles: sortOfVehicle) => {
     const options = vehicles.map((vehicle) => {
         const name = vehicle.Appearance?.name ?? vehicle.Type.Class;
         const currentHP = vehicle?.State?.hp ??vehicle.Stats.MaxHP;
@@ -63,10 +65,30 @@ export const generateWeaponList = (weapons:weapon[], args: currentArgs) => {
     return options.filter(Boolean);
 };
 
+export const generateDefenseList = ([vehicle]: vehicle[]) => {
+    const list = retrieveDefenseList(vehicle);
+    return list.map((item) => {
+        if (item === "Exit") return <>{item}</>;
+        if (item === "Intercept") {
+            const min = vehicle.Stats.Intercept ?? 0;
+            const max = min + 10;
+            const current = vehicle.State.intercept;
+            const string = `${min} <${"-".repeat(current)}|${"-".repeat(10 - current)}> ${max}`;
+            return <>{item}<div>{string}</div></>;
+        }
+        const name = item[0].Name;
+        const type = "Watk" in item[0] ? "Weapon":"Shield";
+        return <>{`${type}: ${name}`}<div>{`${item[1]}`}</div></>;
+    });
+};
+
 const generateButtonedVersion = 
     <T,Other>(func: listGenerator<T, Other>) => 
         (list: T[], cursor: cursor, setCursor: setCursor, other?: Other) => 
             func(list, other, cursor.menu).map((jsx, i) => generateButtonedItem(jsx, i, i === cursor.menu, cursor, setCursor));
 
-export const generateButtonedVehicles = generateButtonedVersion(generateVehicleList);
+export const generateButtonedVehicles: 
+    (list: vehicle[] | baseVehicle[], cursor: cursor, other: unknown) => JSX.Element[] 
+    = generateButtonedVersion(generateVehicleList);
 export const generateButtonedWeapons = generateButtonedVersion(generateWeaponList);
+export const generateButtonedControl = generateButtonedVersion(generateDefenseList);

@@ -88,3 +88,8 @@ export type vehicle = {
         vel: velocityVector, prevVel: velocityVector
     }
 };
+
+export const isVehicle = (a: unknown): a is vehicle => {
+    if (!a || typeof a !== "object") return false;
+    return "Ownership" in a && "Weap" in a;
+};

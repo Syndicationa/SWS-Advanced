@@ -561,9 +561,9 @@ export const applyAttack = (vehicleArray: vehicle[], attacker: vehicle, target: 
 //export const runApply = (fVehicle, tVehicle, vehicleArray, weap, hit) => applyAttack(calculateDamage([hit, cleanAttackInput([fVehicle, tVehicle, vehicleArray, weap])]));
 
 export const finalizeAttack = (vehicle: vehicle): vehicle => {
-    return {
+    return oldArea({
         ...vehicle,
         State: {...vehicle.State, hasMoved: false},
         Weap: {...vehicle.Weap, fireCount: vehicle.Weap.fireCount.map(() => 0)}
-    };
+    });
 };

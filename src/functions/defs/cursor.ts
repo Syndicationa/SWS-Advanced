@@ -92,22 +92,51 @@ const rotateCursor = (cursor: cursor, vector: velocityVector) => {
     return {...cursor, rot: rotate(cursor.rot, vector[0])};
 };
 
-export const vehicleMovementCursor = 
-    (vehicle: vehicle, setVehicle: (v: vehicle) => void, utility: boolean = false) => 
-        (cursor: cursor, vector: velocityVector): cursor => {
-            if (!canMove(vehicle, vector, utility)) return cursor;
-            const v = generateVelocity(vehicle, vector);
-            const movedVehicle = movingShip(vehicle, v, utility);
-            setVehicle(movedVehicle);
+export const vehicleMovementCursor = (vehicle: vehicle, setVehicle: (v: vehicle) => void, utility: boolean = false) => {
+    const move = (cursor: cursor, vector: velocityVector): cursor => {
+        if (!canMove(vehicle, vector, utility)) return cursor;
+        const v = generateVelocity(vehicle, vector);
+        const movedVehicle = movingShip(vehicle, v, utility);
+        setVehicle(movedVehicle);
 
-            const [rotation] = vector;
-            return adjustCursorLocation({
-                ...cursor, 
-                loc: movedVehicle.Location.loc,
-                rot: rotate(cursor.rot, rotation),
-                data: vehicleMovementCursor(movedVehicle, setVehicle, utility)
-            });
-        };
+        const [rotation] = vector;
+        return adjustCursorLocation({
+            ...cursor, 
+            loc: movedVehicle.Location.loc,
+            rot: rotate(cursor.rot, rotation),
+            data: vehicleMovementCursor(movedVehicle, setVehicle, utility)
+        });
+    };
+    move.data = vehicle;
+    return move;
+};
+
+export const utilityControlCursor = (vehicle: vehicle, setVehicle: (v: vehicle) => void) => {
+    const move = (cursor: cursor, vector: velocityVector): cursor => {
+        if (vector[0] === 0 && vector[1] === 0) return cursor;
+        if (vector[0] !== 0 && vector[1] === 0) {
+            if (cursor.menu === 0) {
+                const intercept = minMax(vehicle.State.intercept + vector[0], 0, 10);
+                console.log(intercept);
+                const newVehicle = {...vehicle, State: {...vehicle.State, intercept}};
+                setVehicle(newVehicle);
+                return {
+                    ...cursor,
+                    data: utilityControlCursor(newVehicle, setVehicle)
+                };
+            }
+            return cursor;
+        }
+        const Def = vehicle.Defenses;
+        const length = Def.sActive.length + Def.wActive.length + 2;
+
+        const menu = (cursor.menu + vector[1] + length) % length;
+        
+        return {...cursor, menu};
+    };
+    move.data = vehicle;
+    return move;
+};
 
 export const moveCursor = (cursor: cursor, vector: velocityVector) => {
     if (cursor.mode === "Menu") return changeSelection(cursor, vector);

@@ -71,6 +71,12 @@ export type statusUtil = baseUtil & ranged & {
 };
 export type util = healingUtil | resupplyingUtil | energyUtil | deployingUtil | statusUtil;
 export type utilWithCount = util & {fireCount: number};
+
+export type controlList = [
+    "Intercept",
+    ...[weapon | shield, boolean][],
+    "Exit"
+];
 //#endregion
 
 export type ammo = {

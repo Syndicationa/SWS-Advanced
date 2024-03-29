@@ -1,11 +1,12 @@
 import { last, replaceInArray } from "../../functions";
 import { currentArgs, hasRequiredArgs, isAttackArgs, isUtilityArgs } from "../../types/FunctionTypes";
 import { cursor } from "../../types/cursorTypes";
+import { Data } from "../../types/data";
 import { player, singleBattle } from "../../types/types";
-import { vehicle } from "../../types/vehicleTypes";
-import { vehicleMovementCursor, zoom } from "../cursor";
-import { attack } from "../vehicle/attack";
-import { gVehicleFromID, getPlayVehicles } from "../vehicle/retrieve";
+import { isVehicle, vehicle } from "../../types/vehicleTypes";
+import { utilityControlCursor, vehicleMovementCursor, zoom } from "../cursor";
+import { attack, canFire } from "../vehicle/attack";
+import { gVehicleFromID, getPlayVehicles, retrieveDefenseList } from "../vehicle/retrieve";
 import { utility } from "../vehicle/utility";
 import { addMove, runMove, setMove } from "./stage";
 
@@ -33,7 +34,7 @@ type State = {
     setAttackList: setFunction<string[]>
 }
 
-export const pressFunction = Data => (State: State): void => {
+export const pressFunction = (Data: Data) => (State: State): void => {
     const {stage, cursor, setCursor} = State;
 
     if (cursor.region.xStep > 1) {
@@ -49,7 +50,7 @@ export const pressFunction = Data => (State: State): void => {
             movementPress(State);
             break;
         case 2:
-            utilityPress(Data, State);
+            utilityPress(State);
             break;
         case 3:
             attackPress(State);
@@ -59,7 +60,7 @@ export const pressFunction = Data => (State: State): void => {
     }
 };
 
-const placementPress = (Data, State: State): void => {
+const placementPress = (Data: Data, State: State): void => {
     const {
         setPlayerGame,
         moves, setMoves,
@@ -157,9 +158,8 @@ const movementPress = (State: State): void => {
             throw Error(`Unexpected Outcome: ${impulse}`);
     }
 };
-
-const setupUtilityModes = (Data, State: State): void => {
-    const {cursor, setCursor, activeVehicles, setSelectedVehicle, selectedVehicle, setCurrentArgs, setImpulse} = State;
+const setupUtilityModes = (State: State): void => {
+    const {cursor, setCursor, activeVehicles, setSelectedVehicle, selectedVehicle, setCurrentArgs, setImpulse, setSelection} = State;
     if (selectedVehicle === undefined) throw Error("Vehicle was lost");
     const selected = gVehicleFromID(selectedVehicle.Ownership.Player,selectedVehicle.Ownership.vID, activeVehicles);
     setSelectedVehicle(selected);
@@ -174,6 +174,9 @@ const setupUtilityModes = (Data, State: State): void => {
             break;
         }
         case 2: {//Utility
+            setSelection(0);
+            setCursor({...cursor, mode: "Function", data: utilityControlCursor(selected, setSelectedVehicle), menu: 0});
+            setImpulse(7);
             break;
         }
         case 3: {
@@ -187,14 +190,14 @@ const setupUtilityModes = (Data, State: State): void => {
     }
 };
 
-const resetUtility = (State): void => {
+const resetUtility = (State: State & {modes: string[]}): void => {
     const {modes, setSelection, setCursor, cursor, setImpulse} = State;
     setSelection(0);
     setCursor({...cursor, mode: "Menu", data: modes, menu: 0});
     setImpulse(2);
 };
 
-const utilityPress = (Data, State: State): void => {
+const utilityPress = (State: State): void => {
     const modes = ["Move", "Attack", "Utility", "Exit"];
     const impulses = [3, 4, 7, 0];
     const {
@@ -238,7 +241,7 @@ const utilityPress = (Data, State: State): void => {
             break;
         }
         case 2: {
-            setupUtilityModes(Data, State);
+            setupUtilityModes(State);
             setImpulse(impulses[cursor.menu]);
             break;
         }
@@ -303,7 +306,49 @@ const utilityPress = (Data, State: State): void => {
         //#endregion
         //#region Util
         case 7: {
-            resetUtility({...State, modes});
+            if (typeof cursor.data !== "function" || !isVehicle(cursor.data.data)) throw Error("Vehicle was lost");
+            const copyVehicle = cursor.data.data;
+            const menu = cursor.menu;
+            const defenses = retrieveDefenseList(copyVehicle);
+
+            const {sActive, wActive} = copyVehicle.Defenses;
+
+            if (menu === 0) return;
+            if (defenses[menu] === "Exit") {
+                const intercept = copyVehicle.State.intercept;
+
+                const controlMove = `${intercept}:${sActive}:${wActive}`;
+                
+                const playedGenerateMove = `${copyVehicle.Ownership.vID}...${controlMove}`;
+                const generatedControlMove = vehicleIndex === -1 ? playedGenerateMove:
+                    replaceInArray(splitMove[vehicleIndex].split("."), 1, controlMove).join(".");
+                console.log(splitMove);
+
+                console.log(generatedControlMove);
+
+                if (vehicleIndex === -1) setMoves(addMove(moves, ID, generatedControlMove));
+                else setMoves(setMove(moves, ID, `U-${replaceInArray(splitMove, vehicleIndex, generatedControlMove).join(";")}`));
+
+                setPlayerGame(playerGame => run(playerGame, playedGenerateMove, {type: "U-", str: "", id: ID})[0]);
+
+                resetUtility({...State, modes});
+                return;
+            }
+
+            const weaponMenu = menu - copyVehicle.Defenses.sActive.length;
+
+            const modifiedVehicle: vehicle = {
+                ...copyVehicle,
+                Defenses: {
+                    ...copyVehicle.Defenses,
+                    sActive: replaceInArray(sActive, menu - 1, !(defenses[menu][1])),
+                    wActive: replaceInArray(wActive, weaponMenu - 1, !(defenses[menu][1]))
+                }
+            };
+            
+            setSelectedVehicle(modifiedVehicle);
+            setCursor({...cursor, mode: "Function", data: utilityControlCursor(modifiedVehicle, setSelectedVehicle), menu: 0});
+
             break;
         }
         //#endregion
@@ -369,6 +414,7 @@ const attackPress = (State: State): void => {
             if (selectedVehicle === undefined || weapons === undefined) throw Error("Vehicle was lost");
             const finalArgs = [...currentArgs, weapons[cursor.menu]] as currentArgs;
             if (!isAttackArgs(finalArgs) || !hasRequiredArgs(attack, finalArgs)) throw Error("Args for utility failed to materialize");
+            if (!canFire(finalArgs[1], finalArgs[2], finalArgs[3])) return;
             const attackMove = attack(...finalArgs);
             setCursor({...cursor, mode: "Move", data: []});
             

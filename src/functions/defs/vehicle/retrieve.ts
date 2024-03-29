@@ -1,5 +1,5 @@
 import { mergeArrays } from "../../functions";
-import { line, locationVector, shield, util, utilWithCount, weapon, weaponWithCount } from "../../types/types";
+import { controlList, line, locationVector, shield, util, utilWithCount, weapon, weaponWithCount } from "../../types/types";
 import { vehicle } from "../../types/vehicleTypes.js";
 import { distance, sub } from "../../vectors";
 
@@ -20,6 +20,19 @@ export const updateActiveDef = (vehicle: vehicle) => {
     });
     return {...vehicle, Defenses: {...vehicle.Defenses, wActive}};
 };
+
+export const retrieveDefenseList = (vehicle: vehicle): controlList => {
+    const {Shields, sActive, Weapons, wActive} = vehicle.Defenses;
+    const shieldStruct: [shield, boolean][] = Shields.map((shield, i) => [shield, sActive[i]]);
+    const weaponStruct: [weapon, boolean][] = Weapons.map((weapon, i) => [vehicle.Weap.Data[weapon], wActive[i]]);
+    return [
+        "Intercept",
+        ...shieldStruct,
+        ...weaponStruct,
+        "Exit"
+    ];
+};
+
 
 export const getWeapIndex = (WeapData: weapon[], weapon: weapon | weaponWithCount) => {
     return WeapData.findIndex(weap => weap.Name === weapon.Name);

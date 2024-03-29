@@ -116,7 +116,8 @@ export const objectMap = (obj: object) => (func: ObjectMappingFunction): object 
     (acc, key) => {return {...acc, [key]: func(obj[key], key, obj)};}
     , {});
 
-export const replaceInArray = <T>(arr: T[], index: number, info:T) => [...arr.slice(0,index), info, ...arr.slice(index + 1)];
+export const replaceInArray = <T>(arr: T[], index: number, info:T) => 
+    (index >= arr.length || index < 0) ? arr:[...arr.slice(0,index), info, ...arr.slice(index + 1)];
 
 export const funcOnArrays = <a, b, c>(func: (a: a, b: b) => c) => (arr1: a[], arr2: b[]):c[] => arr1.map((val, i) => func(val, arr2[i]));
 

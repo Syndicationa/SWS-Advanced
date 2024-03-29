@@ -1,7 +1,7 @@
 import { applyStatuses, makeVehicle, determineStealth, oldArea } from "../vehicle/vehicle";
 import { finalizeMove, moveShip } from "../vehicle/move";
 import { gVehicleFromID, mergeVehicleArrays } from "../vehicle/retrieve";
-import { applyAttack } from "../vehicle/attack";
+import { applyAttack, finalizeAttack } from "../vehicle/attack";
 import { objectMap, pop, split } from "../../functions";
 import { applyUtility, finalizeUtility } from "../vehicle/utility";
 import { player, singleBattle } from "../../types/types";
@@ -86,12 +86,16 @@ export const runMove = (Data: Data) => (State: singleBattle, Move: string, {type
             nVehicle = moveShip(nVehicle, {vel, rot}, true);
         }
         if (updates !== "") {
-            const [defenseWeapons, shields] = updates.split(":");
-            const wActive = defenseWeapons.split(",").map(a => JSON.parse(a));
-            const sActive = shields.split(",").map(a => JSON.parse(a));
+            const [intercept, shields, defenseWeapons] = updates.split(":");
+            const wActive = defenseWeapons === "" ? [] : defenseWeapons.split(",").map(a => JSON.parse(a));
+            const sActive = shields === "" ? [] : shields.split(",").map(a => JSON.parse(a));
 
             nVehicle = {
                 ...nVehicle,
+                State: {
+                    ...nVehicle.State,
+                    intercept: Number(intercept)
+                },
                 Defenses: {
                     ...nVehicle.Defenses,
                     wActive,
@@ -163,7 +167,7 @@ export const finalizeStage = (Vehicles: vehicle[], stage: number, player?: playe
         case 2:
             return updatedVehicles.map(finalizeUtility);
         case 3:
-            return updatedVehicles;
+            return updatedVehicles.map(finalizeAttack);
         default:
             throw Error("Unknown Stage");
     }
