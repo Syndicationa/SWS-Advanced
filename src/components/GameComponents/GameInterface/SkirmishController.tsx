@@ -3,7 +3,7 @@ import { useAppSelector } from "../../../hooks";
 import { GameUI } from "./GameUI";
 
 import { replaceInArray } from "../../../functions/functions";
-import { magnitude, sub } from "../../../functions/vectors";
+import { addVectors, magnitude, sub } from "../../../functions/vectors";
 
 import { cursorGenerator, fixCursorPosition, moveCursor, moveCursorToPosition, zoom } from "../../../functions/defs/cursor";
 import { createDisplay, getFromDisp } from "../../../functions/defs/display";
@@ -94,8 +94,8 @@ export const SkirmishController = ({g, Data, close}: props) => {
         if (isStringArray(cursor.data)) return generateStringList(cursor.data, cursor, setCursor);
         if (isVehicleArray(cursor.data)) return generateButtonedVehicles(cursor.data, cursor, setCursor);
         if (isWeaponArray(cursor.data)) return generateButtonedWeapons(cursor.data, cursor, setCursor, currentArgs);
-        return generateVehicleList(getFromDisp(display, cursor.loc, cursor.loc));
         if (typeof cursor.data === "function" && isVehicle(cursor.data.data)) return generateButtonedControl([cursor.data.data], cursor, setCursor);
+        return generateVehicleList(getFromDisp(display, cursor.loc, addVectors(cursor.loc, [1,1])));
     }, [cursor]);
     const data = [`Position: ${cursor.loc} Region Data: ${cursor.region.xStep}`];
     const [attackList, setAttackList] = useState<string[]>([]);
