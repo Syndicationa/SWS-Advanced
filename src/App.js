@@ -33,7 +33,7 @@ const battleMake = user => {
     const gplayer = gPlayerMaker(player)("Synism");
     const gplayer2 = gPlayerMaker(player2)("Bobism");
 
-    const battle = singleBattle(gplayer)({Map: "", PlayerCount: 2, Size:  {OverallSize: 16, StepSizes: [1]}, Title: "Test Game", Discoverable: false, Online: false});
+    const battle = singleBattle(gplayer)({Map: "", PlayerCount: 2, Size:  {OverallSize: 128, StepSizes: [16,1]}, Title: "Test Game", Discoverable: false, Online: false});
     return {
         ...addPlayer(battle)(gplayer2),
         Stage: 3,

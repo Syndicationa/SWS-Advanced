@@ -115,8 +115,8 @@ export const makeVehicle = (source: baseVehicle | vehicle,
         ...origDWeap, ...origShields
     };
 
-    const Location: vehicle["Location"] = {prevLoc: pos, loc: pos, rotation: [...r], parent};
-    const Velocity: vehicle["Velocity"] = {vel: [0,0], prevVel: [0,0]};
+    const Location: vehicle["Location"] = {location: pos, nextLocation: pos, rotation: [...r], parent};
+    const Velocity: vehicle["Velocity"] = {velocity: [0,0], deltaVelocity: [0,0]};
 
     const updateShip = (vehicle: vehicle) => updateActiveDef(updateArea(reArea(true, false))(vehicle));
 
@@ -134,7 +134,7 @@ export const determineStealth = (Vehicles: vehicle[], vehicle: vehicle, player: 
     for (const viewer of Vehicles) {
         if (viewer.Ownership.Player === player.User.ID) continue;
         const range = vehicle.Stats.StealthLevel + (viewer.Stats.ScannerLevel ?? 0);
-        if (distance(viewer.Location.prevLoc, vehicle.Location.prevLoc) <= range)
+        if (distance(viewer.Location.location, vehicle.Location.location) <= range)
             return {...vehicle, Appearance: {...vehicle.Appearance, visible: true}};
     }
     console.log("Stealthy!");
@@ -167,9 +167,9 @@ const updateArea = (areaFunc: areaFunction) => (vehicle: vehicle): vehicle => {
 };
 
 const reArea = (old: boolean, both: boolean): areaFunction => (locInfo: vehicle["Location"], size: sizeVector) => {
-    const {prevLoc, loc, rotation} = locInfo;
+    const {location: loc, nextLocation, rotation} = locInfo;
     let Area: locationVector[] = [];
-    const location = old ? prevLoc : loc;
+    const location = old ? loc:nextLocation;
 
     //The both parameter covers the chance that both that both positions must be covered
     if (both) {

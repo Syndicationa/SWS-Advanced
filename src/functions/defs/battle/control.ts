@@ -4,9 +4,9 @@ import { cursor } from "../../types/cursorTypes";
 import { Data } from "../../types/data";
 import { player, singleBattle } from "../../types/types";
 import { isVehicle, vehicle } from "../../types/vehicleTypes";
-import { utilityControlCursor, vehicleMovementCursor, zoom } from "../cursor";
+import { moveCursor, utilityControlCursor, vehicleMovementCursor, zoom } from "../cursor";
 import { attack, canFire } from "../vehicle/attack";
-import { gVehicleFromID, getPlayVehicles, retrieveDefenseList } from "../vehicle/retrieve";
+import { gVehicleFromID, getPlayVehicles, retrieveDefenseList, sameVehicle } from "../vehicle/retrieve";
 import { utility } from "../vehicle/utility";
 import { addMove, runMove, setMove } from "./stage";
 
@@ -129,14 +129,14 @@ const movementPress = (State: State): void => {
         }
         case 1: {
             setSelectedVehicle(vehicle);
-            setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(vehicle, setSelectedVehicle)});
+            setCursor(moveCursor({...cursor, mode:"Function", data: vehicleMovementCursor(vehicle, setSelectedVehicle)}, [0,0]));
             setImpulse(2);
             break;
         }
         case 2: {
             if (selectedVehicle === undefined) throw Error("Vehicle was lost");
             setCursor({...cursor, mode: "Move", data: []});
-            const velocity = selectedVehicle.Velocity.vel; 
+            const velocity = selectedVehicle.Velocity.deltaVelocity; 
             const rotation = selectedVehicle.Location.rotation;
 
             const lastMove = last(moves[ID])[0];
@@ -158,6 +158,7 @@ const movementPress = (State: State): void => {
             throw Error(`Unexpected Outcome: ${impulse}`);
     }
 };
+
 const setupUtilityModes = (State: State): void => {
     const {cursor, setCursor, activeVehicles, setSelectedVehicle, selectedVehicle, setCurrentArgs, setImpulse, setSelection} = State;
     if (selectedVehicle === undefined) throw Error("Vehicle was lost");
@@ -165,7 +166,7 @@ const setupUtilityModes = (State: State): void => {
     setSelectedVehicle(selected);
     switch (cursor.menu) {
         case 0: {//Move
-            setCursor({...cursor, mode:"Function", data: vehicleMovementCursor(selected, setSelectedVehicle, true)});
+            setCursor(moveCursor({...cursor, mode:"Function", data: vehicleMovementCursor(selected, setSelectedVehicle, true)}, [0,0]));
             break;
         }
         case 1: {//Attack
@@ -249,7 +250,7 @@ const utilityPress = (State: State): void => {
         case 3: {
             //Wrap Up Movement
             if (selectedVehicle === undefined) throw Error("Vehicle was lost");
-            const velocity = selectedVehicle.Velocity.vel; 
+            const velocity = selectedVehicle.Velocity.deltaVelocity; 
             const rotation = selectedVehicle.Location.rotation;
             const velRotMove = `${JSON.stringify(velocity)}:${JSON.stringify(rotation)}`;
             const playedGenerateMove = `${selectedVehicle.Ownership.vID}.${velRotMove}..`;
@@ -381,6 +382,8 @@ const attackPress = (State: State): void => {
     const vehicle = vehicleOptions[cursor.menu] ?? selectedVehicle;
     const weapons = selectedVehicle?.Weap?.Data;
 
+    console.log(impulse);
+
     switch (impulse) {
         case 0: {
             if (vehicleOptions.length === 0) return;
@@ -434,5 +437,114 @@ const attackPress = (State: State): void => {
         }
         default:
             throw Error("Unexpected Outcome");
+    }
+};
+
+export const back = (State: State): void => {
+    const {
+        cursor,
+        setCursor,
+        stage,
+        impulse,
+        setImpulse,
+        setSelectedVehicle,
+        setSelection,
+    } = State;
+
+    console.log(impulse);
+
+    if (impulse === 0) return;
+    setImpulse(impulse - 1);
+    if (impulse === 1) {
+        setSelection(0);
+        setSelection(1);
+        setCursor({...cursor, mode: "Move", data: []});
+        setSelectedVehicle(undefined);
+        return;
+    }
+    switch(stage) {
+        case 0: {
+            setSelection(1);
+            setSelection(0);
+            setCursor({...cursor, mode:"Menu"});
+            break;
+        }
+        case 2: {
+            if (impulse === 4) {
+                resetUtility({...State, modes: ["Move", "Attack", "Utility", "Exit"]});
+                break;
+            } else if (impulse === 5 || impulse === 6) {
+                backAttack(State, impulse - 4);
+            }
+            break;
+        }
+        case 3: {
+            backAttack(State, impulse - 2);
+            break;
+        }
+
+    }
+};
+
+const backAttack = (State: State, adjustedImpulse: number) => {
+    const {
+        cursor,
+        setCursor,
+        display,
+        currentArgs,
+        setCurrentArgs,
+        player,
+        setSelection,
+    } = State;
+
+    const [x,y] = cursor.loc;
+    const vehiclesAtCursor = display[x][y];
+    if (adjustedImpulse === 0) {
+        setSelection(0);
+        let target: vehicle | undefined = undefined;
+
+        if (isAttackArgs(currentArgs)) {
+            const [a, b] = currentArgs;
+            if (a === undefined) throw Error("Corruption of Args");
+            setCurrentArgs([a]);
+            target = b;
+        } else {
+            const [a] = currentArgs;
+            setCurrentArgs([]);
+            target = a;
+        }
+
+        if (target === undefined) throw Error("Vehicle was lost");
+
+        const [tx, ty] = target.Location.location;
+        const vehicles = getPlayVehicles(player.User.ID, display[tx][ty]);
+        const menu = vehicles.findIndex((vehicle) => target === undefined || sameVehicle(vehicle, target));
+
+        setCursor({...cursor, data:vehicles, mode:"Menu",
+            menu: Math.max(menu, 0)});
+    }
+    if (adjustedImpulse === 1) {
+        setCursor({...cursor, mode: "Move", data: []});
+        return;
+    }
+    if (adjustedImpulse === 2) {
+        setSelection(0);
+        let target: vehicle | undefined = undefined;
+
+        if (isAttackArgs(currentArgs)) {
+            const [a, b, c] = currentArgs;
+            if (a === undefined || b === undefined) throw Error("Corruption of Args");
+            setCurrentArgs([a, b]);
+            target = c;
+        } else {
+            const [a, b] = currentArgs;
+            setCurrentArgs([a]);
+            target = b;
+        }
+
+        const menu = vehiclesAtCursor.findIndex(v => target === undefined || sameVehicle(v, target));
+
+        setCursor({...cursor, data:vehiclesAtCursor, mode:"Menu", 
+            menu: Math.max(menu, 0)});
     }
 };

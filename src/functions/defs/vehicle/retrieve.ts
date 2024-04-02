@@ -1,7 +1,7 @@
 import { mergeArrays } from "../../functions";
 import { controlList, line, locationVector, shield, util, utilWithCount, weapon, weaponWithCount } from "../../types/types";
 import { vehicle } from "../../types/vehicleTypes.js";
-import { distance, sub } from "../../vectors";
+import { distance, subVectors } from "../../vectors";
 
 //#region weapon and ammo retrieval
 export const getDefWeaps = (weapDataList: weapon[]): number[] => {
@@ -42,7 +42,7 @@ export const getUtilIndex = (Utils:util[], util:util | utilWithCount) => {
     return Utils.findIndex(utility => utility.Name === util.Name);
 };
 
-export const getShieldIndex = (ShieldData, shield) => {
+export const getShieldIndex = (ShieldData: shield[], shield: shield) => {
     return ShieldData.findIndex(s => s.Name === shield.Name);
 };
 
@@ -71,12 +71,13 @@ export const getPlayVehicles = (pID: string, vehicleArray: vehicle[]) => vehicle
 
 //#endregion
 
-export const vehiclesInRadius = (vehicleArray: vehicle[], loc: locationVector, dist: number): vehicle[] => vehicleArray.filter((s) => distance(s.Location.loc, loc) <= dist || distance(s.Location.prevLoc, loc) <= dist);
+//Look at this
+export const vehiclesInRadius = (vehicleArray: vehicle[], loc: locationVector, dist: number): vehicle[] => vehicleArray.filter((s) => distance(s.Location.location, loc) <= dist || distance(s.Location.nextLocation, loc) <= dist);
 
 export const vehiclesInPosition = (vehicleArr: vehicle[], loc: locationVector): vehicle[] => vehiclesInRadius(vehicleArr, loc, 0);
 
 export const vehiclesOnLine = (line: line, vehicleArray: vehicle[], target: vehicle) => {
-    const [dx, dy] = sub(line.b, line.a);
+    const [dx, dy] = subVectors(line.b, line.a);
     const vehicleList: vehicle[] = [];
     if (dx === 0) {
         if (dy === 0) return [target];

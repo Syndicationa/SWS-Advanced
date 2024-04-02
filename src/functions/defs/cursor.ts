@@ -2,8 +2,8 @@ import { first, last, maxOnArrays, minMax, minOnArrays, pop, pull, rotate, sumAr
 import { GridInfo, cursor, region } from "../types/cursorTypes";
 import { locationVector, velocityVector } from "../types/types";
 import { vehicle } from "../types/vehicleTypes";
-import { addVectors, intDivideVector, modVector, multiplyVector } from "../vectors";
-import { canMove, generateVelocity, movingShip } from "./vehicle/move";
+import { addVectors, intDivideVector, modVector, multiplyVector, subVectors } from "../vectors";
+import { canMove, canMoveToLocation, generateVelocity, generateVelocityFromLocation, movingShip } from "./vehicle/move";
 
 const generateRegion = (gridInfo: GridInfo) => {
     const {OverallSize, StepSizes} = gridInfo;
@@ -93,16 +93,22 @@ const rotateCursor = (cursor: cursor, vector: velocityVector) => {
 };
 
 export const vehicleMovementCursor = (vehicle: vehicle, setVehicle: (v: vehicle) => void, utility: boolean = false) => {
-    const move = (cursor: cursor, vector: velocityVector): cursor => {
-        if (!canMove(vehicle, vector, utility)) return cursor;
-        const v = generateVelocity(vehicle, vector);
+    const move = (cursor: cursor, vector: velocityVector, moveTo: boolean = false): cursor => {
+        
+        if (!moveTo && !canMove(vehicle, vector, utility)) return cursor;
+        if (moveTo && !canMoveToLocation(vehicle, vector, utility)) return cursor;
+
+        const v = !moveTo 
+            ? generateVelocity(vehicle, vector)
+            : generateVelocityFromLocation(vehicle, subVectors(vector, [cursor.region.lx,cursor.region.ly]), utility);
+        
         const movedVehicle = movingShip(vehicle, v, utility);
         setVehicle(movedVehicle);
 
-        const [rotation] = vector;
+        const rotation = !moveTo ? vector[0] : 0;
         return adjustCursorLocation({
             ...cursor, 
-            loc: movedVehicle.Location.loc,
+            loc: movedVehicle.Location.nextLocation,
             rot: rotate(cursor.rot, rotation),
             data: vehicleMovementCursor(movedVehicle, setVehicle, utility)
         });
@@ -152,6 +158,7 @@ export const fixCursorPosition = (cursor: cursor, position: locationVector): loc
 };
 
 export const moveCursorToPosition = (cursor: cursor, position: locationVector): cursor => {
+    if (typeof cursor.data === "function") return cursor.data(cursor, position, true);
     if (cursor.mode !== "Move") return cursor;
     return {...cursor, loc: fixCursorPosition(cursor, position)};
 };

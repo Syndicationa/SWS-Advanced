@@ -1,28 +1,41 @@
 import { rotate } from "../../functions";
-import { compareArray, sumArrays } from "../../functions";
-import { addVectors, distance, magnitude, multiplyVector } from "../../vectors";
+import { addVectors, magnitude, multiplyVector, roundMagnitude, subVectors } from "../../vectors";
 import { bothArea, newArea, oldArea } from "./vehicle";
 
 import { vehicle } from "../../types/vehicleTypes";
-import { rotationVector, velocityVector } from "../../types/types";
+import { locationVector, rotationVector, velocityVector } from "../../types/types";
 
-
-export const canMove = (ship: vehicle, addVel: velocityVector, utility: boolean = false) => {
+export const canMoveWithVelocity = (ship: vehicle, velocity: velocityVector, utility: boolean = false) => {
     const {energy} = ship.State;
     const {MovEnergy, Mov} = ship.Stats;
-    const {vel, prevVel} = ship.Velocity;
-    const [, movY] = addVel;
 
     const moveRatio = utility ? .25:1;
-
-    const relativeVel = ship.Location.rotation.map((v) => v*-movY);
-    const calculatedVel = sumArrays(vel, relativeVel);
-
-    const acceleration = utility ? magnitude(calculatedVel):distance(prevVel, calculatedVel);
+    
+    const acceleration = roundMagnitude(velocity);
 
     const remainingEnergy = calculateMovEnergy(energy, MovEnergy*acceleration);
 
     return (acceleration <= Math.ceil(Mov*moveRatio) && remainingEnergy >= 0);
+};
+
+export const canMoveToLocation = (ship: vehicle, location: locationVector, utility: boolean = false) => {
+    const {location: loc} = ship.Location;
+    const {velocity} = ship.Velocity;
+
+    const momentumLocation = !utility ? addVectors(loc, velocity): loc;
+    const calculatedVel = subVectors(location, momentumLocation);
+
+    return canMoveWithVelocity(ship, calculatedVel, utility);
+};
+
+export const canMove = (ship: vehicle, addVel: velocityVector, utility: boolean = false) => {
+    const {deltaVelocity} = ship.Velocity;
+    const [, movY] = addVel;
+
+    const relativeVel = multiplyVector(ship.Location.rotation, -movY);
+    const calculatedVel = addVectors(deltaVelocity, relativeVel);
+
+    return canMoveWithVelocity(ship, calculatedVel, utility);
 };
 
 const calculateMovEnergy = (energy: number, MovEnergy: number, add: boolean = true) => {
@@ -30,30 +43,46 @@ const calculateMovEnergy = (energy: number, MovEnergy: number, add: boolean = tr
     return energy - MovEnergy;
 };
 
-export const generateVelocity = (Vehicle: vehicle, addVel: velocityVector): {vel: velocityVector, rot: rotationVector} => {
-    const {Velocity, Location} = Vehicle;
-    const rot = Location.rotation;
-    const vel = Velocity.vel;
-    const [rotation, movY] = addVel;
+type velocity = {
+    vel: velocityVector,
+    rot: rotationVector
+}
 
-    const relativeVel = multiplyVector(rot, -movY);
+export const generateVelocityFromLocation = (Vehicle: vehicle, location: locationVector, utility): velocity => {
+    const {Velocity: {velocity},Location: {location: loc, rotation}} = Vehicle;
 
-    const nVel = addVectors(vel, relativeVel);
-    const nRot = rotate(rot, rotation);
+    const momentumLocation = !utility ? addVectors(loc, velocity): loc;
+
+    const nVel = subVectors(location, momentumLocation);
+
+    return {vel: nVel, rot: rotation};
+};
+
+export const generateVelocity = (Vehicle: vehicle, addVel: velocityVector): velocity => {
+    const {Velocity: {deltaVelocity}, Location: {rotation}} = Vehicle;
+    const [dr, dv] = addVel;
+
+    const relativeVel = multiplyVector(rotation, -dv);
+
+    const nVel = addVectors(deltaVelocity, relativeVel);
+    const nRot = rotate(rotation, dr);
 
     return {vel: nVel, rot: nRot};
 };
 
-const mShip = (render: (v: vehicle) => vehicle) => (Vehicle: vehicle, Velocity: {vel: velocityVector, rot: rotationVector}, utility: boolean = false) => {
+const mShip = (render: (v: vehicle) => vehicle) => (Vehicle: vehicle, Velocity: velocity, utility: boolean = false): vehicle => {
     const {vel, rot} = Velocity;
     const {Velocity: vVel, Location: vLoc, Appearance: vApp, State: vState, Stats: vStat} = Vehicle;
 
+    const {location} = Vehicle.Location;
+    const {velocity} = Vehicle.Velocity;
+    const momentumLocation = !utility ? addVectors(location, velocity): location;
+
     //Create new objects
-    const cVel = {...vVel, vel};
-    const cLoc = {...vLoc, loc: addVectors(vLoc.prevLoc, vel), rotation: rot};
+    const cVel = {...vVel, deltaVelocity: vel};
+    const cLoc = {...vLoc, nextLocation: addVectors(momentumLocation, vel), rotation: rot};
     const cApp = {...vApp, area: []};
-    const acc = utility ? magnitude(vel):distance(vVel.prevVel, vel);
-    //const cSteps = moveData.length > 0 ? moveData.length: sumArrays(vel, negateArray(vVel.vel)).reduce(absSum, 0);
+    const acc = roundMagnitude(vel);
     const cEnergy = Math.min(vStat.MaxEnergy, calculateMovEnergy(vState.energy, vStat.MovEnergy*acc, true));
     const cState = {...vState, energy: cEnergy};
     const nVehicle = {
@@ -71,11 +100,12 @@ export const moveShip = mShip(newArea);
 
 export const finalizeMove = (V: vehicle): vehicle => {
     const {Velocity, Location, State} = V;
-    const hasMoved = compareArray(Velocity.prevVel, Velocity.vel);
+    const hasMoved = magnitude(Velocity.deltaVelocity) !== 0;
+    const finalVelocity = addVectors(Velocity.velocity, Velocity.deltaVelocity);
+
     const cState =  {...State, hasFired: false, hasMoved};
-    const veloctiyForUtil: velocityVector = [0,0];
-    const cVel = {...Velocity, prevVel: Velocity.vel, vel: veloctiyForUtil};
-    const cLoc = {...Location, prevLoc: Location.loc, loc: Location.loc};
+    const cVel = {velocity: finalVelocity, deltaVelocity: [0,0] as velocityVector};
+    const cLoc = {...Location, location: Location.nextLocation};
     const cVeh = {
         ...V,
         State: cState,

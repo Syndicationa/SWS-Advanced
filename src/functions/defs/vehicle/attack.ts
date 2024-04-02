@@ -1,10 +1,10 @@
-import { compose, compareArray, sumArrays} from "../../functions";
+import { compose, compareArray, rotate} from "../../functions";
 import { replaceInArray } from "../../functions";
 import { updateActiveDef, mergeVehicleArrays, getActiveShields, getShieldIndex, vehiclesOnLine, sameVehicle } from "./retrieve";
 import {getWeapIndex, getActiveDefs, getAmmoOfTool, getPlayerVehicles, vehiclesInRadius} from "./retrieve";
 import { oldArea } from "./vehicle";
-import { sub, unitDotProduct, distance } from "../../vectors";
-import { vehicle } from "../../types/vehicleTypes";
+import { unitDotProduct, distance, subVectors } from "../../vectors";
+import { isVehicle, vehicle } from "../../types/vehicleTypes";
 import { line, locationVector, rotationVector, statusUtil, weapon, weaponWithCount } from "../../types/types";
 import {hit, hitOptions, hitNumbers} from "../../types/types";
 
@@ -16,27 +16,29 @@ type attackReturn = {modifiedVehicles: vehicle[], damage: damages};
 type targetArray = [primaryVehicle:vehicle, ...rest: vehicle[]];
 
 export const inFiringRot = (fLoc: locationVector, tLoc: locationVector, fRot:rotationVector, wRot: number, offset:rotationVector): boolean => {
-    const distVec = sub(tLoc, fLoc);
-    if (compareArray(distVec, new Array(distVec.length).fill(() => 0))) return true;
-    const uDP = unitDotProduct(distVec, sumArrays(fRot, offset));
+    const distVec = subVectors(tLoc, fLoc);
+    if (compareArray(distVec, [0,0])) return true;
+    const uDP = unitDotProduct(distVec, rotate(fRot, offset));
     const result = Math.round(400*(1 - (uDP*Math.abs(uDP))))/100;
     return result <= wRot;
 };
 
-export const canFire = (attacker: vehicle, target: vehicle, weapon: weapon | weaponWithCount): boolean => {
-    const {prevLoc:attackerLocation, rotation} = attacker.Location;
-    const targetLocation = target.Location.prevLoc;
+export const canFire = (attacker: vehicle, target: vehicle | locationVector, weapon: weapon | weaponWithCount): boolean => {
+    const {location:attackerLocation, rotation} = attacker.Location;
+    const targetLocation = isVehicle(target) 
+        ? target.Location.location
+        : target;
     const {energy, heat} = attacker.State;
-    const {Mov, MaxHeat} = attacker.Stats;
+    const {Mnv, MaxHeat} = attacker.Stats;
 
     const fireCount = 
         "fireCount" in weapon 
             ? weapon.fireCount
             : attacker.Weap.fireCount[getWeapIndex(attacker.Weap.Data, weapon)];
-    const ammoCount = getAmmoOfTool(weapon, attacker.Ammo);
+    const ammoCount = attacker.Ammo.count[getAmmoOfTool(weapon, attacker.Ammo)];
     const heatLoad = "HeatLoad" in weapon ? weapon.HeatLoad:0;
 
-    const trueWrot = (weapon.Wrot ?? 0) + Math.round(Mov / 6);
+    const trueWrot = (weapon.Wrot ?? 0) + Math.round(Mnv / 6);
     const offsetValue = weapon.Offset ?? [0, -1];
 
     const hasAmmo = (ammoCount > 0);
@@ -58,7 +60,7 @@ const defensesInArea =  (vehicleArray: vehicle[], tLoc: locationVector): [defend
         const {Weapons, wActive} = vehicle.Defenses;
         const dWeaps = Weapons.filter(( w, i) => wActive[i]);
         if (dWeaps.length === 0) return false;
-        const dist = distance(tLoc, vehicle.Location.prevLoc);
+        const dist = distance(tLoc, vehicle.Location.location);
         return dWeaps.some((wInd) => weaponData[wInd].Wran >= dist);
     });
     return [defenders, tLoc];
@@ -67,7 +69,7 @@ const defensesInArea =  (vehicleArray: vehicle[], tLoc: locationVector): [defend
 const calcDefVehicle = (vehicleArray: vehicle[], tLoc: locationVector) => {
     return vehicleArray.reduce((total, vehicle) => {
         const weaponData = vehicle.Weap.Data;
-        const dist = distance(tLoc, vehicle.Location.prevLoc);
+        const dist = distance(tLoc, vehicle.Location.location);
         const dWeaps = 
             getActiveDefs(vehicle.Defenses)
                 .filter((w) => dist <= weaponData[w].Wran)
@@ -87,10 +89,10 @@ const calcInterceptChance = compose(calcDefVehicle, defensesInArea);
 export const calcGenHitChance = (attacker: vehicle, target: vehicle, tool: weapon | statusUtil): [hit: number, intercept: number] => {
     const {Whit, Wran} = tool;
     const Acc = attacker.Stats.Acc;
-    const Mov = target.Stats.Mov;
-    const dist = distance(attacker.Location.prevLoc, target.Location.prevLoc);
+    const Mnv = target.Stats.Mnv;
+    const dist = distance(attacker.Location.location, target.Location.location);
 
-    let hitChance = (Whit + Acc) + (-25*Math.tanh((Mov- 15)/5) + 25);
+    let hitChance = (Whit + Acc) + (-25*Math.tanh((Mnv- 15)/5) + 25);
     hitChance /= (dist > Wran) ? (dist - Wran + 1):1;
     return [hitChance, hitChance];
 };
@@ -98,13 +100,13 @@ export const calcGenHitChance = (attacker: vehicle, target: vehicle, tool: weapo
 export const calcDefHitChance = (attacker: vehicle, target: vehicle, weap: weapon, vehicleArray: vehicle[]): [hit: number, intercept: number] => {
     const hitChance = calcGenHitChance(attacker, target, weap)[0];
     const playerVehicles = getPlayerVehicles(target, vehicleArray);
-    const hitDifference = calcInterceptChance(playerVehicles, target.Location.prevLoc);
+    const hitDifference = calcInterceptChance(playerVehicles, target.Location.location);
     const interceptHitChance = hitChance - hitDifference;
     return [hitChance, interceptHitChance];
 };
 
 export const calcRangeHC = (fVehicle: vehicle, tVehicle: vehicle, range: number): hit => {
-    const dist = distance(fVehicle.Location.prevLoc, tVehicle.Location.prevLoc);
+    const dist = distance(fVehicle.Location.location, tVehicle.Location.location);
     return dist <= range ? "Hit": "Miss";
 };
 //#endregion
@@ -120,7 +122,7 @@ const calcBaseDamage = (attacker: vehicle, target: vehicle, weapon: weapon): num
     const wRan = weapon.Wran;
     const wMran = weapon.WMran ?? 0;
     const wRAtk = weapon.WRatk;
-    const dist = distance(attacker.Location.prevLoc, target.Location.prevLoc);
+    const dist = distance(attacker.Location.location, target.Location.location);
     let damage = wAtk + wRAtk*(dist - wMran + (wRan - dist)*((wRAtk >= 0 && dist >= wRan) ? 1:0));
     damage = Math.round(damage);
     return Math.max(damage, 0);
@@ -211,7 +213,7 @@ const applyTargets = (damage: damages, target: vehicle[]): vehicle[] => {
 
 const consumeDefAmmo = (loc: locationVector) => (vehicle: vehicle) => {
     const weaponData = vehicle.Weap.Data;
-    const dist = distance(loc, vehicle.Location.prevLoc);
+    const dist = distance(loc, vehicle.Location.location);
 
     const weapons = 
         getActiveDefs(vehicle.Defenses)
@@ -284,18 +286,18 @@ const greaterThan = a => b => b > a;
 
 const generateLine = (attacker, target) => {
     return {
-        a: attacker.Location.prevLoc,
-        b: target.Location.prevLoc
+        a: attacker.Location.location,
+        b: target.Location.location
     };
 };
 
 const genNewLine = (line: line, vehicleList: vehicle[]): line => {
-    const [dx, dy] = sub(line.b, line.a);
+    const [dx, dy] = subVectors(line.b, line.a);
     const xFunction = dx < 0 ? Math.min:Math.max;
     const yFunction = dy < 0 ? Math.min:Math.max;
 
     const [x,y] = vehicleList.reduce((furthest, vehicle) => {
-        const location = vehicle.Location.prevLoc;
+        const location = vehicle.Location.location;
         const nX = xFunction(furthest[0], location[0]);
         const nY = yFunction(furthest[1], location[1]);
         return [nX, nY];
@@ -435,7 +437,7 @@ const missileAttack = (attacker: vehicle, target: vehicle[], weapon: weapon, veh
 
     const newVehicleArray = mergeVehicleArrays(getPlayerVehicles(newTarget[0], vehicleArray), newTarget);
 
-    const returnTarget = newVehicleArray.map(consumeDefAmmo(target[0].Location.loc));
+    const returnTarget = newVehicleArray.map(consumeDefAmmo(target[0].Location.location));
     
     return {
         modifiedVehicles: [newAttacker, ...returnTarget],
@@ -476,7 +478,7 @@ const rammingAttack = (attacker: vehicle, target: vehicle[], weapon: weapon, hit
 export const attack = (vehicleArray: vehicle[], attacker: vehicle, target: vehicle, weapon: weapon): string => {
     const {Type, Eran, Wran} = weapon;
 
-    const location = (Eran === undefined ? attacker:target).Location.prevLoc;
+    const location = (Eran === undefined ? attacker:target).Location.location;
     const nearTarget = vehiclesInRadius(vehicleArray, location, Eran ?? Wran);
 
     let trueTarget = Eran === undefined ? [target]:nearTarget;

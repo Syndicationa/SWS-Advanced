@@ -185,10 +185,12 @@ export const minMax = (number: number, lowerBound: number, higherBound: number):
 export const inBounds = (number: number, lowerBound: number, higherBound: number): boolean => 
     (number >= lowerBound) && (number < higherBound);
 
-export const rotate = (rotation: rotationVector, direction: number): rotationVector => {
+export const rotate = (rotation: rotationVector, direction: number | rotationVector): rotationVector => {
     const {round, cos, sin, PI: pi, atan2} = Math;
     const [xr,yr] = rotation;
-    const trueDirection = direction % 8;
+    const trueDirection = Array.isArray(direction) 
+        ? ((atan2(-direction[0],direction[1])/pi)*4 + 12) % 8
+        : direction % 8;
     const num = ((atan2(-xr,yr)/pi)*4 + 12 + trueDirection) % 8;
     const x = round(sin(num*pi/4));
     const y = -round(cos(num*pi/4));

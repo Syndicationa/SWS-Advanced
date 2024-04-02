@@ -15,7 +15,7 @@ export type GridInfo = {
 export type cursorModes = "Move" | "Menu" | "Rotate" | "Function";
 
 export type cursorDataFunc = {
-    (c: cursor, v: velocityVector): cursor
+    (c: cursor, v: velocityVector, moveTo?: boolean): cursor
     data: unknown
 };
 

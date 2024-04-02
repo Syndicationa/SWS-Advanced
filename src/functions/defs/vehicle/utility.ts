@@ -1,11 +1,11 @@
-import { clone, replaceInArray, compareArray } from "../../functions";
+import { clone, replaceInArray } from "../../functions";
 import { applyDamage, calcGenHitChance, calcHit, calcRangeHC, consumeAmmo } from "./attack";
 import { getAmmo, getAmmoOfTool, getPlayerVehicles, getUtilIndex, mergeVehicleArrays } from "./retrieve";
 import { makeVehicle, oldArea } from "./vehicle";
 import { data } from "../../../slicers/dataInit.mjs";
 import { vehicle } from "../../types/vehicleTypes";
-import { deployingUtil, energyUtil, healingUtil, hit, hitNumbers, resupplyingUtil, status, statusUtil, util } from "../../types/types";
-import { addVectors } from "../../vectors";
+import { deployingUtil, energyUtil, healingUtil, hit, hitNumbers, resupplyingUtil, status, statusUtil, util, velocityVector } from "../../types/types";
+import { addVectors, magnitude } from "../../vectors";
 
 export const canUtil = (source: vehicle, target: vehicle, util: util): boolean => {
     if (util.Type === "Deploying") return true;
@@ -142,7 +142,7 @@ const deployVehicle = (source: vehicle, vehicleArray: vehicle[], util: deploying
             Data.shipTypes[source.Type.Faction][util.Deploys],
             source.Ownership.Player,
             shipNum,
-            source.Location.prevLoc,
+            source.Location.location,
             source.Location.rotation);
 
     const velocityFixedVehicle = {...deployedVehicle, Velocity: clone(source.Velocity)};
@@ -199,7 +199,6 @@ const createDataStr = (source: vehicle, target: vehicle, util: util, number: num
         default:
             throw Error("Unknown Type of Utility");
     }
-    return "";
 };
 
 export const utility = (source: vehicle, target: vehicle, util: util): string => {
@@ -275,11 +274,12 @@ export const applyUtility = (Data, shipArray: vehicle[], source: vehicle, target
 
 export const finalizeUtility = (vehicle: vehicle): vehicle => {
     const {Velocity, Location, State} = vehicle;
-    const hasMoved = compareArray([0,0], Velocity.vel);
-    const cState =  {...State, hasFired: false, hasMoved};
-    const newVel = addVectors(Velocity.vel, Velocity.prevVel);
-    const cVel = {...Velocity, prevVel: newVel, vel: newVel};
-    const cLoc = {...Location, prevLoc: Location.loc, loc: addVectors(Location.loc, newVel)};
+    const hasMoved = magnitude(Velocity.deltaVelocity) !== 0;
+    const finalVelocity = addVectors(Velocity.velocity, Velocity.deltaVelocity);
+
+    const cState =  {...State, hasMoved};
+    const cVel = {velocity: finalVelocity, deltaVelocity: [0,0] as velocityVector};
+    const cLoc = {...Location, location: Location.nextLocation, nextLocation: addVectors(Location.nextLocation, finalVelocity)};
     const cVeh = {
         ...vehicle,
         State: cState,

@@ -3,12 +3,12 @@ import { useAppSelector } from "../../../hooks";
 import { GameUI } from "./GameUI";
 
 import { replaceInArray } from "../../../functions/functions";
-import { addVectors, magnitude, sub } from "../../../functions/vectors";
+import { addVectors, magnitude, subVectors } from "../../../functions/vectors";
 
 import { cursorGenerator, fixCursorPosition, moveCursor, moveCursorToPosition, zoom } from "../../../functions/defs/cursor";
 import { createDisplay, getFromDisp } from "../../../functions/defs/display";
 
-import { pressFunction } from "../../../functions/defs/battle/control";
+import { back, pressFunction } from "../../../functions/defs/battle/control";
 import { nextPhase, runGame, runMove, runTurn } from "../../../functions/defs/battle/stage";
 import { mergeVehicleArrays } from "../../../functions/defs/vehicle/retrieve";
 
@@ -94,7 +94,7 @@ export const SkirmishController = ({g, Data, close}: props) => {
         if (isStringArray(cursor.data)) return generateStringList(cursor.data, cursor, setCursor);
         if (isVehicleArray(cursor.data)) return generateButtonedVehicles(cursor.data, cursor, setCursor);
         if (isWeaponArray(cursor.data)) return generateButtonedWeapons(cursor.data, cursor, setCursor, currentArgs);
-        if (typeof cursor.data === "function" && isVehicle(cursor.data.data)) return generateButtonedControl([cursor.data.data], cursor, setCursor);
+        if (typeof cursor.data === "function" && isVehicle(cursor.data.data) && impulse === 7) return generateButtonedControl([cursor.data.data], cursor, setCursor);
         return generateVehicleList(getFromDisp(display, cursor.loc, addVectors(cursor.loc, [1,1])));
     }, [cursor]);
     const data = [`Position: ${cursor.loc} Region Data: ${cursor.region.xStep}`];
@@ -172,7 +172,7 @@ export const SkirmishController = ({g, Data, close}: props) => {
                 group: () => console.log(currentPlayer, players),
                 ungroup: () => console.log(game),
                 info: () => console.log(playerGame),
-                back: () => console.log(moves),
+                back: () => back(State),
             },
             cursor,
             moveCursor: 
@@ -180,7 +180,7 @@ export const SkirmishController = ({g, Data, close}: props) => {
                     press(State):
                     setCursor(moveCursor(cursor, vec)),
             moveCursorTo: 
-                (pos: locationVector) => magnitude(sub(cursor.loc,fixCursorPosition(cursor, pos))) === 0 ? 
+                (pos: locationVector) => magnitude(subVectors(cursor.loc,fixCursorPosition(cursor, pos))) === 0 ? 
                     press(State): 
                     setCursor(moveCursorToPosition(cursor, pos))
         };

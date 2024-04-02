@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useEffect, useRef } from "react";
 import { PropTypes } from "prop-types";
-import { clearBoard, copyGrid, drawCursor, drawGrid, drawShips, grSize } from "../../../functions/drawing.mjs";
+import { clearBoard, copyGrid, drawCursor, drawGrid, drawShips, grSize } from "../../../functions/drawing";
 
 export const Board = props => {  
     const {display, colors, cursor, move, ...rest } = props;
@@ -10,7 +10,6 @@ export const Board = props => {
 
     const [main, setMain] = useState(null);
     const [grid, setGrid] = useState(null);
-    const [region, setRegion] = useState(cursor.region);
 
     const press = (e) => {
         const width = main.width/grSize(cursor.region);
@@ -42,18 +41,11 @@ export const Board = props => {
     }, []);
 
     useEffect(() => {
-        if (cursor.region !== region) {
-      
-            setRegion(cursor.region);
-        }
-    }, [cursor, region]);
-
-    useEffect(() => {
         if (grid === null) return;
         clearBoard(grid);
         //drawHexMap(data, grid);
-        drawGrid(grid, grid.getContext("2d"), region);
-    }, [region, grid]);
+        drawGrid(grid, grid.getContext("2d"), cursor.region);
+    }, [cursor.region, grid]);
 
     useEffect(() => {
         if (main === null || grid === null) return;
@@ -65,7 +57,7 @@ export const Board = props => {
         drawShips(display, cursor.region, colors, main.getContext("2d"), {width, height});
         drawCursor(main.getContext("2d"), {height, width}, cursor);
         copyGrid(main.getContext("2d"), grid);
-    }, [display, colors, main, grid, cursor]);
+    }, [display, colors, main, grid, cursor, cursor.loc]);
   
     return (<>
         <canvas ref={mainRef} width="1280" height="1280" id="Board" className="gameboard" onClick={press} {...rest}>Doesn&#39;t Support the Canvas</canvas>

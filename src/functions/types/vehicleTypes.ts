@@ -40,7 +40,7 @@ type Stats = {
     MaxHP: number,
     MaxHeat: number, CoolingRate: number, OverHeat: number,
     MaxEnergy: number, GenEnergy: number, MovEnergy: number,
-    Acc: number, Def: number, Mov: number, FMov?: number,
+    Acc: number, Def: number, Mov: number, Mnv: number, FMov?: number,
     StealthLevel?: number, ScannerLevel?: number,
     Communication?: number, Intercept?: number
 };
@@ -80,12 +80,12 @@ export type vehicle = {
     },
 
     Location: {
-        loc: locationVector, prevLoc: locationVector,
+        nextLocation: locationVector, location: locationVector,
         rotation: rotationVector, parent: string
     },
 
     Velocity: {
-        vel: velocityVector, prevVel: velocityVector
+        deltaVelocity: velocityVector, velocity: velocityVector
     }
 };
 
