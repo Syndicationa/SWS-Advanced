@@ -1,7 +1,7 @@
 import { cursor, setCursor } from "./types/cursorTypes";
 import { baseVehicle, vehicle } from "./types/vehicleTypes";
-import { weapon } from "./types/types";
-import { currentArgs, isAttackArgs } from "./types/FunctionTypes";
+import { util, weapon } from "./types/types";
+import { currentArgs, isAttackArgs, isUtilityArgs } from "./types/FunctionTypes";
 import { calcDefHitChance, calcGenHitChance, calcRangeHC, calculateDamage, canFire } from "./defs/vehicle/attack";
 import { InfoDisplay } from "../components/GameComponents/GameInterface/InfoDisplay";
 import { retrieveDefenseList } from "./defs/vehicle/retrieve";
@@ -28,6 +28,37 @@ export const generateVehicleList = (vehicles: sortOfVehicle) => {
         const name = vehicle.Appearance?.name ?? vehicle.Type.Class;
         const currentHP = vehicle?.State?.hp ??vehicle.Stats.MaxHP;
         return <>{name}<div className='Health'>HP: {currentHP}/{vehicle.Stats.MaxHP}</div></>;
+    });
+    return options.filter(Boolean);
+};
+
+export const generateUtilList = (utils: util[], args: currentArgs) => {
+    if (!isUtilityArgs(args) || args.length !== 2) throw Error("Utility shouldn't be selected now");
+    const [attacker, target] = args;
+    const options = utils.map((util) => {
+        const name = util.Name;
+        let hitChance: number = 0;
+        if (util.Type === "Deploying") 
+            hitChance = 100;
+        else if (util.Type !== "Status") 
+            hitChance = calcRangeHC(attacker, target, util.Wran) === "Hit" ? 100:0;
+        else if (util.Type === "Status") 
+            hitChance = calcGenHitChance(attacker, target, util)[0];
+
+        const utilHeat = "HeatLoad" in util ? util.HeatLoad:0;
+
+        const type = `Type: ${util.Type}`;
+        const hit = `Hit Chance: ${Math.round(hitChance)}`;
+        const heat = `Heat: ${attacker.State.heat}/${attacker.Stats.OverHeat} + ${utilHeat}`;
+
+        const info = [type, hit, heat].filter(item => item !== "") as string[];
+
+        return (
+            <>
+                {name}
+                <InfoDisplay information={info} className="Util" />
+            </>
+        );
     });
     return options.filter(Boolean);
 };
@@ -91,4 +122,5 @@ export const generateButtonedVehicles:
     (list: vehicle[] | baseVehicle[], cursor: cursor, other: unknown) => JSX.Element[] 
     = generateButtonedVersion(generateVehicleList);
 export const generateButtonedWeapons = generateButtonedVersion(generateWeaponList);
+export const generateButtonedUtils = generateButtonedVersion(generateUtilList);
 export const generateButtonedControl = generateButtonedVersion(generateDefenseList);

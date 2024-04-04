@@ -12,9 +12,9 @@ import { back, pressFunction } from "../../../functions/defs/battle/control";
 import { nextPhase, runGame, runMove, runTurn } from "../../../functions/defs/battle/stage";
 import { mergeVehicleArrays } from "../../../functions/defs/vehicle/retrieve";
 
-import { generateButtonedControl, generateButtonedVehicles, generateButtonedWeapons, generateStringList, generateVehicleList } from "../../../functions/listGenerator";
+import { generateButtonedControl, generateButtonedUtils, generateButtonedVehicles, generateButtonedWeapons, generateStringList, generateVehicleList } from "../../../functions/listGenerator";
 import { locationVector, singleBattle, velocityVector } from "../../../functions/types/types";
-import { isStringArray, isVehicleArray, isWeaponArray } from "../../../functions/types/cursorTypes";
+import { isStringArray, isUtilArray, isVehicleArray, isWeaponArray } from "../../../functions/types/cursorTypes";
 import { isVehicle, vehicle } from "../../../functions/types/vehicleTypes";
 import { currentArgs } from "../../../functions/types/FunctionTypes";
 import { Data } from "../../../functions/types/data";
@@ -94,6 +94,7 @@ export const SkirmishController = ({g, Data, close}: props) => {
         if (isStringArray(cursor.data)) return generateStringList(cursor.data, cursor, setCursor);
         if (isVehicleArray(cursor.data)) return generateButtonedVehicles(cursor.data, cursor, setCursor);
         if (isWeaponArray(cursor.data)) return generateButtonedWeapons(cursor.data, cursor, setCursor, currentArgs);
+        if (isUtilArray(cursor.data)) return  generateButtonedUtils(cursor.data, cursor, setCursor, currentArgs);
         if (typeof cursor.data === "function" && isVehicle(cursor.data.data) && impulse === 7) return generateButtonedControl([cursor.data.data], cursor, setCursor);
         return generateVehicleList(getFromDisp(display, cursor.loc, addVectors(cursor.loc, [1,1])));
     }, [cursor]);
