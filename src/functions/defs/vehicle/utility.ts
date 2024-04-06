@@ -81,7 +81,7 @@ const heal = (source:vehicle, target:vehicle, util: healingUtil, hitValue: hit):
 
     return {
         modifiedVehicles: [newSource, newTarget],
-        healed: Math.min(target.State.maxHP - target.State.hp, util.Heal)
+        healed: Math.min(target.Stats.MaxHP - target.State.hp, util.Heal)
     };
 };
 

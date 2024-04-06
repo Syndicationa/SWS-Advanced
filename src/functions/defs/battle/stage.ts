@@ -13,13 +13,12 @@ type runReturn = [State: singleBattle, str: string];
 export const runGame = (Data: Data) => (State: singleBattle): runReturn => {
     const {Turns} = State.Moves;
     const run = runTurn(Data);
-    const moves = Turns.map((_,i) => {
-        _;
-        return objectMap(State.Moves)((arr: string[]) => [arr[i]]) as singleBattle["Moves"];
-    });
-    return moves.reduce(([state, oldString]: [state: singleBattle, str: string], move, i) => {
+
+    return Turns.reduce(([state, oldString]: [state: singleBattle, str: string], _, i, arr) => {
+        const move = objectMap(State.Moves)((arr) => [arr[i]]) as unknown as singleBattle["Moves"];
         const [nState, str] = run(state, move);
-        if (i === moves.length - 1) return [state, oldString];
+
+        if (i === arr.length - 1) return [state, oldString];
         return [{...nState, Vehicles: finalizeStage(nState.Vehicles, Turns[i])}, str];
     }, [State, ""]);
 };

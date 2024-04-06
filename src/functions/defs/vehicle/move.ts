@@ -7,7 +7,8 @@ import { locationVector, rotationVector, velocityVector } from "../../types/type
 
 export const canMoveWithVelocity = (ship: vehicle, velocity: velocityVector, utility: boolean = false) => {
     const {energy} = ship.State;
-    const {MovEnergy, Mov} = ship.Stats;
+    const MovEnergy = ship.Stats.MovEnergy;
+    const Mov = ship.Stats.Mov;
 
     const moveRatio = utility ? .25:1;
     

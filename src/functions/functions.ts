@@ -110,11 +110,13 @@ export const pull = <T>(arr: T[]) => arr.slice(1);
 
 export const split = <T>(arr: T[], position: number) => [arr.slice(0, position), arr.slice(position)];
 
-type ObjectMappingFunction = (value: unknown, key?: string, object?: object) => unknown;
+type ObjectMappingFunction<O, R> = (value: O[keyof O], key?: string, object?: O) => R;
+type ret<O, R> = {[key in keyof O]: R};
 
-export const objectMap = (obj: object) => (func: ObjectMappingFunction): object => Object.keys(obj).reduce(
-    (acc, key) => {return {...acc, [key]: func(obj[key], key, obj)};}
-    , {});
+export const objectMap = <O extends object>(obj: O) => <R>(func: ObjectMappingFunction<O, R>): ret<O, R> => 
+    Object.keys(obj).reduce(
+        (acc, key) => {return {...acc, [key]: func(obj[key as keyof O], key, obj)};}
+        , {} as ret<O, R>);
 
 export const replaceInArray = <T>(arr: T[], index: number, info:T) => 
     (index >= arr.length || index < 0) ? arr:[...arr.slice(0,index), info, ...arr.slice(index + 1)];

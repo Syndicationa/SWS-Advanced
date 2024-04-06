@@ -5,7 +5,7 @@ import {getWeapIndex, getActiveDefs, getAmmoOfTool, getPlayerVehicles, vehiclesI
 import { oldArea } from "./vehicle";
 import { unitDotProduct, distance, subVectors } from "../../vectors";
 import { isVehicle, vehicle } from "../../types/vehicleTypes";
-import { line, locationVector, rotationVector, statusUtil, weapon, weaponWithCount } from "../../types/types";
+import { line, locationVector, rotationVector, status, statusUtil, weapon, weaponWithCount } from "../../types/types";
 import {hit, hitOptions, hitNumbers} from "../../types/types";
 
 
@@ -29,7 +29,8 @@ export const canFire = (attacker: vehicle, target: vehicle | locationVector, wea
         ? target.Location.location
         : target;
     const {energy, heat} = attacker.State;
-    const {Mnv, MaxHeat} = attacker.Stats;
+    const MaxHeat = attacker.Stats.MaxHeat;
+    const Mnv = attacker.Stats.Mnv;
 
     const fireCount = 
         "fireCount" in weapon 
@@ -88,8 +89,7 @@ const calcInterceptChance = compose(calcDefVehicle, defensesInArea);
 
 export const calcGenHitChance = (attacker: vehicle, target: vehicle, tool: weapon | statusUtil): [hit: number, intercept: number] => {
     const {Whit, Wran} = tool;
-    const Acc = attacker.Stats.Acc;
-    const Mnv = target.Stats.Mnv;
+    const {Acc, Mnv} = attacker.Stats;
     const dist = distance(attacker.Location.location, target.Location.location);
 
     let hitChance = (Whit + Acc) + (-25*Math.tanh((Mnv- 15)/5) + 25);
@@ -174,12 +174,12 @@ const updateFireRate = (Weap, weapon) => {
 };
 
 export const applyDamage = (damage: number, target: vehicle): vehicle => {
-    const {hp, maxHP} = target.State;
+    const {hp} = target.State;
+    const MaxHP = target.Stats.MaxHP;
     return {...target,
         State: {
             ...target.State,
-            hp: Math.min(hp - damage, maxHP),
-            maxHP: maxHP - ((damage > 0) ? Math.round(damage/5):0)
+            hp: Math.min(hp - damage, MaxHP),
         }
     };
 };
@@ -201,14 +201,14 @@ const applyAttacker = (attacker: vehicle, weap: weapon): vehicle => {
     };
 };
 
-const applyTarget = ([damage, sDamage]: damage, target: vehicle): vehicle => {
+const applyTarget = ([damage, sDamage]: damage, target: vehicle, weapon: weapon): vehicle => {
     if (target === undefined) throw Error("Vehicle not found");
-    return consumeShield(applyDamage(damage, target), sDamage);
+    return processStatus(consumeShield(applyDamage(damage, target), sDamage), [damage, sDamage], weapon.status);
 };
 
-const applyTargets = (damage: damages, target: vehicle[]): vehicle[] => {
+const applyTargets = (damage: damages, target: vehicle[], weapon: weapon): vehicle[] => {
     if (target === undefined) throw Error("Vehicle not found");
-    return target.map((vehicle, i) => applyTarget(damage[i], vehicle));
+    return target.map((vehicle, i) => applyTarget(damage[i], vehicle, weapon));
 };
 
 const consumeDefAmmo = (loc: locationVector) => (vehicle: vehicle) => {
@@ -227,7 +227,7 @@ const consumeDefAmmo = (loc: locationVector) => (vehicle: vehicle) => {
     });
 };
 
-const consumeShield = (vehicle, sDam) => {
+const consumeShield = (vehicle: vehicle, sDam: number): vehicle => {
     const shields = getActiveShields(vehicle.Defenses);
     const damageShield = shields.find((s) => s.Type === "Default");
     if (damageShield === undefined) return vehicle;
@@ -244,6 +244,21 @@ const consumeShield = (vehicle, sDam) => {
             ...vehicle.Defenses,
             sDamage,
             sActive
+        }
+    };
+};
+
+const processStatus = (vehicle: vehicle, damage: damage, status: status | undefined): vehicle => {
+    if (status === undefined || !status.function(damage)) return vehicle; 
+    const modStatus = !("modify" in status) || status.modify === undefined
+        ? status
+        : status.modify(damage);
+
+    return {
+        ...vehicle,
+        State: {
+            ...vehicle.State,
+            statuses: [...vehicle.State.statuses, modStatus]
         }
     };
 };
@@ -278,7 +293,7 @@ const createDataStr = (fVehicle: vehicle, tVehicle: vehicle | vehicle[], weap: w
 
 const performDamage = (attacker: vehicle, target: vehicle[], weapon: weapon) => {
     const damage = calculateDamage(attacker, target, weapon);
-    const newTarget = applyTargets(damage, target);
+    const newTarget = applyTargets(damage, target, weapon);
     return {damage, newTarget};
 };
 

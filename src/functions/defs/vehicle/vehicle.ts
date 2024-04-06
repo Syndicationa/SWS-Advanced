@@ -1,6 +1,6 @@
-import { rectangle, isInRectangle, compareArray} from "../../functions";
+import { rectangle, isInRectangle, compareArray, objectMap} from "../../functions";
 import { ammo, locationVector, player, rotationVector, sizeVector, util, weapon } from "../../types/types";
-import { baseVehicle, vehicle } from "../../types/vehicleTypes";
+import { baseVehicle, isVehicle, modifiers, vehicle } from "../../types/vehicleTypes";
 import { distance } from "../../vectors";
 import { getDefWeaps, updateActiveDef } from "./retrieve";
 
@@ -56,9 +56,15 @@ const addEE = (weapons: vehicle["Weap"], utils: vehicle["Utils"], ammo: vehicle[
 export const makeVehicle = (source: baseVehicle | vehicle, 
     playerID: string, vID: number, 
     pos: locationVector, r: rotationVector, parent: string = ""): vehicle => {
+
+    const updateVehicle = (vehicle: vehicle) => updateActiveDef(updateArea(reArea(true, false))(vehicle));
+    const Location: vehicle["Location"] = {location: pos, nextLocation: pos, rotation: [...r], parent};
+    const Velocity: vehicle["Velocity"] = {velocity: [0,0], deltaVelocity: [0,0]};
+    
+    if (isVehicle(source)) return updateVehicle({...source, Location, Velocity});
     
     const {
-        Type: Type, Stats: Stats, 
+        Type: Type, Stats: stats, 
         Appearance: app, 
         Weap: weap, Utils: utils, 
         Ammo: ammo, Defenses: def} = source;
@@ -66,16 +72,23 @@ export const makeVehicle = (source: baseVehicle | vehicle,
     const Ownership = {Player: playerID, vID: vID};
     const Appearance = {area: [], name: Type.Class, visible: true, ...app};
 
-    const State = "State" in source ? source.State: {
-        hp: Stats.MaxHP, maxHP: Stats.MaxHP, 
-        energy: Stats.MaxEnergy,
+    const {MaxHP, MaxEnergy} = stats;
+
+    const Stats = {...stats, TrueStats: stats};
+    const modifiers: modifiers = objectMap(Stats)(() => [0, 1]);
+
+
+    const State = {
+        hp: MaxHP, 
+        energy: MaxEnergy,
         heat: 0,
         intercept: 5,
         hasMoved: false, hasFired: false, 
-        statuses: []
+        statuses: [],
+        modifiers
     };
 
-    const origWeap: vehicle["Weap"] = "fireCount" in weap ? weap: {
+    const origWeap: vehicle["Weap"] = {
         Data: weap, 
         fireCount: new Array(weap.length).fill(0),
         Weap (i) {
@@ -83,14 +96,14 @@ export const makeVehicle = (source: baseVehicle | vehicle,
         }
     };
 
-    const origUtils: vehicle["Utils"] = "fireCount" in utils ? utils: {
+    const origUtils: vehicle["Utils"] = {
         Data: utils, fireCount: new Array(utils.length).fill(0),
         Util (i) {
             return {...this.Data[i], fireCount: this.fireCount[i]};
         }
     };
 
-    const origAmmo: vehicle["Ammo"] = "count" in ammo ? ammo: {
+    const origAmmo: vehicle["Ammo"] = {
         Data: ammo, 
         count: ammo.map((ammoType) => 
             ammoType.sCount ?? ammoType.MCount ?? Infinity),
@@ -99,14 +112,14 @@ export const makeVehicle = (source: baseVehicle | vehicle,
         }
     };
 
-    const {Weap, Utils, Ammo} = addEE(origWeap, origUtils, origAmmo, Stats.MaxHP);
+    const {Weap, Utils, Ammo} = addEE(origWeap, origUtils, origAmmo, MaxHP);
 
     const defWeaps = getDefWeaps(Weap.Data);
     const shields = def.Shields ?? []; 
-    const origDWeap = "wActive" in def ? def:{
+    const origDWeap = {
         Weapons: defWeaps, wActive: defWeaps.map(() => true),
     };
-    const origShields = "sActive" in def ? def:{
+    const origShields = {
         Shields: shields,
         sDamage: shields.map(() => 0),
         sActive: shields.map(() => false),
@@ -115,12 +128,7 @@ export const makeVehicle = (source: baseVehicle | vehicle,
         ...origDWeap, ...origShields
     };
 
-    const Location: vehicle["Location"] = {location: pos, nextLocation: pos, rotation: [...r], parent};
-    const Velocity: vehicle["Velocity"] = {velocity: [0,0], deltaVelocity: [0,0]};
-
-    const updateShip = (vehicle: vehicle) => updateActiveDef(updateArea(reArea(true, false))(vehicle));
-
-    return updateShip({
+    return updateVehicle({
         Ownership, Type, Stats,
         Appearance, State,
         Weap, Utils, Ammo, Defenses,
@@ -142,14 +150,27 @@ export const determineStealth = (Vehicles: vehicle[], vehicle: vehicle, player: 
 };
 
 export const applyStatuses = (vehicle: vehicle): vehicle => {
-    const statuses = vehicle.State.statuses.map((status) => {return {...status, time: status.time - 1};});
-    const nVeh = statuses.reduce((accVeh, status) => {
-        if (status.time === 0) return status.reset(accVeh);
-        return status.apply(accVeh);
-    }, vehicle);
-    const trimmedStatuses = statuses.reduce((acc, status) => status.time === 0 ? acc:[...acc, status],[]);
+    const modifiers: modifiers = objectMap(vehicle.Stats.TrueStats)(() => [0, 1]);
+    const defaultedVehicle = {...vehicle, State: {...vehicle.State, modifiers}};
 
-    return {...nVeh, State: {...nVeh.State, statuses: trimmedStatuses}};
+    const statuses = vehicle.State.statuses.map((status) => {return {...status, time: status.time - 1};});
+    const activeStatuses = statuses.filter(status => status.time !== 0);
+
+    const deactivated = statuses.reduce((vehicle, status) => status.reset(vehicle), defaultedVehicle);
+    const finalVehicle = activeStatuses.reduce((vehicle, status) => status.apply(vehicle), deactivated);
+
+    const modifiedStats = objectMap(finalVehicle.Stats.TrueStats)((stat, key) => {
+        if (stat === undefined) return stat;
+        if (key === undefined) throw Error("How");
+        const [summand, multiplier] = finalVehicle.State.modifiers[key];
+        return stat*multiplier + summand;
+    });
+
+    const Stats = {...modifiedStats, TrueStats: finalVehicle.Stats.TrueStats};
+
+    console.log(finalVehicle);
+
+    return {...finalVehicle, Stats, State: {...finalVehicle.State, statuses: activeStatuses}};
 };
 
 const shipReturn = (area: locationVector[], vehicle: vehicle): vehicle => {
@@ -161,7 +182,6 @@ type areaFunction = (location: vehicle["Location"], Size: sizeVector) => locatio
 const updateArea = (areaFunc: areaFunction) => (vehicle: vehicle): vehicle => {
     const loc = vehicle.Location;
     const {Size, visible} = vehicle.Appearance;
-    console.log(visible);
     if (vehicle.State.hp <= 0 || !visible) return shipReturn([], vehicle);
     return shipReturn(areaFunc(loc, Size), vehicle);
 };

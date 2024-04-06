@@ -26,24 +26,31 @@ type Appearance = baseAppearance & {
 };
 
 type State = {
-    hp: number, 
-    maxHP: number, 
+    hp: number,
     energy: number, 
     heat: number,
     intercept: number,
     hasMoved: boolean, 
     hasFired: boolean,
     statuses: status[]
+    modifiers: modifiers
 };
 
-type Stats = {
-    MaxHP: number,
+export type TrueStats = {
     MaxHeat: number, CoolingRate: number, OverHeat: number,
     MaxEnergy: number, GenEnergy: number, MovEnergy: number,
-    Acc: number, Def: number, Mov: number, Mnv: number, FMov?: number,
+    Mov: number, Mnv: number, FMov?: number,
     StealthLevel?: number, ScannerLevel?: number,
-    Communication?: number, Intercept?: number
+    MaxHP: number, Acc: number, Def: number,
+    Communication?: number, 
+    Intercept?: number
 };
+
+export type modifiers = { [key in keyof TrueStats]: [summand: number, multiplier: number]};
+
+export type Stats = {
+    TrueStats: TrueStats,
+} & TrueStats;
 
 type group<t> = {
     Data: t[], fireCount: number[],
@@ -52,7 +59,7 @@ type group<t> = {
 export type baseVehicle = {
     Type: VehicleType,
     Appearance: baseAppearance,
-    Stats: Stats,
+    Stats: TrueStats,
     Weap: weapon[],
     Utils: util[],
     Ammo: ammo[],

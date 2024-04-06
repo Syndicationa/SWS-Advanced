@@ -1,4 +1,4 @@
-import { ballin, deactivator } from "../functions/defs/status.ts";
+import { ballin, deactivator, targeting } from "../functions/defs/status.ts";
 
 const factions = ["Astute", "Blade"];
 const factionColors = {Astute: "#0000ff", Blade: "#FF0000"};
@@ -37,7 +37,8 @@ const shipAAAA = {
             aType: "Default",
             FireRate: 10, EnergyCost: 5, HeatLoad: 5,
         },
-        deactivator
+        deactivator,
+        targeting
     ],
 
     Ammo: [
@@ -94,7 +95,8 @@ const shipBBBB = {
             aType: "Default", dType: "Default",
             FireRate: 10, EnergyCost: 2, HeatLoad: 2,
         },
-        ballin
+        ballin,
+        targeting
     ],
 
     Ammo: [

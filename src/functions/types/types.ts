@@ -9,12 +9,13 @@ export type line = {a: locationVector, b: locationVector};
 
 export type status = {
     time: number,
-    data: object | undefined,
+    data: unknown | undefined,
     Type: "Generic" | "Movement" | "Accuracy" | "Damage" | "True Hit" | "Countermeasures" | "Other Ideas",
     combine: (a: status, b: status) => status[],
     apply: (v: vehicle) => vehicle,
     reset: (v: vehicle) => vehicle,
-    function: (a?: unknown) => unknown
+    function: (a?: unknown) => unknown,
+    modify?: (damage: [number, number]) => status
 }
 
 //#region weapon
@@ -32,6 +33,8 @@ type baseWeapon = {
     FireRate: number, //Shots per phase
     EnergyCost: number, //Energy cost
     aType: string //Ammo type
+
+    status?: status
 }
 type heated = {HeatLoad: number}; //Heat generated per shot
 type defensive = {Defensive: false} | {

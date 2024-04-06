@@ -16,7 +16,7 @@ const deactivateWeapons: status = {
         };
     },
     reset: (v: vehicle) => v,
-    function: () => {},
+    function: () => true,
 };
 
 export const deactivator: statusUtil = {
@@ -73,41 +73,74 @@ export const ballin: statusUtil = {
 
 export const accBoot: status = {
     time: 20,
-    data: {
-        buff: 20,
-        Acc: NaN
-    },
+    data: [10, 1],
     Type: "Accuracy",
     combine: (a: status, b: status) => {
-        if (a.data === undefined || b.data === undefined) throw Error("These aren't Acc Boosting");
-        if (
-            !("Acc" in a.data) || !("Acc" in b.data) ||
-            !("buff" in a.data) || !("buff" in b.data)
-        ) throw Error("Definitely aren't Acc Boosting");
-        
-        const {Acc: aAcc, buff: aBuff} = a.data;
-        const {Acc: bAcc, buff: bBuff} = b.data;
-        if (isNaN(aAcc) && isNaN(bAcc)) 
+        if (a.Type !== "Accuracy" || b.Type !== "Accuracy" || a.data === undefined || b.data === undefined || a.data === null || b.data === null) return [a, b];
+        if (a.time !== b.time) return [a, b];
+        return [{
+            ...a,
+            data: [a.data[0] + b.data[0], a.data[1] * b.data[1]]
+        }];
     },
     apply (v: vehicle) {
-        if (!isNaN(this.data.Acc)) return v;
-        this.Acc = v.Stats.Acc;
+        const [summand, multiplier] = v.State.modifiers.Acc;
+        const [thisSummand, thisMultiplier] = this.data as [number, number];
+        console.log(v.State.modifiers.Acc, this.data);
         return {
             ...v,
-            Stats: {
-                ...v.Stats,
-                Acc: v.Stats.Acc + this.data.buff                
+            State: {
+                ...v.State,
+                modifiers: {
+                    ...v.State.modifiers,
+                    Acc: [summand + thisSummand, multiplier*thisMultiplier] as [number, number]
+                }
             }
         };
     },
     reset (v: vehicle) {
+        return v;
+    },
+    function: () => {},
+};
+
+export const targeting: statusUtil = {
+    Name: "Targeting",
+    FireRate: 2,
+    EnergyCost: 20,
+    HeatLoad: 70,
+    aType: "Default",
+    Wran: 5,
+    Whit: 80,
+    Type: "Status",
+    Status: ["Target", accBoot],
+};
+
+export const heater: status = {
+    time: 2,
+    data: 20,
+    Type: "Generic",
+    combine: (a: status, b: status) => {
+        return [a,b];
+    },
+    apply (v: vehicle) {
         return {
             ...v,
-            Appearance: {
-                ...v.Appearance,
-                Shape: this.data
+            State: {
+                ...v.State,
+                heat: v.State.heat + this.state
             }
         };
     },
-    function: () => {},
-}
+    reset: (v: vehicle) => v,
+    function: (a?: unknown) => {
+        if (!Array.isArray(a) || a.length < 2) return false;
+        return a[0] !== 0;
+    },
+    modify (damage: [number, number]) {
+        return {
+            ...this,
+            data: damage[0]*3
+        };
+    }
+};
