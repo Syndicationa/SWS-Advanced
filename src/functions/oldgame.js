@@ -1,4 +1,4 @@
-import { Vehicle } from "./defs/vehicle/vehicle.mjs";
+import { Vehicle } from "./defs/vehicle/vehicle.js";
 import { clone, updateSector, compareArray } from "./functions";
 
 export const moveCursor = (dx, dy, data, rules = true) => {

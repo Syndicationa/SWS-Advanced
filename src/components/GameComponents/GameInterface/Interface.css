@@ -168,7 +168,7 @@
 	grid-template-columns: 2fr 1fr;
 	grid-template-rows: 1fr 1fr;
 	grid-template-areas: 'Name SelectButton'
-						 	'HP SelectButton';
+						 	'Information SelectButton';
 	padding-left: 0px;
 }
 
@@ -184,7 +184,15 @@
 
 .Health {
 	background-color: inherit;
-	grid-area: HP;
+	grid-area: Information;
+}
+
+.Weapon {
+	grid-area: Information;
+}
+
+.Util {
+	grid-area: Information;
 }
 
 ul {

@@ -68,14 +68,14 @@ export const CreateGame = () => {
         if (difference <= 0) return;
         let nPlayers = [];
         for (let x = 0; x < difference; x++) {
-            nPlayers.push(clone
-            ({colorSet: user.colorSet,
-                Controls: user.Controls,
-                movType: 0,
-                Name: "",
-                Faction: "Astute",
-                exoticFactions: user.exoticFactions
-            }
+            nPlayers.push(clone(
+                {colorSet: user.colorSet,
+                    Controls: user.Controls,
+                    movType: 0,
+                    Name: "",
+                    Faction: "Astute",
+                    exoticFactions: user.exoticFactions
+                }
             ));
         }
         setHumans([...hPlayerList, ...nPlayers]);
@@ -117,7 +117,7 @@ export const CreateGame = () => {
                 </Section>): <></>}
             <Section title="Players">
                 <label htmlFor="HumanPlayers">Human Player Count:</label>
-			    <input id="HumanPlayers" value={hPlayerCount} onChange={(e) => setHCount(e.target.value)} 
+                <input id="HumanPlayers" value={hPlayerCount} onChange={(e) => setHCount(e.target.value)} 
                     className="numbox" type="number" min="1" />
                 <br />
                 <br />

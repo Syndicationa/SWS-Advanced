@@ -1,3 +1,5 @@
+import { ballin, deactivator, targeting } from "../functions/defs/status.ts";
+
 const factions = ["Astute", "Blade"];
 const factionColors = {Astute: "#0000ff", Blade: "#FF0000"};
 const shipAAAA = {
@@ -13,16 +15,16 @@ const shipAAAA = {
         MaxHP: 100,
         MaxHeat: 100, CoolingRate: 20, OverHeat: 200,
         MaxEnergy: 100, GenEnergy: 20, MovEnergy: 0,
-        Acc: 90, Def: 10, Mov: 15, FMov: 0,
+        Acc: 90, Def: 10, Mov: 20, Mnv: 20, FMov: 0,
         StealthLevel: -1, Communication: 10
     },
 
     Weap: [
         {
             Name: "Pew Pew", Type: "Generic",
-            Watk: 100, Whit: 0, Eran: 1, WRatk: -1,
+            Watk: 100, Whit: 0, WRatk: 0,
             Defensive: false, Wcov: 0,
-            Wran: 100, WMran: 0, Wrot: 2,
+            Wran: 20, WMran: 0, Wrot: 0,
             FireRate: 10, EnergyCost: 5, HeatLoad: 5,
             aType: "Default"
         }
@@ -34,7 +36,9 @@ const shipAAAA = {
             Heal: 10, Wran: 10,
             aType: "Default",
             FireRate: 10, EnergyCost: 5, HeatLoad: 5,
-        }
+        },
+        deactivator,
+        targeting
     ],
 
     Ammo: [
@@ -70,7 +74,7 @@ const shipBBBB = {
         MaxHP: 70,
         MaxHeat: 70, CoolingRate: 14, OverHeat: 140,
         MaxEnergy: 80, GenEnergy: 16, MovEnergy: 0,
-        Acc: 110, Def: 10, Mov: 18, FMov: 0,
+        Acc: 110, Def: 10, Mov: 18, Mnv: 20, FMov: 0,
         StealthLevel: 1, Communication: 10
     },
 
@@ -90,7 +94,9 @@ const shipBBBB = {
             Wran: 6,
             aType: "Default", dType: "Default",
             FireRate: 10, EnergyCost: 2, HeatLoad: 2,
-        }
+        },
+        ballin,
+        targeting
     ],
 
     Ammo: [

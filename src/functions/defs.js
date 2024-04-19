@@ -1,4 +1,4 @@
-import {clone, updateSector, compareArray, rectangle, isInRectangle, distance} from './functions.mjs';
+import {clone, updateSector, compareArray, rectangle, isInRectangle, distance} from './functions.js';
 import {attackShip, calcLocDiff, inFiringRot} from "./game";
 
 export class Faction {

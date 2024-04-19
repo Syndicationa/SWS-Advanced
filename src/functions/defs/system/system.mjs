@@ -1,5 +1,5 @@
-import { createDisplay } from "../display.mjs"
-import { exampleMapElement, falseMapElementArea, trueMapElementArea } from "./map.mjs"
+import { createDisplay } from "../display";
+import { exampleMapElement, falseMapElementArea, trueMapElementArea } from "./map.mjs";
 
 export const systemTemplate = {
     Name: "Test",

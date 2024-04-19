@@ -1,15 +1,15 @@
-import { addPlayMove, singleBattle } from "../functions/defs/battle/battle.mjs";
-import { nextPhase, runMove, runTurn } from "../functions/defs/battle/control.mjs";
+import { addPlayMove, singleBattle } from "../functions/defs/battle/battle.js";
+import { nextPhase, runMove, runTurn } from "../functions/defs/battle/control.js";
 import { gPlayerMaker, playerMaker } from "../functions/defs/player/player.mjs";
 import { militaVessels, mcrnVessels } from "./convertShips.mjs";
 import readline from "readline";
-import { clone, compareArray, last, objectMap, sumArrays, pop } from "../functions/functions.mjs";
+import { clone, compareArray, last, objectMap, sumArrays, pop } from "../functions/functions.js";
 import { stringify } from "./disp.mjs";
-import { createDisplay } from "../functions/defs/display.mjs";
-import { getAmmoOfWeap, getPlayShips, shipsInPosition } from "../functions/defs/vehicle/retrieve.mjs";
-import { canMove } from "../functions/defs/vehicle/move.mjs";
-import { sub } from "../functions/vectors.mjs";
-import { canFire, attackShip } from "../functions/defs/vehicle/attack.mjs";
+import { createDisplay } from "../functions/defs/display.js";
+import { getAmmoOfWeap, getPlayShips, shipsInPosition } from "../functions/defs/vehicle/retrieve.js";
+import { canMove } from "../functions/defs/vehicle/move.js";
+import { sub } from "../functions/vectors.js";
+import { canFire, attackShip } from "../functions/defs/vehicle/attack.js";
 
 const gPSIP = (shipArr, pID, loc) => shipsInPosition(getPlayShips(pID, shipArr),loc);
 

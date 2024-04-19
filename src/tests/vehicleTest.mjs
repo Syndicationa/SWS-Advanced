@@ -1,11 +1,11 @@
 import { militaVessels, mcrnVessels } from "./convertShips.mjs";
-import { makeVehicle } from "../functions/defs/vehicle/vehicle.mjs";
-import { createDisplay, getFromDisp } from "../functions/defs/display.mjs";
-import { absSum, map, negateArray, reduce, sumArrays } from "../functions/functions.mjs";
-import { attackShip, calcHitChance, canFire, cleanAttackInput } from "../functions/defs/vehicle/attack.mjs";
-import { moveShip } from "../functions/defs/vehicle/move.mjs";
-import { getAmmoOfWeap } from "../functions/defs/vehicle/retrieve.mjs";
-import { trueDist } from "../functions/vectors.mjs";
+import { makeVehicle } from "../functions/defs/vehicle/vehicle.js";
+import { createDisplay, getFromDisp } from "../functions/defs/display.js";
+import { absSum, map, negateArray, reduce, sumArrays } from "../functions/functions.js";
+import { attackShip, calcHitChance, canFire, cleanAttackInput } from "../functions/defs/vehicle/attack.js";
+import { moveShip } from "../functions/defs/vehicle/move.js";
+import { getAmmoOfWeap } from "../functions/defs/vehicle/retrieve.js";
+import { trueDist } from "../functions/vectors.js";
 
 const locInfo = {
     prevLoc: [0,0],

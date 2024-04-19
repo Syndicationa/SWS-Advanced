@@ -1,23 +1,33 @@
 import { useCallback, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
-import { PropTypes } from "prop-types";
+import { useAppSelector } from "../../../hooks";
 import { GameUI } from "./GameUI";
 
-import { replaceInArray } from "../../../functions/functions.mjs";
-import { magnitude, sub } from "../../../functions/vectors.mjs";
+import { replaceInArray } from "../../../functions/functions";
+import { addVectors, magnitude, subVectors } from "../../../functions/vectors";
 
-import { singleBattleTemplate } from "../../../functions/defs/templates.mjs";
-import { cursorGenerator, fixCursorPosition, moveCursor, moveCursorToPosition, zoom } from "../../../functions/defs/cursor.mjs";
-import { createDisplay, getFromDisp } from "../../../functions/defs/display.mjs";
+import { cursorGenerator, fixCursorPosition, moveCursor, moveCursorToPosition, zoom } from "../../../functions/defs/cursor";
+import { createDisplay, getFromDisp } from "../../../functions/defs/display";
 
-import { pressFunction } from "../../../functions/defs/battle/control.mjs";
-import { nextPhase, runGame, runMove, runTurn } from "../../../functions/defs/battle/stage.mjs";
-import { mergeShipArrays } from "../../../functions/defs/vehicle/retrieve.mjs";
+import { back, pressFunction } from "../../../functions/defs/battle/control";
+import { nextPhase, runGame, runMove, runTurn } from "../../../functions/defs/battle/stage";
+import { mergeVehicleArrays } from "../../../functions/defs/vehicle/retrieve";
 
-import { generateButtonedVehicles, generateStringList, generateVehicleList } from "../../../functions/listGenerator.mjs";
+import { generateButtonedControl, generateButtonedUtils, generateButtonedVehicles, generateButtonedWeapons, generateStringList, generateVehicleList } from "../../../functions/listGenerator";
+import { locationVector, singleBattle, velocityVector } from "../../../functions/types/types";
+import { isStringArray, isUtilArray, isVehicleArray, isWeaponArray } from "../../../functions/types/cursorTypes";
+import { isVehicle, vehicle } from "../../../functions/types/vehicleTypes";
+import { currentArgs } from "../../../functions/types/FunctionTypes";
+import { Data } from "../../../functions/types/data";
+import { determineStealth, oldArea } from "../../../functions/defs/vehicle/vehicle";
 
-const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
-    const user = useSelector(state => state.player);
+type props = {
+    g: singleBattle,
+    Data: Data,
+    close: () => void,
+};
+
+export const SkirmishController = ({g, Data, close}: props) => {
+    const user = useAppSelector(state => state.player);
 
     const [game, setGame] = useState(() => runGame(Data)(g)[0]); //Core game that playerGames are built on
     const [playerGame, setPlayerGame] = useState(game); //Game used for the player's turns
@@ -36,11 +46,11 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
     const [impulse, setImpulse] = useState(0);
     const [active, setActive] = useState(true);
 
-    const [selectedVehicle, setSelectedVehicle] = useState();
-    const [currentFunction, setCurrentFunction] = useState();
+    const [selectedVehicle, setSelectedVehicle] = useState<vehicle | undefined>();
+    const [currentArgs, setCurrentArgs] = useState<currentArgs>([]);
 
     const activeVehicles = useMemo(() => playerGame.Vehicles, [playerGame.Vehicles]);
-    const display = useMemo(() => createDisplay(game.Size.OverallSize)(selectedVehicle ? mergeShipArrays(activeVehicles, [selectedVehicle]): activeVehicles), 
+    const display = useMemo(() => createDisplay(game.Size.OverallSize)(selectedVehicle ? mergeVehicleArrays(activeVehicles, [selectedVehicle]): activeVehicles), 
         [activeVehicles, selectedVehicle, game.Size.OverallSize, playerGame]);
     //#endregion
 
@@ -48,7 +58,7 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
     const players = useMemo(() => game.Players, [game]);
     const [currentPlayer, setCurrentPlayer] = useState(() => {
         if (local) return 0;
-        return players.findIndex(play => user.ID === play.User.ID);
+        return players.findIndex(play => user.user.ID === play.User.ID);
     });
     const player = useMemo(() => players[currentPlayer], [players, currentPlayer]);
 
@@ -80,14 +90,16 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
 
     //#region UI
     const [selection, setSelection] = useState(1);
-    const [listType, setListType] = useState("Vehicle");
     const list = useMemo(() => {
-        if (listType === "Message") return generateStringList(cursor.data, cursor, setCursor);
-        else if (cursor.mode === "Menu") return generateButtonedVehicles(cursor.data, cursor, setCursor);
-        else if (cursor.mode === "Move") return generateVehicleList(getFromDisp(display, cursor.loc, cursor.loc));
+        if (isStringArray(cursor.data)) return generateStringList(cursor.data, cursor, setCursor);
+        if (isVehicleArray(cursor.data)) return generateButtonedVehicles(cursor.data, cursor, setCursor);
+        if (isWeaponArray(cursor.data)) return generateButtonedWeapons(cursor.data, cursor, setCursor, currentArgs);
+        if (isUtilArray(cursor.data)) return  generateButtonedUtils(cursor.data, cursor, setCursor, currentArgs);
+        if (typeof cursor.data === "function" && isVehicle(cursor.data.data) && impulse === 7) return generateButtonedControl([cursor.data.data], cursor, setCursor);
+        return generateVehicleList(getFromDisp(display, cursor.loc, addVectors(cursor.loc, [1,1])));
     }, [cursor]);
     const data = [`Position: ${cursor.loc} Region Data: ${cursor.region.xStep}`];
-    const [attackList, setAttackList] = useState([]);
+    const [attackList, setAttackList] = useState<string[]>([]);
     //#endregion
 
     const State = useMemo(() => {
@@ -99,19 +111,24 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
             stage, impulse, setImpulse,
             activeVehicles, display,
             selectedVehicle, setSelectedVehicle,
-            currentFunction, setCurrentFunction,
+            currentArgs, setCurrentArgs,
             player,
-            setListType,
             setSelection,
             setAttackList
         };
-    }, [playerGame, moves, cursor, stage, impulse, activeVehicles, selectedVehicle, currentFunction, player]);
+    }, [playerGame, moves, cursor, stage, impulse, activeVehicles, selectedVehicle, currentArgs, player]);
 
     const nextPlayer = useCallback(() => {
         if (local) {
             setGame(previousGame => { 
                 setCurrentPlayer(currentPlayer + 1);
-                const newGame = {...previousGame, Moves: moves};
+                const visibleVehicles = previousGame.Vehicles.map((vehicle, i, vehicleArray) => 
+                    determineStealth(vehicleArray, vehicle, players[currentPlayer + 1]));
+                const newGame = {
+                    ...previousGame, 
+                    Moves: moves, 
+                    Vehicles: visibleVehicles.map((vehicle) => oldArea(vehicle))
+                };
                 setPlayerGame(newGame);
                 return newGame;
             });    
@@ -131,7 +148,7 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
         }
         setGame(previousGame => {
             const [changedGame] = turn({...previousGame, Moves: moves}, moves);
-            const game = nextPhase(changedGame);
+            const game = nextPhase(changedGame, players[0]);
             console.log(game.Moves);
             setPlayerGame(game);
             setMoves(game.Moves);
@@ -156,15 +173,15 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
                 group: () => console.log(currentPlayer, players),
                 ungroup: () => console.log(game),
                 info: () => console.log(playerGame),
-                back: () => console.log(moves),
+                back: () => back(State),
             },
             cursor,
             moveCursor: 
-                (vec) => magnitude(vec) === 0 ? 
+                (vec: velocityVector) => magnitude(vec) === 0 ? 
                     press(State):
                     setCursor(moveCursor(cursor, vec)),
             moveCursorTo: 
-                (pos) => magnitude(sub(cursor.loc,fixCursorPosition(cursor, pos))) === 0 ? 
+                (pos: locationVector) => magnitude(subVectors(cursor.loc,fixCursorPosition(cursor, pos))) === 0 ? 
                     press(State): 
                     setCursor(moveCursorToPosition(cursor, pos))
         };
@@ -194,11 +211,3 @@ const SkirmishController = ({g = singleBattleTemplate, Data, close}) => {
         <GameUI game={uiGame} input={input} close={closeFunction} />
     );
 };
-
-SkirmishController.propTypes = {
-    g: PropTypes.object,
-    Data: PropTypes.object,
-    close: PropTypes.func,
-};
-
-export {SkirmishController};

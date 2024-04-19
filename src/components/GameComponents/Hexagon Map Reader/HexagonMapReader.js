@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { saveFileTemplate } from '../../../functions/defs/planets.mjs';
-import { clearBoard, drawHexMap } from '../../../functions/drawing.mjs';
+import { clearBoard, drawHexMap } from '../../../functions/drawing.js';
 import "./map.css"
 
 const download = (map, hexagonMapFile) => {

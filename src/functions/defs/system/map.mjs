@@ -1,5 +1,5 @@
-import { map, sumArrays } from "../../functions.mjs";
-import { distance } from "../../vectors.mjs";
+import { map, sumArrays } from "../../functions.js";
+import { distance } from "../../vectors.js";
 //import { hexArea } from "../hexArea.mjs";
 
 export const exampleMapElement = {

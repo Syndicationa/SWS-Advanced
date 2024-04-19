@@ -2,17 +2,16 @@ import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { SectionTitle } from "./SectionTitle";
 
-const Section = ({title, minimizable, close, children, style, titleStyle}) => {
-    const mini = minimizable === undefined ? true: minimizable;
-    const [minimized, setMinimized] = useState(mini);
+const Section = ({title, minimizable, close, children, style, titleStyle, className}) => {
+    const [minimized, setMinimized] = useState(minimizable ?? true);
 
     const invertMinimized = () => {
         setMinimized(!minimized);
     };
 
     return (
-        <div className="Section" style={style}>
-            <SectionTitle title={title} minimizable={mini}
+        <div className={"Section" + className} style={style}>
+            <SectionTitle title={title} minimizable={minimizable ?? true}
                 minimized={minimized} close={close} 
                 minimization={invertMinimized} {...titleStyle} />
             {minimized ? <></>:children}
@@ -26,7 +25,8 @@ Section.propTypes = {
     close: PropTypes.func,
     children: PropTypes.arrayOf(PropTypes.element),
     style: PropTypes.object,
-    titleStyle: PropTypes.object
+    titleStyle: PropTypes.object,
+    className: PropTypes.string
 };
 
 export { Section };

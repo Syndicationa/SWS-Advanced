@@ -5,9 +5,9 @@ module.exports = {
     },
     "extends": [
         "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
         "plugin:react/recommended",
-        "plugin:react/jsx-runtime",
-        "prettier"
+        "plugin:react/jsx-runtime"
     ],
     "overrides": [
         {
@@ -15,18 +15,20 @@ module.exports = {
                 "node": true
             },
             "files": [
-                ".eslintrc.{js,mjs}"
+                ".eslintrc.{js,cjs}"
             ],
             "parserOptions": {
                 "sourceType": "script"
             }
         }
     ],
+    "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "ecmaVersion": "latest",
         "sourceType": "module"
     },
     "plugins": [
+        "@typescript-eslint",
         "react"
     ],
     "rules": {

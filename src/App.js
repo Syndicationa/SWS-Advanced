@@ -12,7 +12,7 @@ import { gPlayerMaker, playerMaker } from "./functions/defs/player/player.mjs";
 // import { exampleNetwork } from "./functions/defs/techNetwork.mjs";
 import { getSolarDate } from "./functions/date.mjs";
 import { tempData } from "./tests/temporaryData.mjs";
-import { addPlayer, singleBattle } from "./functions/defs/battle/battle.mjs";
+import { addPlayer, singleBattle } from "./functions/defs/battle/battle.ts";
 
 // const systemMake = (user) => {
 //     const player = playerMaker(user)({Faction: "Astute", Name: "Synism", Admin: true})
@@ -33,7 +33,7 @@ const battleMake = user => {
     const gplayer = gPlayerMaker(player)("Synism");
     const gplayer2 = gPlayerMaker(player2)("Bobism");
 
-    const battle = singleBattle(gplayer)({Map: "", PlayerCount: 2, Size:  {OverallSize: 16, StepSizes: [1]}, Title: "Test Game", Discoverable: false, Online: false});
+    const battle = singleBattle(gplayer)({Map: "", PlayerCount: 2, Size:  {OverallSize: 128, StepSizes: [16,1]}, Title: "Test Game", Discoverable: false, Online: false});
     return {
         ...addPlayer(battle)(gplayer2),
         Stage: 3,
@@ -42,25 +42,25 @@ const battleMake = user => {
                 "A.B;",
                 "",
                 "",
-                ""
+                "",
             ],
             Turns: [
                 0,
                 1,
                 2,
-                3
+                3,
             ],
             A: [
-                "P-Astute.0.[2,2].[1,0];Astute.0.[2,13].[1,0];",
-                "M-0.[2,2].[1,1];1.[2,-2].[1,-1];",
-                "U-0.[1,1]:[1,1]..;1.[1,-1]:[1,-1]..;",
-                "A-"
+                "P-Astute.0.[2,2].[1,0];Astute.0.[3,2].[1,0];",
+                "M-0.[2,2].[1,1];1.[2,2].[1,1];",
+                "U-0.[1,1]:[1,1]..;1.[1,1]:[1,1]..;",
+                "A-",
             ],
             B: [
-                "P-Blade.0.[13,13].[-1,0];Blade.0.[13,2].[-1,0];",
-                "M-3.[-2,2].[-1,1];2.[-2,-2].[-1,-1];",
-                "U-3.[-1,1]:[-1,1]..;2.[-1,-1]:[-1,-1]..;",
-                "A-"
+                "P-Blade.0.[13,2].[-1,0];Blade.0.[12,2].[-1,0];",
+                "M-3.[-2,2].[-1,1];2.[-2,2].[-1,1];",
+                "U-3.[-1,1]:[-1,1]..;2.[-1,1]:[-1,1]..;",
+                "A-",
             ]
         }
     };

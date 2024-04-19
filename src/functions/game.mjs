@@ -1,4 +1,4 @@
-import { sub } from "./vectors.mjs";
+import { sub } from "./vectors.js";
 
 export const inFire = (fLoc = [0,0], tLoc = [0,0], origRot = [0, 0], wRot = 0, off = [0, 0]) => {
     const [xdist, ydist] = sub(tLoc, fLoc);
