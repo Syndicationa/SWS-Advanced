@@ -1,0 +1,110 @@
+.CreateGame {
+    /* background-color: #5554; */
+}
+
+.CreateGame * {
+    background-color: #5550; 
+}
+
+.CreateGame .SectionTitle {
+    background-color: #404040;
+}
+
+.CreateGame input {
+    background-color: #444a;
+    border-radius: 5px;
+    border: none;
+}
+
+.CreateGame input:hover {
+    background-color: #3a3a3abb;
+    border: 1px solid white;
+}
+
+.CreateGame input:focus {
+    background-color: #303030cc;
+    border: 2px solid white;
+}
+
+.CreateGame .TitleAndType {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1em;
+}
+
+.CreateGame .TitleAndType input {
+    width: 37.5%;
+}
+
+.CreateGame .TitleAndType div {
+    width: 25%;
+}
+
+.CreateGame .TitleAndType label {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.CreateGame .TitleAndType div {
+    max-width: 100%;
+    width: fit-content;
+}
+
+.CreateGame .PlayersAndLayers {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.CreateGame .PlayersAndLayers input {
+    width: 4em;
+}
+
+.CreateGame .Players .PlayerList {
+    height: fit-content;
+    max-height: 200px;
+    overflow: scroll;
+}
+
+.CreateGame .Layers {
+    text-align: right;
+}
+
+.CreateGame .Layers .LayerList {
+    width: 100%;
+    height: fit-content;
+    max-height: 200px;
+    overflow: scroll;
+    text-align: right;
+}
+
+.CreateGame .Layers input {
+    margin-right: 25%;
+}
+
+.CreateGame .LocalDiscoverable {
+    margin-top: 1em;
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.CreateGame .Local, .CreateGame .Discoverable {
+    margin-left: 0;
+    width: 50%;
+}
+
+.CreateGame .Create {
+    grid-area: Create;
+    margin-top: 1em;
+    width: 50%;
+    font-size: large;
+    background-color: #434c57;
+}
+
+.CreateGame .Create:hover {
+    background-color: #636c77;
+    color: white;
+}

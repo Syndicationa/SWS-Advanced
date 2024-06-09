@@ -1,5 +1,5 @@
 import { last, pop } from "../../functions";
-import { playerTemplate } from "../templates.mjs";
+import { player, singleBattle } from "../../types/types";
 
 export const battleTemplate = {
     Players: [],
@@ -41,9 +41,20 @@ export const createBattle = loc => player => {
     };
 };
 
-export const singleBattle = player => data => {
+export type battleData = {
+    Map: "Space",
+    PlayerCount: number, 
+    Size: singleBattle["Size"],
+    Title: string, 
+    Discoverable: boolean, 
+    Online: boolean,
+    
+    id: string
+}
+
+export const createSingleBattle = (player: player, data: battleData): singleBattle => {
     const ID = player.User.ID;
-    const {Map, PlayerCount, Size, Title, Discoverable, Online} = data;
+    const {Map, PlayerCount, Size, Title, Discoverable, Online, id} = data;
     return {
         Title,
         Players: colorPlayers([], player),
@@ -52,19 +63,22 @@ export const singleBattle = player => data => {
         Vehicles: [],
         Moves: {
             Data: [""],
-            Turns: [""],
+            Turns: ["P-"],
             [ID]: ["P-"]
         },
         Stage: 0,
         Map,
         Type: {Type: "Unique", Discoverable, Joinable: PlayerCount > 1 && Online, Online },
         PlayerCount,
-        Display: [],
-        Size
+        Size,
+        
+        
+        id,
+        version: "5.0"
     };
 };
 
-const colorPlayers = (players = [playerTemplate], addedPlayer = playerTemplate) => {
+const colorPlayers = (players: player[], addedPlayer: player) => {
     const addedPlayerColors = {};
     players.forEach(player => addedPlayerColors[player.User.ID] = addedPlayer.colorSet[player.Faction]);
     const modAddedPlayer = {

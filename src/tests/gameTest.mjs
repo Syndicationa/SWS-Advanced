@@ -1,6 +1,6 @@
 import { addPlayMove, singleBattle } from "../functions/defs/battle/battle.js";
 import { nextPhase, runMove, runTurn } from "../functions/defs/battle/control.js";
-import { gPlayerMaker, playerMaker } from "../functions/defs/player/player.mjs";
+import { gPlayerMaker, playerMaker } from "../functions/defs/player/player.ts/index.js";
 import { militaVessels, mcrnVessels } from "./convertShips.mjs";
 import readline from "readline";
 import { clone, compareArray, last, objectMap, sumArrays, pop } from "../functions/functions.js";

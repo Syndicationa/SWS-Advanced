@@ -19,7 +19,7 @@ export const runGame = (Data: Data) => (State: singleBattle): runReturn => {
         const [nState, str] = run(state, move);
 
         if (i === arr.length - 1) return [state, oldString];
-        return [{...nState, Vehicles: finalizeStage(nState.Vehicles, Turns[i])}, str];
+        return [{...nState, Vehicles: finalizeStage(nState.Vehicles, Number(Turns[i]))}, str];
     }, [State, ""]);
 };
 
@@ -178,7 +178,7 @@ export const nextPhase = (State: singleBattle, player?: player): singleBattle =>
     const nextStage = (stage % 3) + 1;
     const moves = State.Moves;
     const nMoves = objectMap(moves)((move: singleBattle["Moves"][string], key: string) => {
-        if (key === "Turns") return [...move, nextStage];
+        if (key === "Turns") return [...move, nextStage.toString()];
         if (key === "Data") return [...move, ""];
         return [...move, stageNext[stage]];
     }) as singleBattle["Moves"];

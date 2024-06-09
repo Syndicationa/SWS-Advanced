@@ -2,7 +2,7 @@ import { PropTypes } from "prop-types";
 import { useState } from "react";
 import { SectionTitle } from "./SectionTitle";
 
-const Section = ({title, minimizable, close, children, style, titleStyle, className}) => {
+const Section = ({title, minimizable, close, children, style, titleStyle, className = ""}) => {
     const [minimized, setMinimized] = useState(minimizable ?? true);
 
     const invertMinimized = () => {
@@ -10,7 +10,7 @@ const Section = ({title, minimizable, close, children, style, titleStyle, classN
     };
 
     return (
-        <div className={"Section" + className} style={style}>
+        <div className={`Section ${className}`} style={style}>
             <SectionTitle title={title} minimizable={minimizable ?? true}
                 minimized={minimized} close={close} 
                 minimization={invertMinimized} {...titleStyle} />

@@ -1,8 +1,10 @@
-import { ballin, deactivator, targeting } from "../functions/defs/status.ts";
+import { ballin, deactivator, targeting } from "../functions/defs/status";
+import { Data } from "../functions/types/data";
+import { baseVehicle } from "../functions/types/vehicleTypes";
 
 const factions = ["Astute", "Blade"];
 const factionColors = {Astute: "#0000ff", Blade: "#FF0000"};
-const shipAAAA = {
+const shipAAAA: baseVehicle = {
     Type: {
         Faction: "Astute", Class: "AAAA", Realm: ["Space"]
     },
@@ -23,7 +25,7 @@ const shipAAAA = {
         {
             Name: "Pew Pew", Type: "Generic",
             Watk: 100, Whit: 0, WRatk: 0,
-            Defensive: false, Wcov: 0,
+            Defensive: false,
             Wran: 20, WMran: 0, Wrot: 0,
             FireRate: 10, EnergyCost: 5, HeatLoad: 5,
             aType: "Default"
@@ -53,7 +55,7 @@ const shipAAAA = {
             {
                 Name: "Default",
                 Type: "Default",
-                Cloak: false, StealthLevel: 0, StealthCost: 0,
+                Cloak: false,
                 Intercept: .84, MaxDamage: 69, DamageRegen: 42,
                 EnergyCost: 42, HeatLoad: 4,
             }
@@ -61,7 +63,7 @@ const shipAAAA = {
     }
 };
 
-const shipBBBB = {
+const shipBBBB: baseVehicle = {
     Type: {
         Faction: "Blade", Class: "BBBB", Realm: ["Space"]
     },
@@ -84,7 +86,7 @@ const shipBBBB = {
             Watk: 300, Whit: -30, Eran: 2, WRatk: -1,
             Wran: 12, WMran: 0, Wrot: 4,
             FireRate: 80, EnergyCost: 12, HeatLoad: 12,
-            aType: "Default"
+            aType: "Default", Defensive: false
         }
     ],
 
@@ -111,7 +113,7 @@ const shipBBBB = {
             {
                 Name: "Default",
                 Type: "Default",
-                Cloak: false, StealthLevel: 0, StealthCost: 0,
+                Cloak: false,
                 Intercept: 1.0, MaxDamage: 69, DamageRegen: 30,
                 EnergyCost: 24, HeatLoad: 8,
             }
@@ -119,7 +121,7 @@ const shipBBBB = {
     }
 };
 
-export const tempData = {
+export const tempData: Data = {
     factionNames: factions,
     exoticFactions: factions,
     factionColors,

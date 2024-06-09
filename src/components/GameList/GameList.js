@@ -9,7 +9,7 @@ import { Section } from "../Sections/Section";
 export const GameList = () => {
     const dispatch = useDispatch();
     const playerGames = useSelector(state => state.game.playerGames);
-    const gameList = useSelector(state => state.player.player.games);
+    const gameList = useSelector(state => state.player.user.games);
 
     const skirmishes = playerGames.filter((game) => game.gameMode === "Skirmish" || game.gameMode === undefined);
     const systemGames = playerGames.filter((game) => game.gameMode === "System");
