@@ -66,7 +66,6 @@ export type baseVehicle = {
     Defenses: {
         Shields: shield[]
     },
-
 }
 
 export type vehicle = {

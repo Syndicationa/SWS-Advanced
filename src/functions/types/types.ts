@@ -104,25 +104,56 @@ export type shield = stealth & {
     HeatLoad: number,
 };
 
-export type player = {
-    User: {
-        Username: string,
-        ID: string,
-        exoticFactions: boolean,
-        controls: string[],
-        colorSet: string[],
-        DefaultFaction: string,
+export type RuleSet = {
+    HumanPlayerCount: number,
+    ComputerPlayerCount: number,
+    Size: {OverallSize: number, StepSizes: number[]},
+    Type: {Type: "Unique", Discoverable: boolean, Online: boolean},
+    Map: "Space",
+};
+
+export type user = {
+    Username: "",
+    //Letters for Up, Down, Left, Right, Action, Back, Info, End Turn, Zoom In, Zoom Out
+    Controls: [string, string, string, string, string, string, string, string, string, string],
+    DefaultFaction: string,
+    exoticFactions: boolean,
+    WinLoss: [number,number,number],
+    RuleSet: RuleSet,
+    colorSet: {
+        [key: string]: string
     },
-    colorSet: [],
+    games: [],
+    unsubGames: [],
+    ID: string
+};
+
+export const isUser = (a: unknown): a is user => {
+    if (!a || typeof a !== "object") return false;
+    return "Controls" in a && Array.isArray(a.Controls) && a.Controls.length === 10;
+};
+
+type basePlayer = {
+    User: user,
+    colorSet: user["colorSet"],
     Faction: string,
     Name: string,
+}
+
+export type systemPlayer = basePlayer & {
     Battles: [],
     Vehicles: {
         InBattle: vehicle[],
         OnBoard: vehicle[],
         Healing: vehicle[],
     },
-    Money: number,
+};
+
+export type player = basePlayer & {
+    Controls: user["Controls"]
+    Vehicles: [],
+    Loses: [],
+    hasMoved: boolean,
 };
 
 export type faction = {
@@ -161,13 +192,20 @@ export type singleBattle = {
     Losses: vehicle[],
     Retreated: vehicle[],
     Vehicles: vehicle[],
-    Moves: {Data: string[], Turns: number[]} & {[key: string]: string[]},
+    Moves: {Data: string[], Turns: string[], [key: string]: string[]},
     Stage: number,
     Map: "Space",
-    Type: {Type: "Unique", Discoverable: false, Joinable: false, Online: false},
+    Type: {Type: "Unique", Discoverable: boolean, Joinable: boolean, Online: boolean},
     PlayerCount: number,
-    Display: vehicle[][][],
     Size: {OverallSize: number, StepSizes: number[]},
+
+    id: string
+    version: "5.0"
+};
+
+export const isSingleBattle = (a: unknown): a is singleBattle => {
+    if (!a || typeof a !== "object" || !("Type" in a) || typeof a.Type !== "object" || a.Type === null) return false;
+    return "id" in a && "version" in a && a.version === "5.0" && "Type" in a.Type && a.Type.Type === "Unique";
 };
 
 export type display = vehicle[][][];

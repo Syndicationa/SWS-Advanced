@@ -8,11 +8,11 @@ import { GameList } from "./components/GameList/GameList";
 import { SkirmishController } from "./components/GameComponents/GameInterface/SkirmishController";
 // import { createSystem, systemTemplate } from "./functions/defs/system/system.mjs";
 // import { createFaction } from "./functions/defs/faction/faction.mjs";
-import { gPlayerMaker, playerMaker } from "./functions/defs/player/player.mjs";
+import { playerMaker } from "./functions/defs/player/player.ts";
 // import { exampleNetwork } from "./functions/defs/techNetwork.mjs";
 import { getSolarDate } from "./functions/date.mjs";
-import { tempData } from "./tests/temporaryData.mjs";
-import { addPlayer, singleBattle } from "./functions/defs/battle/battle.ts";
+import { tempData } from "./tests/temporaryData";
+import { addPlayer, createSingleBattle } from "./functions/defs/battle/battle.ts";
 
 // const systemMake = (user) => {
 //     const player = playerMaker(user)({Faction: "Astute", Name: "Synism", Admin: true})
@@ -30,12 +30,10 @@ const battleMake = user => {
     const user2 = {...user, ID: "B"};
     const player = playerMaker(user)({Faction: "Astute", Name: "Synism", Admin: true});
     const player2 = playerMaker(user2)({Faction: "Blade", Name: "Bobism", Admin: true});
-    const gplayer = gPlayerMaker(player)("Synism");
-    const gplayer2 = gPlayerMaker(player2)("Bobism");
 
-    const battle = singleBattle(gplayer)({Map: "", PlayerCount: 2, Size:  {OverallSize: 128, StepSizes: [16,1]}, Title: "Test Game", Discoverable: false, Online: false});
+    const battle = createSingleBattle(player)({Map: "", PlayerCount: 2, Size:  {OverallSize: 128, StepSizes: [16,1]}, Title: "Test Game", Discoverable: false, Online: false});
     return {
-        ...addPlayer(battle)(gplayer2),
+        ...addPlayer(battle)(player2),
         Stage: 3,
         Moves: {
             "Data": [
@@ -116,7 +114,7 @@ function App() {
         }
     };
 
-    const [v] = useState(true);
+    const [v] = useState(false);
 
     return (
         <div className="App">

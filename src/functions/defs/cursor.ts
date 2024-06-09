@@ -34,6 +34,10 @@ const adjustCursorLocation = (cursor: cursor): cursor => {
     const {OverallSize, StepSizes} = gridInfo;
     const grSize = getGridSize(gridInfo)[StepSizes.find((a) => a === yStep) ?? 0];
     const boxedLocation = minOnArrays(maxOnArrays(location, [0,0]), [OverallSize - 1, OverallSize - 1]) as locationVector;
+
+    // const lowerBound = subVectors(location, [grSize / 2, grSize / 2]);
+    // const upperBound = addVectors(location, [grSize / 2, grSize / 2]);
+
     let newRegion = region;
     if (boxedLocation[0] < lx) {
         newRegion = {...newRegion, lx: lx - grSize, hx: lx - 1,};

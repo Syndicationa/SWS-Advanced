@@ -2,12 +2,14 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { getAuth, signInWithPopup } from "@firebase/auth";
 import {collection, doc, setDoc, getDoc} from "firebase/firestore";
 import { gProvider, database } from "../firebase";
+import { isUser, user } from "../functions/types/types";
+import { Data } from "../functions/types/data";
 // import { fetchGames } from "./gameSlicer";
 // import { clone } from '../functions/functions'
 
 const userRef = collection(database, "users");
 
-const initialState = {
+const initialState: {user: user, loggedIn: boolean} = {
     user: {
         Username: "",
         //Letters for Up, Down, Left, Right, Action, Back, Info, End Turn, Zoom In, Zoom Out
@@ -16,12 +18,11 @@ const initialState = {
         exoticFactions: false,
         WinLoss: [0,0,0],
         RuleSet: {
-            hPlayerCount: 1,
-            cPlayerCount: 0,
-            layerCount: 2,
-            layers: [8,16],
-            gameType: "Deathmatch",
-            joinability: "Public"
+            HumanPlayerCount: 2,
+            ComputerPlayerCount: 0,
+            Size: {OverallSize: 128, StepSizes: [16,1]},
+            Type: {Type: "Unique", Discoverable: false, Online: true},
+            Map: "Space",
         },
         colorSet: {
             Astute: "#0000ff",
@@ -40,7 +41,8 @@ const getUserID = async () => {
     const result = await signInWithPopup(auth, gProvider);
     if (!result) return false;
     const user = result.user;
-    const userID = user.reloadUserInfo.localId;
+    console.log(user);
+    const userID = user.uid;
     if (!userID) {
         alert("Failed to retrieve your User ID, please try again later");
         return;
@@ -50,15 +52,15 @@ const getUserID = async () => {
 
 export const fetchPlayer = createAsyncThunk(
     "player/fetchPlayer",
-    async (data) => {
+    async (data: Data) => {
         const userID = await getUserID();
         if (!userID) return;
 
         const playerData = await getDoc(doc(userRef,userID));
         const player = playerData.data();
-        if (!playerData) return;
-    
-        player.factionList = player.exoticFaction ? data.exoticFactions: data.factionNames;
+        if (player === undefined) return;
+        if (!isUser(player)) return;
+        //player.factionList = player.exoticFaction ? data.exoticFactions: data.factionNames;
         player.colorSet = {...data.factionColors, ...player.colorSet};
     
         return player;
@@ -67,10 +69,10 @@ export const fetchPlayer = createAsyncThunk(
 
 export const createPlayer = createAsyncThunk(
     "player/createPlayer",
-    async (data) => {
+    async (data: user) => {
         const userID = await getUserID();
         if (!userID) return;
-        const playerData = {...data, userID: userID};
+        const playerData = {...data, ID: userID};
         await setDoc(doc(userRef,userID),playerData);
 
         return playerData;
@@ -83,26 +85,27 @@ const playerSlice = createSlice({
     reducers: {
         updatePlayer: (state, action) => {
             const player = action.payload;
-            setDoc(doc(userRef, player.userID), player);
-            state.player = player;
+            if (!isUser(player)) return;
+            setDoc(doc(userRef, player.ID), player);
+            state.user = player;
         },
 
         logOutPlayer: (state) => {
-            state.player = initialState.player;
+            state.user = initialState.user;
             state.loggedIn = false;
         }
     },
     extraReducers: (builder) => {
         builder.addCase(fetchPlayer.fulfilled, (state, action) => {
             const player = action.payload;
-            if (!player) return;
-            state.player = player;
+            if (!isUser(player)) return;
+            state.user = player;
             state.loggedIn = true;
         });
         builder.addCase(createPlayer.fulfilled, (state, action) => {
             const player = action.payload;
-            if (!player) return;
-            state.player = player;
+            if (!isUser(player)) return;
+            state.user = player;
             state.loggedIn = true;
         });
     }

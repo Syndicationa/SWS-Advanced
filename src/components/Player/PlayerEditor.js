@@ -46,7 +46,7 @@ const PlayerEditor = ({player, update, inGame}) => {
     };
 
     return (
-        <Section title={"Player"} close={false} >
+        <Section title={player.Name} close={false} >
             <label htmlFor="Name">Name: </label>
             <input id="Name" value={name} onChange={(e) => setName(e.target.value)} />
             <br />

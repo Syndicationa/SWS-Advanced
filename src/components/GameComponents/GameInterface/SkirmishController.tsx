@@ -13,7 +13,7 @@ import { nextPhase, runGame, runMove, runTurn } from "../../../functions/defs/ba
 import { mergeVehicleArrays } from "../../../functions/defs/vehicle/retrieve";
 
 import { generateButtonedControl, generateButtonedUtils, generateButtonedVehicles, generateButtonedWeapons, generateStringList, generateVehicleList } from "../../../functions/listGenerator";
-import { locationVector, singleBattle, velocityVector } from "../../../functions/types/types";
+import { locationVector, player, singleBattle, velocityVector } from "../../../functions/types/types";
 import { isStringArray, isUtilArray, isVehicleArray, isWeaponArray } from "../../../functions/types/cursorTypes";
 import { isVehicle, vehicle } from "../../../functions/types/vehicleTypes";
 import { currentArgs } from "../../../functions/types/FunctionTypes";
@@ -62,7 +62,7 @@ export const SkirmishController = ({g, Data, close}: props) => {
     });
     const player = useMemo(() => players[currentPlayer], [players, currentPlayer]);
 
-    const updatePlayer = useCallback((playerData) => {
+    const updatePlayer = useCallback((playerData: player) => {
         const playerIndex = players.findIndex((play) => play.User.ID === playerData.User.ID);
         const newPlayers = replaceInArray(players, playerIndex, playerData);
         setGame(previousGame => {return {...previousGame, Players: newPlayers};});
